@@ -16,7 +16,7 @@
 > variety of "hard" problems involving one or several of: constraints, heteroskedasticity,
 > multiple objectives, multiple fidelities, and high-dimensionality.
 
-There are resources related to datasets, surrogate models, and benchmarks already out there:
+There are already materials-science-specific resources related to datasets, surrogate models, and benchmarks out there:
 - [Matbench](https://github.com/materialsproject/matbench) focuses on materials property
 prediction using composition and/or crystal structure
 - [Olympus](https://github.com/aspuru-guzik-group/olympus) focuses on small datasets
