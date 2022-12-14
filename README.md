@@ -62,7 +62,7 @@ of sorts for the surrogate model, where the model is indistinguishable from the 
 underlying objective function. 
 
 To accomplish this, I plan to:
-- run ~10 repeats for every set of parameters and fit separate models for each quantile
+- run ~10 repeats for every set of parameters and fit separate models for quantiles
   of the noise distribution
 - Get a large enough quasi-random sampling of the search space to accurately model intricate interactions between parameters (i.e. the response surface)
 - Train a classification model that short-circuits the regression model, returning NaN
