@@ -30,11 +30,11 @@ In March 2021, [pymatgen](https://github.com/materialsproject/pymatgen) reorgani
 code into [namespace
 packages](https://packaging.python.org/en/latest/guides/packaging-namespace-packages/),
 which makes it easier to distribute a collection of related subpackages and modules
-under an umbrella project. Tangent to that, PyScaffold is a project generator for high-quality Python
+under an umbrella project. Tangent to that, [PyScaffold](https://pyscaffold.org/) is a project generator for high-quality Python
 packages, ready to be shared on PyPI and installable via pip; coincidentally,
-it also supports namespace package configurations. The goal for this
+it also supports namespace package configurations. My plan for this
 repository is to host
-`pip`-installable packages that provide the code to load datasets, surrogate
+`pip`-installable packages that allow for loading datasets, surrogate
 models, and benchmarks for recent manuscripts I've
 written. It is primarily intended as a convenience for me, with a secondary benefit of
 adding value to the community. I will look into hosting the datasets via Foundry and
@@ -76,10 +76,19 @@ My plans for implementation include:
   distributions, and 3 parameters that define the weight fractions
   [[code](https://github.com/sparks-baird/bayes-opt-particle-packing)]
   [[paper](https://github.com/sparks-baird/bayes-opt-particle-packing/blob/main/paper/main.pdf)]
-- discrete intensity vs. wavelength spectra (measured experimentally via a spectrophotometer) as a
-  function of red, green, and blue LED powers and three sensor settings: number of
-  integration steps, integration time per step, and signal gain [[code](https://github.com/sparks-baird/self-driving-lab-demo)] [[paper](https://doi.org/10.1016/j.matt.2022.11.007)]
-- Two error metrics (RMSE and MAE) and two hardware performance metrics (runtime and memory) of a [CrabNet](https://github.com/sparks-baird/CrabNet) regression model trained on the https://matbench.materialsproject.org/Leaderboards%20Per-Task/matbench_v0.1_matbench_expt_gap/ as a function of 23 CrabNet hyperparameters [[code](https://github.com/sparks-baird/crabnet-hyperparameter)] [[paper](https://doi.org/10.1016/j.commatsci.2022.111505)] 
+- discrete intensity vs. wavelength spectra (measured experimentally via a
+  spectrophotometer) as a function of red, green, and blue LED powers and three sensor
+  settings: number of integration steps, integration time per step, and signal gain
+  [[code](https://github.com/sparks-baird/self-driving-lab-demo)]
+  [[paper](https://doi.org/10.1016/j.matt.2022.11.007)]
+- Two error metrics (RMSE and MAE) and two hardware performance metrics (runtime and
+  memory) of a [CrabNet](https://github.com/sparks-baird/CrabNet) regression model
+  trained on the
+  https://matbench.materialsproject.org/Leaderboards%20Per-Task/matbench_v0.1_matbench_expt_gap/
+  as a function of 23 CrabNet hyperparameters
+  [[code](https://github.com/sparks-baird/crabnet-hyperparameter)]
+  [[paper](https://doi.org/10.1016/j.commatsci.2022.111505)]
+- 
 
 ## Installation
 
