@@ -87,7 +87,7 @@ My plans for implementation include:
   as a function of 23 CrabNet hyperparameters
   [[code](https://github.com/sparks-baird/crabnet-hyperparameter)]
   [[paper](https://doi.org/10.1016/j.commatsci.2022.111505)]
-- 
+
 
 ## Installation
 
