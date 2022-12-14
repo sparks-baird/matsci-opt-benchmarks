@@ -9,12 +9,53 @@
 [![Twitter](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&label=Twitter)](https://twitter.com/matsci-opt-benchmarks)
 -->
 
-# matsci-opt-benchmarks
+# matsci-opt-benchmarks (WIP)
 
-> Add a short description here!
+> A collection of benchmarking problems and datasets for testing the performance of advanced optimization algorithms in the field of materials science and chemistry.
 
-A longer description of your project goes here...
+[Matbench](https://github.com/materialsproject/matbench) focuses on materials property
+prediction using composition and/or crystal structure.
+[Olympus](https://github.com/aspuru-guzik-group/olympus) focuses on small datasets
+generated via experimental self-driving laboratories.
+[Foundry](https://github.com/MLMI2-CSSI/foundry) focuses on delivering
+ML-ready datasets in materials science and chemistry. [Matbench-genmetrics](https://github.com/sparks-baird/matbench-genmetrics) focuses on generative modeling for crystal
+structure using metrics inspired by [guacamol](https://www.benevolent.com/guacamol) and
+[CDVAE](https://github.com/txie-93/cdvae).
+In March 2021, [pymatgen](https://github.com/materialsproject/pymatgen) reorganized the
+code into [namespace
+packages](https://packaging.python.org/en/latest/guides/packaging-namespace-packages/),
+which makes it easier to distribute a collection of related subpackages and modules
+under an umbrella project. PyScaffold is a project generator for high-quality Python
+packages, ready to be shared on PyPI and installable via pip, and coincidentally,
+supports namespace package configurations. The goal for this
+repository is to host
+`pip`-installable packages for benchmark datasets that I use for the manuscripts I
+write. It is primarily intended as a convenience for me, with a secondary benefit of
+adding value to the community. I will look into hosting the datasets via Foundry and
+using the surrogate model API via Olympus. I will likely do logging to a
+[MongoDB](https://www.mongodb.com/)
+database via [Atlas](https://www.mongodb.com/cloud/atlas) before taking a snapshot of
+the dataset for Foundry. Initially, I will probably use a basic [scikit-learn](https://scikit-learn.org/) model, such
+as
+[RandomForestRegressor](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html)
+or [GradientBoostingRegressor](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html),
+along with cross-validated hyperparameter optimization via
+[RandomizedSearchCV](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html)
+or
+[HalvingRandomSearchCV](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.HalvingRandomSearchCV.html)
+for the surrogate model. What will really differentiate the contribution of this
+repository is the modeling of heteroskedastic noise. I plan to run ~10 repeats for every
+set of parameters and fit separate models for each quantile of the noise distribution. I
+also plan to get a large enough quasi-random sampling of the search space to accurately
+model intricate interactions between parameters. I also plan to train a classification
+model that acts as a short-circuit, returning NaN
+values for inaccessible regions of objective functions. The goal is to win a [Turing test](https://en.wikipedia.org/wiki/Turing_test)
+of sorts for the surrogate model, where the model is indistinguishable from the true,
+underlying objective function. My plans for implementation include:
 
+- the particle packing 
+- the error of a CrabNet regression model trained on the MatBench experimental bandgap
+  dataset as a function of 23 CrabNet hyperparameters [[code](https://github.com/sparks-baird/crabnet-hyperparameter)] [[paper](https://doi.org/10.1016/j.commatsci.2022.111505)] 
 ## Installation
 
 In order to set up the necessary environment:
