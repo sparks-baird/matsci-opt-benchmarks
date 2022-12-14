@@ -8,16 +8,16 @@ dependencies:
   - python>=3.6
   - pip
   # BASICS
-  - numpy
-  - scipy
-  - pandas
-  - tqdm
-  - click
-  - ipython
+  # - numpy
+  # - scipy
+  # - pandas
+  # - tqdm
+  # - click
+  # - ipython
   # VISUALIZATION
-  - matplotlib
-  - ipympl  # interactive matplotlib plots
-  - seaborn
+  # - matplotlib
+  # - ipympl  # interactive matplotlib plots
+  # - seaborn
   # - altair
   # - yellowbrick
   # ML, STATS & DEEP LEARNING
@@ -40,6 +40,7 @@ dependencies:
   - pip:
      - -e .  # install git checkout of matsci-opt-benchmarks in editable mode
      # add here only pip-packages that are not available in conda/conda-forge! E.g.:
+     - ax-platform
      # - icecream
      # - jax
      # - numpyro
@@ -48,12 +49,12 @@ dependencies:
      # - neptune-contrib
 
   # DEVELOPMENT ONLY PACKAGES (could also be kept in a separate environment file)
-  - jupyterlab
-  - pytest
-  - pytest-cov
-  - tox
-  - pre_commit
-  - nbdime
-  - nbstripout
-  - sphinx
-  - recommonmark
+  # - jupyterlab
+  # - pytest
+  # - pytest-cov
+  # - tox
+  # - pre_commit
+  # - nbdime
+  # - nbstripout
+  # - sphinx
+  # - recommonmark

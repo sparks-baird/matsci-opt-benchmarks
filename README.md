@@ -65,8 +65,8 @@ To accomplish this, I plan to:
 - run ~10 repeats for every set of parameters and fit separate models for quantiles
   of the noise distribution
 - Get a large enough quasi-random sampling of the search space to accurately model intricate interactions between parameters (i.e. the response surface)
-- Train a classification model that short-circuits the regression model, returning NaN
-  values for inaccessible regions of objective functions, and return the regression
+- Train a classification model that short-circuits the regression model: return NaN
+  values for inaccessible regions of objective functions and return the regression
   model values for accessible regions
 
 
