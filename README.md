@@ -9,11 +9,86 @@
 [![Twitter](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&label=Twitter)](https://twitter.com/matsci-opt-benchmarks)
 -->
 
-# matsci-opt-benchmarks
+# matsci-opt-benchmarks (WIP)
 
-> Add a short description here!
+> A collection of benchmarking problems and datasets for testing the performance of
+> advanced optimization algorithms in the field of materials science and chemistry for a
+> variety of "hard" problems involving one or several of: constraints, heteroskedasticity,
+> multiple objectives, multiple fidelities, and high-dimensionality.
 
-A longer description of your project goes here...
+There are resources related to datasets, surrogate models, and benchmarks already out there:
+- [Matbench](https://github.com/materialsproject/matbench) focuses on materials property
+prediction using composition and/or crystal structure
+- [Olympus](https://github.com/aspuru-guzik-group/olympus) focuses on small datasets
+generated via experimental self-driving laboratories
+- [Foundry](https://github.com/MLMI2-CSSI/foundry) focuses on delivering ML-ready datasets in materials science and chemistry
+- [Matbench-genmetrics](https://github.com/sparks-baird/matbench-genmetrics) focuses on generative modeling for crystal
+structure using metrics inspired by [guacamol](https://www.benevolent.com/guacamol) and
+[CDVAE](https://github.com/txie-93/cdvae)
+
+In March 2021, [pymatgen](https://github.com/materialsproject/pymatgen) reorganized the
+code into [namespace
+packages](https://packaging.python.org/en/latest/guides/packaging-namespace-packages/),
+which makes it easier to distribute a collection of related subpackages and modules
+under an umbrella project. Tangent to that, [PyScaffold](https://pyscaffold.org/) is a project generator for high-quality Python
+packages, ready to be shared on PyPI and installable via pip; coincidentally,
+it also supports namespace package configurations. My plan for this
+repository is to host
+`pip`-installable packages that allow for loading datasets, surrogate
+models, and benchmarks for recent manuscripts I've
+written. It is primarily intended as a convenience for me, with a secondary benefit of
+adding value to the community. I will look into hosting the datasets via Foundry and
+using the surrogate model API via Olympus. I will likely do logging to a
+[MongoDB](https://www.mongodb.com/)
+database via [Atlas](https://www.mongodb.com/cloud/atlas) and later take a snapshot of
+the dataset for Foundry. Initially, I will probably use a basic [scikit-learn](https://scikit-learn.org/) model, such
+as
+[RandomForestRegressor](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html)
+or [GradientBoostingRegressor](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html),
+along with cross-validated hyperparameter optimization via
+[RandomizedSearchCV](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html)
+or
+[HalvingRandomSearchCV](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.HalvingRandomSearchCV.html)
+for the surrogate model.
+
+What will really differentiate the contribution of this
+repository is *the modeling of heteroskedastic noise*, where the noise variance
+can be a complex function of the input parameters. This is contrasted with
+homoskedasticity, where the noise variance for a given parameter is fixed
+[[Wikipedia](https://en.wikipedia.org/wiki/Homoscedasticity_and_heteroscedasticity)].
+
+My goal is to win a ["Turing test"](https://en.wikipedia.org/wiki/Turing_test)
+of sorts for the surrogate model, where the model is indistinguishable from the true,
+underlying objective function. 
+
+To accomplish this, I plan to:
+- run ~10 repeats for every set of parameters and fit separate models for each quantile
+  of the noise distribution
+- Get a large enough quasi-random sampling of the search space to accurately model intricate interactions between parameters (i.e. the response surface)
+- Train a classification model that short-circuits the regression model, returning NaN
+  values for inaccessible regions of objective functions, and return the regression
+  model values for accessible regions
+
+
+My plans for implementation include:
+- packing fraction of a random 3D packing of spheres as a function of the number of
+  spheres, 6 parameters that define three separate truncated log-normal
+  distributions, and 3 parameters that define the weight fractions
+  [[code](https://github.com/sparks-baird/bayes-opt-particle-packing)]
+  [[paper](https://github.com/sparks-baird/bayes-opt-particle-packing/blob/main/paper/main.pdf)]
+- discrete intensity vs. wavelength spectra (measured experimentally via a
+  spectrophotometer) as a function of red, green, and blue LED powers and three sensor
+  settings: number of integration steps, integration time per step, and signal gain
+  [[code](https://github.com/sparks-baird/self-driving-lab-demo)]
+  [[paper](https://doi.org/10.1016/j.matt.2022.11.007)]
+- Two error metrics (RMSE and MAE) and two hardware performance metrics (runtime and
+  memory) of a [CrabNet](https://github.com/sparks-baird/CrabNet) regression model
+  trained on the
+  https://matbench.materialsproject.org/Leaderboards%20Per-Task/matbench_v0.1_matbench_expt_gap/
+  as a function of 23 CrabNet hyperparameters
+  [[code](https://github.com/sparks-baird/crabnet-hyperparameter)]
+  [[paper](https://doi.org/10.1016/j.commatsci.2022.111505)]
+- 
 
 ## Installation
 
