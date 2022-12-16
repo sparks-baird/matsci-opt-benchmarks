@@ -52,3 +52,4 @@ MANIFEST
 .venv*/
 .conda*/
 .python-version
+scripts/particle_packing/my_secrets.py
