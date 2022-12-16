@@ -48,18 +48,13 @@ def run_simulation(flag, util_dir=".", data_dir=".", uid=str(uuid4())):
     exe_name = "PackingGeneration.exe"
     simpath = path.join(util_dir, exe_name)
     new_dir = path.join(data_dir, uid)
-    newpath = path.join(new_dir, exe_name)
-    shutil.copyfile(simpath, newpath)
-    f = Path(newpath)
-    f.chmod(f.stat().st_mode | stat.S_IEXEC)
-    cwd = os.getcwd()
-    os.chdir(new_dir)
+
     result = run(
-        [f"./{exe_name}", flag], capture_output=True, text=True
+        [f"{path.join(os.getcwd(), simpath)}", flag],
+        capture_output=True,
+        text=True,
+        cwd=new_dir,
     )  # stdout=PIPE, stderr=STDOUT
-    # print(result.stdout)
-    # print(result.stderr)
-    os.chdir(cwd)
 
 
 def particle_packing_simulation(
@@ -73,6 +68,7 @@ def particle_packing_simulation(
     util_dir=".",
     uid=None,
     safety_factor=2.0,
+    cleanup=True,
 ):
     if seed is None:
         seed = randint(0, 100000)
@@ -117,13 +113,22 @@ def particle_packing_simulation(
         ]
         f.writelines(lines)
 
-    run_simulation("-fba", util_dir=util_dir, data_dir=data_dir, uid=uid)
+    results = {}
+
+    try:
+        run_simulation("-fba", util_dir=util_dir, data_dir=data_dir, uid=uid)
+        results["fba"] = read_packing_fraction(
+            data_dir, uid, packing_xyzd_fpath, box_length
+        )
+    except Exception as e:
+        print(e)
+        results["fba"] = None
 
     with open(generation_conf_fpath, "w") as f:
         lines = [
             f"Particles count: {num_particles}",
             f"Packing size: {box_length} {box_length} {box_length}",
-            f"Generation start: 0",
+            "Generation start: 0",
             f"Seed: {seed}",
             "Steps to write: 1000",
             "Boundaries mode: 1",
@@ -137,7 +142,11 @@ def particle_packing_simulation(
         print(e)
     try:
         run_simulation("-ls", util_dir=util_dir, data_dir=data_dir, uid=uid)
+        results["ls"] = read_packing_fraction(
+            data_dir, uid, packing_xyzd_fpath, box_length
+        )
     except Exception as e:
+        results["ls"] = None
         print(e)
 
     try:
@@ -146,46 +155,46 @@ def particle_packing_simulation(
         print(e)
     try:
         run_simulation("-lsgd", util_dir=util_dir, data_dir=data_dir, uid=uid)
+        results["lsgd"] = read_packing_fraction(
+            data_dir, uid, packing_xyzd_fpath, box_length, final=True
+        )
     except Exception as e:
+        results["lsgd"] = None
         print(e)
 
     """https://github.com/VasiliBaranov/packing-generation/issues/30#issue-1103925864"""
 
-    try:
-        packing = np.fromfile(path.join(data_dir, uid, "packing.xyzd")).reshape(-1, 4)
-        with open(path.join(data_dir, uid, "packing.nfo"), "r+") as nfo:
-            lines = nfo.readlines()
-            Theoretical_Porosity = float(lines[2].split()[2])
-            Final_Porosity = float(lines[3].split()[2])
-            # print(Theoretical_Porosity, Final_Porosity)
+    if cleanup:
+        shutil.rmtree(save_dir)
 
-            scaling_factor = ((1 - Final_Porosity) / (1 - Theoretical_Porosity)) ** (
-                1 / 3
-            )
+    return results
 
-            real_diameters = packing[:, 3] * scaling_factor
-            actual_density = (
-                sum((4 / 3) * pi * (np.array(real_diameters) / 2) ** 3)
-                / box_length**3
-            )
+
+def read_packing_fraction(data_dir, uid, packing_xyzd_fpath, box_length, final=False):
+    packing = np.fromfile(packing_xyzd_fpath).reshape(-1, 4)
+    with open(path.join(data_dir, uid, "packing.nfo"), "r+") as nfo:
+        lines = nfo.readlines()
+        Theoretical_Porosity = float(lines[2].split()[2])
+        Final_Porosity = float(lines[3].split()[2])
+        # print(Theoretical_Porosity, Final_Porosity)
+
+        scaling_factor = ((1 - Final_Porosity) / (1 - Theoretical_Porosity)) ** (1 / 3)
+
+        real_diameters = packing[:, 3] * scaling_factor
+        actual_density = (
+            sum((4 / 3) * pi * (np.array(real_diameters) / 2) ** 3) / box_length**3
+        )
+        if final:
             packing[:, 3] = real_diameters
-            packing.tofile(
-                packing_xyzd_fpath
-            )  # updating the packing: this line will modifies diameters in the packing.xyzd
+            # updating the packing: this line will modify diameters in the packing.xyzd
+            packing.tofile(packing_xyzd_fpath)
 
             # update packing.nfo and set TheoreticalPorosity to FinalPorosity to avoid scaling the packing once again the next time running this script.
             lines[3] = lines[3].replace(str(Final_Porosity), str(Theoretical_Porosity))
             nfo.seek(0)
             nfo.writelines(lines)
 
-            return actual_density
-    except Exception:
-        return np.nan
-
-
-# def evaluate(parameters):
-#     packing_fraction = particle_packing_simulation(**parameters)
-#     return {**parameters, "packing_fraction": packing_fraction}
+    return actual_density
 
 
 def evaluate(parameters):
@@ -197,14 +206,24 @@ def evaluate(parameters):
     comps = [parameters[name] for name in ["comp1", "comp2"]]
     comps.append(1 - sum(comps))
     num_particles = parameters["num_particles"]
+    util_dir = parameters.get("util_dir", ".")
+    data_dir = parameters.get("data_dir", ".")
     try:
-        result = particle_packing_simulation(
-            means, stds, comps, num_particles=num_particles
+        results = particle_packing_simulation(
+            means,
+            stds,
+            comps,
+            num_particles=num_particles,
+            util_dir=util_dir,
+            data_dir=data_dir,
         )
     except Exception as e:
         print(e)
-        result = np.nan
-    return {**parameters, "packing_fraction": result}
+        results = {"error": str(e)}
+
+    results = {**parameters, **results}
+
+    return results
 
 
 def evaluate_batch(parameter_sets):
@@ -217,3 +236,22 @@ def collect_results(job_pkl_path, slurm_savepath):
 
     results = [job.result() for job in jobs]
     pd.DataFrame(results).to_csv(slurm_savepath, index=False)
+
+
+# %% Code Graveyard
+
+# newpath = path.join(new_dir, exe_name)
+# shutil.copyfile(simpath, newpath)
+# f = Path(newpath)
+# f.chmod(f.stat().st_mode | stat.S_IEXEC)
+
+# cwd = os.getcwd()
+# os.chdir(new_dir)
+
+# print(result.stdout)
+# print(result.stderr)
+# os.chdir(cwd)
+
+# packing_fraction = read_packing_fraction(
+#     data_dir, uid, packing_xyzd_fpath, box_length, final=True
+# )
