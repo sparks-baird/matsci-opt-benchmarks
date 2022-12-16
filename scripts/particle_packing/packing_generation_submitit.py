@@ -115,9 +115,11 @@ parameter_batch_sets = list(chunks(parameter_sets, batch_size))
 
 # %% submission
 log_folder = "data/interim/particle_packing/%j"
-walltime = 5 * batch_size
-partition = "notchpeak"
-account = "notchpeak"
+# walltime = 5 * batch_size
+walltime = 5
+# use `myallocation` command to see available partition/account combos
+partition = "notchpeak-freecycle"
+account = "sparks"
 executor = AutoExecutor(folder=log_folder)
 executor.update_parameters(
     timeout_min=walltime,
