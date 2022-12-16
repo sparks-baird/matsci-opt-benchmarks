@@ -11,6 +11,7 @@ import pandas as pd
 from pathlib import Path
 import stat
 from scipy.stats import lognorm
+from time import time
 
 
 def get_diameters(means, stds, comps, num_particles=100, seed=None):
@@ -115,6 +116,7 @@ def particle_packing_simulation(
 
     results = {}
 
+    t0 = time()
     try:
         run_simulation("-fba", util_dir=util_dir, data_dir=data_dir, uid=uid)
         results["fba"] = read_packing_fraction(
@@ -123,6 +125,9 @@ def particle_packing_simulation(
     except Exception as e:
         print(e)
         results["fba"] = None
+
+    t1 = time()
+    results["fba_time_s"] = t1 - t0
 
     with open(generation_conf_fpath, "w") as f:
         lines = [
@@ -149,18 +154,24 @@ def particle_packing_simulation(
         results["ls"] = None
         print(e)
 
-    try:
-        os.remove(packing_nfo_fpath)
-    except Exception as e:
-        print(e)
-    try:
-        run_simulation("-lsgd", util_dir=util_dir, data_dir=data_dir, uid=uid)
-        results["lsgd"] = read_packing_fraction(
-            data_dir, uid, packing_xyzd_fpath, box_length, final=True
-        )
-    except Exception as e:
-        results["lsgd"] = None
-        print(e)
+    t2 = time()
+    results["ls_time_s"] = t2 - t1
+
+    # try:
+    #     os.remove(packing_nfo_fpath)
+    # except Exception as e:
+    #     print(e)
+    # try:
+    #     run_simulation("-lsgd", util_dir=util_dir, data_dir=data_dir, uid=uid)
+    #     results["lsgd"] = read_packing_fraction(
+    #         data_dir, uid, packing_xyzd_fpath, box_length, final=True
+    #     )
+    # except Exception as e:
+    #     results["lsgd"] = None
+    #     print(e)
+    #
+    # t3 = time()
+    # results["lsgd_time_s"] = t3 - t2
 
     """https://github.com/VasiliBaranov/packing-generation/issues/30#issue-1103925864"""
 
@@ -206,8 +217,10 @@ def evaluate(parameters):
     comps = [parameters[name] for name in ["comp1", "comp2"]]
     comps.append(1 - sum(comps))
     num_particles = parameters["num_particles"]
+    safety_factor = parameters.get("safety_factor", 2.0)
     util_dir = parameters.get("util_dir", ".")
     data_dir = parameters.get("data_dir", ".")
+    
     try:
         results = particle_packing_simulation(
             means,
@@ -216,11 +229,11 @@ def evaluate(parameters):
             num_particles=num_particles,
             util_dir=util_dir,
             data_dir=data_dir,
+            safety_factor=safety_factor,
         )
     except Exception as e:
         print(e)
         results = {"error": str(e)}
-
     results = {**parameters, **results}
 
     return results
