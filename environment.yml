@@ -15,7 +15,9 @@ dependencies:
   # - click
   # - ipython
   # VISUALIZATION
-  # - matplotlib
+  - matplotlib
+  - plotly
+  - python-kaleido
   # - ipympl  # interactive matplotlib plots
   # - seaborn
   # - altair
