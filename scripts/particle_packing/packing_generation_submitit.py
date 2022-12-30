@@ -85,7 +85,6 @@ def mongodb_evaluate(parameter_set, verbose=False):
     """Evaluate a parameter set and save the results to MongoDB."""
     t0 = time()
     results = evaluate(parameter_set)
-    runtime = time() - t0
     print(results)
     utc = datetime.utcnow()
     results = {
