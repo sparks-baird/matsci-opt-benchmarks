@@ -74,7 +74,7 @@ My plans for implementation include:
 - packing fraction of a random 3D packing of spheres as a function of the number of
   spheres, 6 parameters that define three separate truncated log-normal
   distributions, and 3 parameters that define the weight fractions
-  [[code](https://github.com/sparks-baird/bayes-opt-particle-packing)]
+  [[code](https://github.com/sparks-baird/bayes-opt-particle-packing)] [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7513019.svg)](https://doi.org/10.5281/zenodo.7513019)
   [[paper](https://github.com/sparks-baird/bayes-opt-particle-packing/blob/main/paper/main.pdf)]
 - discrete intensity vs. wavelength spectra (measured experimentally via a
   spectrophotometer) as a function of red, green, and blue LED powers and three sensor
