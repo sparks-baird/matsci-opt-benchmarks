@@ -1,41 +1,35 @@
-from itertools import permutations
 import logging
+from itertools import permutations
 from os import getcwd, path
 from pathlib import Path
-import time
-from warnings import warn
-import pandas as pd
-import ray
-from sklearn.preprocessing import normalize
-import torch
-from tqdm import tqdm
-
-from psutil import cpu_count
-from boppf.utils.particle_packing import particle_packing_simulation
-from ax.service.ax_client import AxClient
-import numpy as np
 from uuid import uuid4
+from warnings import warn
 
-from ray import tune
-from ray.tune import report
-from ray.tune.suggest.ax import AxSearch
-
+import numpy as np
+import ray
+import torch
+from ax.modelbridge.generation_strategy import GenerationStep, GenerationStrategy
+from ax.modelbridge.registry import Models
+from ax.service.ax_client import AxClient
+from ax.service.utils.instantiation import ObjectiveProperties
 from boppf.utils.data import (
     MU3,
     SPLIT,
-    get_parameters,
-    frac_names,
-    target_name,
+    default_frac_bnd,
     default_mean_bnd,
     default_std_bnd,
-    default_frac_bnd,
+    frac_names,
+    get_parameters,
+    target_name,
 )
-
-from ax.modelbridge.generation_strategy import GenerationStrategy, GenerationStep
-from ax.modelbridge.registry import Models
-from ax.service.utils.instantiation import ObjectiveProperties
-
+from boppf.utils.particle_packing import particle_packing_simulation
 from botorch.acquisition import qExpectedImprovement
+from psutil import cpu_count
+from ray import tune
+from ray.tune import report
+from ray.tune.suggest.ax import AxSearch
+from sklearn.preprocessing import normalize
+from tqdm import tqdm
 
 logger = logging.getLogger(tune.__name__)
 logger.setLevel(
@@ -134,7 +128,7 @@ def optimize_ppf(
     sobol_step = GenerationStep(
         model=Models.SOBOL,
         num_trials=n_sobol,
-        min_trials_observed=n_sobol,  # How many trials need to be completed to move to next model
+        min_trials_observed=n_sobol,  # How many trials need to be completed to move to next model # noqa: E501
         max_parallelism=max_parallel,  # Max parallelism for this step
         model_kwargs={"seed": seed},  # Any kwargs you want passed into the model
         model_gen_kwargs={},  # Any kwargs you want passed to `modelbridge.gen`
@@ -150,12 +144,12 @@ def optimize_ppf(
 
     bayes_step = GenerationStep(
         model=bayes_model,
-        num_trials=-1,  # No limitation on how many trials should be produced from this step
+        num_trials=-1,  # No limitation on how many trials should be produced from this step # noqa: E501
         model_kwargs={**bayes_kwargs, **kwargs},
         # model_gen_kwargs={"num_restarts": 5, "raw_samples": 128},
-        max_parallelism=max_parallel,  # Parallelism limit for this step, often lower than for Sobol
+        max_parallelism=max_parallel,  # Parallelism limit for this step, often lower than for Sobol # noqa: E501
         # More on parallelism vs. required samples in BayesOpt:
-        # https://ax.dev/docs/bayesopt.html#tradeoff-between-parallelism-and-total-number-of-trials
+        # https://ax.dev/docs/bayesopt.html#tradeoff-between-parallelism-and-total-number-of-trials # noqa: E501
     )
     if n_sobol == 0:
         steps = [bayes_step]
@@ -195,7 +189,7 @@ def optimize_ppf(
 
     # if remove_scaling_degeneracy:  # and data_augmentation
     #     generous_search = ax_client.make_search_space(
-    #         parameters=generous_parameters, parameter_constraints=parameter_constraints
+    #         parameters=generous_parameters,parameter_constraints=parameter_constraints
     #     )
     #     ax_client.experiment.search_space = generous_search
 
@@ -231,7 +225,7 @@ def optimize_ppf(
 
     def evaluate(parameters):
         # data augmentation non-functional
-        # https://discuss.ray.io/t/how-to-perform-data-augmentation-with-raytune-and-axsearch/5829
+        # https://discuss.ray.io/t/how-to-perform-data-augmentation-with-raytune-and-axsearch/5829 # noqa: E501
 
         if not remove_composition_degeneracy:
             fracs = np.array([parameters[nm] for nm in frac_names])
@@ -255,19 +249,19 @@ def optimize_ppf(
         for mn, mn_name in zip(means, mean_names):
             if default_mean_bnd[0] + eps > mn > default_mean_bnd[1] - eps:
                 raise ValueError(
-                    f"{mn_name} out of bounds. Expected to be within {default_mean_bnd}, received: {parameters[mn_name]}"
+                    f"{mn_name} out of bounds. Expected to be within {default_mean_bnd}, received: {parameters[mn_name]}"  # noqa: E501
                 )
 
         for std, std_name in zip(stds, std_names):
             if default_std_bnd[0] + eps > std > default_std_bnd[1] - eps:
                 raise ValueError(
-                    f"{std_name} out of bounds. Expected to be within {default_std_bnd}, received: {parameters[std_name]}"
+                    f"{std_name} out of bounds. Expected to be within {default_std_bnd}, received: {parameters[std_name]}"  # noqa: E501
                 )
 
         for frac, frac_name in zip(fractions, frac_names):
             if default_frac_bnd[0] + eps > frac > default_frac_bnd[1] - eps:
                 raise ValueError(
-                    f"{frac_name} out of bounds. Expected to be within {default_frac_bnd}, received: {parameters[frac_name]}"
+                    f"{frac_name} out of bounds. Expected to be within {default_frac_bnd}, received: {parameters[frac_name]}"  # noqa: E501
                 )
 
         uid = str(uuid4())[0:8]  # 0:8 to shorten the long hash ID, 8 is arbitrary
@@ -279,7 +273,8 @@ def optimize_ppf(
     # # sequential
     # for i in range(n_trials):
     #     parameters, trial_index = ax_client.get_next_trial()
-    #     ax_client.complete_trial(trial_index=trial_index, raw_data=evaluate(parameters))
+    #     ax_client.complete_trial(trial_index=trial_index,
+    #     raw_data=evaluate(parameters))
 
     # Set up AxSearcher in RayTune
     algo = AxSearch(ax_client=ax_client)
@@ -291,7 +286,7 @@ def optimize_ppf(
         fail_fast=False,
         num_samples=n_trials,
         search_alg=algo,
-        verbose=ray_verbosity,  # Set this level to 1 to see status updates and to 2 to also see trial results.
+        verbose=ray_verbosity,  # Set this level to 1 to see status updates and to 2 to also see trial results. # noqa: E501
         local_dir=getcwd(),
         resume="AUTO",
         # To use GPU, specify: resources_per_trial={"gpu": 1}.
@@ -366,7 +361,7 @@ def reparameterize(
     frac_mapper = {v: k for v, k in zip(frac_names, ordered_frac_names)}
     mapper = {**mean_mapper, **std_mapper, **frac_mapper}
 
-    # https://stackoverflow.com/questions/57446160/swap-or-exchange-column-names-in-pandas-dataframe-with-multiple-columns
+    # https://stackoverflow.com/questions/57446160/swap-or-exchange-column-names-in-pandas-dataframe-with-multiple-columns # noqa: E501
     x.index = [mapper.get(x, x) for x in x.to_frame().index]
     if remove_scaling_degeneracy:
         last_mean = mean_names[-1]

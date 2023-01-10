@@ -1,17 +1,17 @@
-from random import randint
-from uuid import uuid4
-from os import path
-import cloudpickle as pickle
-from math import ceil, pi
 import os
 import shutil
+from math import ceil, pi
+from os import path
+from pathlib import Path
+from random import randint
 from subprocess import run
+from time import time
+from uuid import uuid4
+
+import cloudpickle as pickle
 import numpy as np
 import pandas as pd
-from pathlib import Path
-import stat
 from scipy.stats import lognorm
-from time import time
 
 
 def get_diameters(means, stds, comps, num_particles=100, seed=None):
@@ -27,7 +27,7 @@ def get_diameters(means, stds, comps, num_particles=100, seed=None):
 
     if len(samples) != num_particles:
         raise ValueError(
-            f"Number of samples ({len(samples)}) does not match requested number of particles {num_particles}. Ensure `sum(comps)==1` (sum({comps})=={sum(comps)})"
+            f"Number of samples ({len(samples)}) does not match requested number of particles {num_particles}. Ensure `sum(comps)==1` (sum({comps})=={sum(comps)})"  # noqa: E501
         )
 
     return samples
@@ -50,12 +50,14 @@ def run_simulation(flag, util_dir=".", data_dir=".", uid=str(uuid4())):
     simpath = path.join(util_dir, exe_name)
     new_dir = path.join(data_dir, uid)
 
-    result = run(
+    run(
         [f"{path.join(os.getcwd(), simpath)}", flag],
         capture_output=True,
         text=True,
         cwd=new_dir,
-    )  # stdout=PIPE, stderr=STDOUT
+        # stdout=PIPE,
+        # stderr=STDOUT,
+    )
 
 
 def particle_packing_simulation(
@@ -200,7 +202,8 @@ def read_packing_fraction(data_dir, uid, packing_xyzd_fpath, box_length, final=F
             # updating the packing: this line will modify diameters in the packing.xyzd
             packing.tofile(packing_xyzd_fpath)
 
-            # update packing.nfo and set TheoreticalPorosity to FinalPorosity to avoid scaling the packing once again the next time running this script.
+            # update packing.nfo and set TheoreticalPorosity to FinalPorosity to avoid
+            # scaling the packing once again the next time running this script.
             lines[3] = lines[3].replace(str(Final_Porosity), str(Theoretical_Porosity))
             nfo.seek(0)
             nfo.writelines(lines)
@@ -220,7 +223,7 @@ def evaluate(parameters):
     safety_factor = parameters.get("safety_factor", 2.0)
     util_dir = parameters.get("util_dir", ".")
     data_dir = parameters.get("data_dir", ".")
-    
+
     try:
         results = particle_packing_simulation(
             means,

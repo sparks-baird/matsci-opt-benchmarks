@@ -1,29 +1,26 @@
 # %% imports
-from time import time
-from submitit import AutoExecutor
-from os import path
-from datetime import datetime
-import numpy as np
-
-from my_secrets import MONGODB_API_KEY
-
-from ax.modelbridge.factory import get_sobol
-from ax.service.ax_client import AxClient
 import json
-import requests
-
+from datetime import datetime
+from os import path
 from random import shuffle
+from time import time
 from uuid import uuid4
 
-# https://www.chpc.utah.edu/documentation/software/modules-advanced.php
-# ERROR: Could not install packages due to an OSError: [Errno 122] Disk quota exceeded: '/uufs/chpc.utah.edu/common/home/u1326059/software/pkg/miniconda3/envs/particle-packing/lib/python3.9/site-packages/joblib-1.2.0.dist-info/INSTALLER2p04xuw3.tmp'
+import requests
+from ax.modelbridge.factory import get_sobol
+from ax.service.ax_client import AxClient
+from my_secrets import MONGODB_API_KEY
+from submitit import AutoExecutor
 
-from matsci_opt_benchmarks.particle_packing.utils.packing_generation import (
-    evaluate,
-    evaluate_batch,
-    # collect_results,
-)
 from matsci_opt_benchmarks.particle_packing.utils.data import get_parameters
+from matsci_opt_benchmarks.particle_packing.utils.packing_generation import evaluate
+
+# https://www.chpc.utah.edu/documentation/software/modules-advanced.php
+# ERROR: Could not install packages due to an OSError: [Errno 122] Disk quota exceeded:
+# '/uufs/chpc.utah.edu/common/home/u1326059/software/pkg/miniconda3/envs/
+# particle-packing/lib/python3.9/site-packages/joblib-1.2.0.dist-info/
+# INSTALLER2p04xuw3.tmp'
+
 
 dummy = False
 SEED = 10
@@ -78,7 +75,7 @@ if dummy:
 else:
     batch_size = 700
 
-url = "https://data.mongodb-api.com/app/data-plyju/endpoint/data/v1/action/insertOne"
+url = "https://data.mongodb-api.com/app/data-plyju/endpoint/data/v1/action/insertOne"  # noqa: E501
 
 
 def mongodb_evaluate(parameter_set, verbose=False):
@@ -179,9 +176,9 @@ print("Submitted jobs")
 #     collect_results, job_pkl_path, slurm_savepath
 # )  # sbatch array
 
-# print(
-#     f"Waiting for submission jobs ({job_ids_str}) to complete before running collector job ({collector_job.job_id}). Pickled results file saved to {slurm_savepath} after all jobs have run."
-# )
+# print( f"Waiting for submission jobs ({job_ids_str}) to complete before running
+#     collector job ({collector_job.job_id}). Pickled results file saved to
+# {slurm_savepath} after all jobs have run." )
 
 results = [job.result() for job in jobs]
 
@@ -192,7 +189,7 @@ results = [job.result() for job in jobs]
 # from urllib.parse import quote_plus
 # password needs to be URL encoded
 # client = pymongo.MongoClient(
-#     f"mongodb+srv://{USERNAME}:{quote_plus(PASSWORD)}@matsci-opt-benchmarks.ehu7qrh.mongodb.net/?retryWrites=true&w=majority"
+#     f"mongodb+srv://{USERNAME}:{quote_plus(PASSWORD)}@matsci-opt-benchmarks.ehu7qrh.mongodb.net/?retryWrites=true&w=majority"# noqa: E501
 # )
 # collection = client["particle-packing"]["sobol"]
 # collection.insert_one(result)
