@@ -1,8 +1,9 @@
 from copy import copy
 from itertools import permutations, product
-import pandas as pd
-import numpy as np
 from os.path import join
+
+import numpy as np
+import pandas as pd
 from scipy.stats import lognorm
 
 # rename the columns
@@ -202,7 +203,7 @@ def get_s_mode_radii(size, s, scale, max_running_size=10000):
 
     if running_size > max_running_size:
         raise ValueError(
-            f"running_size > {max_running_size}: {running_size}. Something probably wrong with input parameters. s: {s}, scale: {scale}, s_mode_radii: {s_mode_radii}."
+            f"running_size > {max_running_size}: {running_size}. Something probably wrong with input parameters. s: {s}, scale: {scale}, s_mode_radii: {s_mode_radii}."  # noqa: E501
         )
 
     return s_mode_radii
@@ -251,8 +252,6 @@ def prep_input_data(means, stds, fractions, tol, size):
             c_radii.append(c_mode_radii)
             m_fracs.append(m_mode_fracs)
     return s_radii, c_radii, m_fracs
-    
-    
 
 
 # %% Code Graveyard
