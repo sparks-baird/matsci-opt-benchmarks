@@ -117,7 +117,7 @@ copyright = "2022, Sterling Baird"
 # If you don’t need the separation provided between version and release,
 # just set them both to the same value.
 try:
-    from benchmarks.particle_packing import __version__ as version
+    from matsci_opt_benchmarks.particle_packing import __version__ as version
 except ImportError:
     version = ""
 
@@ -176,10 +176,7 @@ html_theme = "alabaster"
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-    "sidebar_width": "300px",
-    "page_width": "1200px"
-}
+html_theme_options = {"sidebar_width": "300px", "page_width": "1200px"}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
@@ -264,7 +261,13 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", "user_guide.tex", "matsci-opt-benchmarks Documentation", "Sterling Baird", "manual")
+    (
+        "index",
+        "user_guide.tex",
+        "matsci-opt-benchmarks Documentation",
+        "Sterling Baird",
+        "manual",
+    )
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

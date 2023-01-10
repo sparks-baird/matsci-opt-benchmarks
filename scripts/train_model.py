@@ -6,7 +6,7 @@ from pathlib import Path
 import click
 from IPython.core import ultratb
 
-import benchmarks.particle_packing
+import matsci_opt_benchmarks.particle_packing
 
 # fallback to debugger on error
 sys.excepthook = ultratb.FormattedTB(mode="Verbose", color_scheme="Linux", call_pdb=1)
@@ -29,7 +29,7 @@ _logger = logging.getLogger(__name__)
 @click.option("--quiet", "log_level", flag_value=logging.WARNING, default=True)
 @click.option("-v", "--verbose", "log_level", flag_value=logging.INFO)
 @click.option("-vv", "--very-verbose", "log_level", flag_value=logging.DEBUG)
-@click.version_option(benchmarks.particle_packing.__version__)
+@click.version_option(matsci_opt_benchmarks.particle_packing.__version__)
 def main(cfg_path: Path, log_level: int):
     logging.basicConfig(
         stream=sys.stdout,
@@ -38,7 +38,7 @@ def main(cfg_path: Path, log_level: int):
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
     # YOUR CODE GOES HERE! Keep the main functionality in src/particle_packing
-    # est = benchmarks.particle_packing.models.Estimator()
+    # est = matsci_opt_benchmarks.particle_packing.models.Estimator()
 
 
 if __name__ == "__main__":
