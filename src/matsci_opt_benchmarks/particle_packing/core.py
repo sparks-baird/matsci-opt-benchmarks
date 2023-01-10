@@ -1,12 +1,11 @@
 """Perform Bayesian optimization on the particle packing simulation parameters."""
-from os import getcwd, path
+from os import path
 from pathlib import Path
 
+import ray
 import torch
 from boppf.utils.ax import optimize_ppf
 from psutil import cpu_count
-import ray
-import boppf
 
 
 class BOPPF:
@@ -60,7 +59,7 @@ class BOPPF:
             f"particles={particles}",
             f"max_parallel={max_parallel}",
             f"n_sobol={n_sobol},n_bayes={n_bayes},seed={seed}",
-            f"augment={data_augmentation},drop_last={remove_composition_degeneracy},drop_scaling={remove_scaling_degeneracy},order={use_order_constraint}",
+            f"augment={data_augmentation},drop_last={remove_composition_degeneracy},drop_scaling={remove_scaling_degeneracy},order={use_order_constraint}",  # noqa: E501
         )
 
         Path(save_dir).mkdir(exist_ok=True, parents=True)
@@ -74,7 +73,7 @@ class BOPPF:
                 local_mode=True,
                 num_cpus=max_parallel,
                 log_to_driver=False,  # maybe I should set this to True again
-                include_dashboard=False,  # https://github.com/ray-project/ray/issues/9114#issuecomment-707325418
+                include_dashboard=False,  # https://github.com/ray-project/ray/issues/9114#issuecomment-707325418 # noqa: E501
             )
         else:
             ray.init(
