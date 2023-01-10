@@ -53,11 +53,11 @@ dependencies:
 
   # DEVELOPMENT ONLY PACKAGES (could also be kept in a separate environment file)
   # - jupyterlab
-  # - pytest
-  # - pytest-cov
-  # - tox
-  # - pre_commit
+  - pytest
+  - pytest-cov
+  - tox
+  - pre_commit
   # - nbdime
   # - nbstripout
-  # - sphinx
+  - sphinx
   # - recommonmark
