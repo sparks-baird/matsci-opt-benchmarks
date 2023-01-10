@@ -2,31 +2,31 @@
 
 Modified from source: https://github.com/sparks-baird/crabnet-hyperparameter
 """
-from os import path
-from ax.plot.trace import optimization_trace_single_method_plotly
+import collections
 import pprint
-from typing import Iterable, List
+from os import path
+from typing import Iterable
+
 import numpy as np
 import pandas as pd
+import plotly.express as px
 import plotly.graph_objs as go
 from ax.modelbridge import ModelBridge
-from ax.plot.helper import compose_annotation
-from ax.utils.common.logger import get_logger
 from ax.plot.base import AxPlotConfig
-from plotly import offline
-import plotly.express as px
-from scipy.stats import lognorm
-from scipy.interpolate import interp1d
-
+from ax.plot.helper import compose_annotation
+from ax.plot.trace import optimization_trace_single_method_plotly
+from ax.utils.common.logger import get_logger
 from boppf.utils.data import prep_input_data
-import collections
+from plotly import offline
+from scipy.interpolate import interp1d
 
 logger = get_logger(__name__)
 
 
 def matplotlibify(fig, size=24, width_inches=3.5, height_inches=3.5, dpi=142):
     # make it look more like matplotlib
-    # modified from: https://medium.com/swlh/formatting-a-plotly-figure-with-matplotlib-style-fa56ddd97539)
+    # modified from:
+    # https://medium.com/swlh/formatting-a-plotly-figure-with-matplotlib-style-fa56ddd97539)# noqa: E501
     family = "Arial"
     color = "black"
     font_dict = dict(family=family, size=size, color=color)
