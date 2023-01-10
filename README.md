@@ -59,7 +59,7 @@ homoskedasticity, where the noise variance for a given parameter is fixed
 
 My goal is to win a ["Turing test"](https://en.wikipedia.org/wiki/Turing_test)
 of sorts for the surrogate model, where the model is indistinguishable from the true,
-underlying objective function. 
+underlying objective function.
 
 To accomplish this, I plan to:
 - run ~10 repeats for every set of parameters and fit separate models for quantiles
@@ -74,7 +74,7 @@ My plans for implementation include:
 - packing fraction of a random 3D packing of spheres as a function of the number of
   spheres, 6 parameters that define three separate truncated log-normal
   distributions, and 3 parameters that define the weight fractions
-  [[code](https://github.com/sparks-baird/bayes-opt-particle-packing)] 
+  [[code](https://github.com/sparks-baird/bayes-opt-particle-packing)]
   [[paper1](https://github.com/sparks-baird/bayes-opt-particle-packing/blob/main/paper/main.pdf)] [[paper2](https://github.com/sparks-baird/matsci-opt-benchmarks/blob/main/reports/Datainbrief.docx)] [[data ![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7513019.svg)](https://doi.org/10.5281/zenodo.7513019)]
 - discrete intensity vs. wavelength spectra (measured experimentally via a
   spectrophotometer) as a function of red, green, and blue LED powers and three sensor
