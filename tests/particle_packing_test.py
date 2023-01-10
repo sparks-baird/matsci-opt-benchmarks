@@ -1,7 +1,8 @@
+from os import path
+
 from matsci_opt_benchmarks.particle_packing.utils.packing_generation import (
     particle_packing_simulation,
 )
-from os import path
 
 
 def test_particle_packing_simulation():
