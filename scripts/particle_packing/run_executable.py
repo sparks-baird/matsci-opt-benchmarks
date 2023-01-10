@@ -1,6 +1,6 @@
 from os import getcwd
-from subprocess import run
 from os.path import join
+from subprocess import run
 
 print(getcwd())
 # fpath = join("..", "..", "boppf", "utils", "particle_packing_sim.exe")
