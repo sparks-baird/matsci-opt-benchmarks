@@ -1,27 +1,17 @@
 """Call the appropriate MATLAB scripts and executable."""
-from os import getcwd, path
 import os
+from os import path
+from os.path import join
 from pathlib import Path
-from subprocess import DEVNULL, STDOUT, Popen, PIPE, run
-from os.path import join, abspath
-from sys import executable
+from subprocess import PIPE, STDOUT, run
 from typing import List, Optional
-import numpy as np
-import pandas as pd
-from sklearn.preprocessing import normalize
-from numpy.random import lognormal
-from scipy.stats import lognorm
-from plotly import offline
-import plotly.express as px
-from random import choices
 
 # conda activate boppf
 # cd C:\Program Files\MATLAB\R2021a\extern\engines\python
 # python setup.py install
 # from matlab import engine, double
 from boppf.utils.data import prep_input_data
-
-from boppf.utils.proprietary import SECTION_KEY, write_proprietary_input_file, LINE_KEY
+from boppf.utils.proprietary import LINE_KEY, SECTION_KEY, write_proprietary_input_file
 
 
 def particle_packing_simulation(
@@ -43,9 +33,11 @@ def particle_packing_simulation(
     particles : int, optional
         The number of particles to drop in the simulation, by default 1500000
     means : List[float], optional
-        The log-normal mean radius of the 3 particles, by default double([120, 120, 120])
+        The log-normal mean radius of the 3 particles, by default double([120, 120,
+        120])
     stds : List[float], optional
-        The log-normal standard deviations of the 3 particles, by default double([10, 10, 10])
+        The log-normal standard deviations of the 3 particles, by default double([10,
+        10, 10])
     fractions : List[float], optional
         The mass fractions of the first two particles, by default double([0.33, 0.33])
     max_n_submodes_per_mode : int
@@ -217,5 +209,6 @@ def read_vol_frac(uid, cwd, data_dir, verbose=True):
 # )
 # fig.show()
 # print(
-#     f"scale={scale}, s={s}, mean={np.mean(check_samples)}, median={np.median(check_samples)}"
+#     f"scale={scale}, s={s}, mean={np.mean(check_samples)},
+#     median={np.median(check_samples)}"
 # )
