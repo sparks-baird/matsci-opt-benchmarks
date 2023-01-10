@@ -21,7 +21,7 @@ Notebook[{
 
 Cell[CellGroupData[{
 Cell["CRediT statement", "Title",
- CellChangeTimes->{{3.8244795173132515`*^9, 
+ CellChangeTimes->{{3.8244795173132515`*^9,
   3.8244795210602*^9}},ExpressionUUID->"f9dc8fd9-891f-45f1-8142-9e84b888b93e"],
 
 Cell["\<\
@@ -29,7 +29,7 @@ Parse Google Form responses from authors to form a Contributor Roles Taxonomy \
 (CRediT) statement.\
 \>", "Subtitle",
  CellChangeTimes->{{3.824479524063106*^9, 3.824479536997778*^9}, {
-  3.8244839396214275`*^9, 
+  3.8244839396214275`*^9,
   3.8244839505902877`*^9}},ExpressionUUID->"23aabeaa-135e-43ed-9d10-\
 ece5729077df"],
 
@@ -43,35 +43,35 @@ Cell[CellGroupData[{
 Cell[BoxData[{
  RowBox[{
   RowBox[{
-  "editURL", "=", 
+  "editURL", "=",
    "\"\<https://docs.google.com/spreadsheets/d/1CqwVXk6iHev4-Vprpw9P8pn-k_\
-eNFvI6BuM5U06oREE/edit?usp=sharing\>\""}], ";"}], "\[IndentingNewLine]", 
+eNFvI6BuM5U06oREE/edit?usp=sharing\>\""}], ";"}], "\[IndentingNewLine]",
  RowBox[{
-  RowBox[{"saveFolder", "=", 
-   RowBox[{"NotebookDirectory", "[", "]"}]}], ";"}], "\[IndentingNewLine]", 
- RowBox[{"CreditStatement", "[", 
-  RowBox[{"editURL", ",", 
+  RowBox[{"saveFolder", "=",
+   RowBox[{"NotebookDirectory", "[", "]"}]}], ";"}], "\[IndentingNewLine]",
+ RowBox[{"CreditStatement", "[",
+  RowBox[{"editURL", ",",
    RowBox[{"Folder", "\[Rule]", "saveFolder"}]}], "]"}]}], "Input",
  CellChangeTimes->{{3.843001165103383*^9, 3.84300118514062*^9}, {
-   3.84300168392706*^9, 3.843001737137061*^9}, {3.8430031127974906`*^9, 
+   3.84300168392706*^9, 3.843001737137061*^9}, {3.8430031127974906`*^9,
    3.8430031132584715`*^9}, {3.843063915154503*^9, 3.8430639155982857`*^9}, {
-   3.856460485268319*^9, 3.856460493237876*^9}, {3.856460631151621*^9, 
+   3.856460485268319*^9, 3.856460493237876*^9}, {3.856460631151621*^9,
    3.856460663295915*^9}, {3.861141232422146*^9, 3.8611412412155943`*^9}, {
-   3.866861701694744*^9, 3.866861711944251*^9}, {3.866861798833713*^9, 
+   3.866861701694744*^9, 3.866861711944251*^9}, {3.866861798833713*^9,
    3.8668618535205703`*^9}, 3.882112765287129*^9},
  CellLabel->"In[2]:=",ExpressionUUID->"f4fe33ef-bafa-4287-b492-4afc1ee6d266"],
 
 Cell[BoxData[
  TemplateBox[{
-  "StringSplit", "strse", 
+  "StringSplit", "strse",
    "\"String or list of strings expected at position \\!\\(\\*RowBox[{\\\"1\\\
 \"}]\\) in \\!\\(\\*RowBox[{\\\"StringSplit\\\", \\\"[\\\", \
 RowBox[{\\\"None\\\", \\\",\\\", \\\"\\\\\\\"=\\\\\\\"\\\"}], \\\"]\\\"}]\\).\
 \"", 2, 4, 1, 25406849070660486226, "Local"},
   "MessageTemplate"]], "Message", "MSG",
  CellChangeTimes->{
-  3.8564604989923935`*^9, {3.856460652834733*^9, 3.85646066359214*^9}, 
-   3.8611412447088947`*^9, 3.8668617177506475`*^9, 3.8668618260596066`*^9, 
+  3.8564604989923935`*^9, {3.856460652834733*^9, 3.85646066359214*^9},
+   3.8611412447088947`*^9, 3.8668617177506475`*^9, 3.8668618260596066`*^9,
    3.8668618605138493`*^9, 3.882112773707203*^9},
  CellLabel->
   "During evaluation of \
@@ -83,8 +83,8 @@ analysis, Investigation, Data Curation, Writing - Original Draft, Writing - \
 Review \\\\& Editing, Visualization. \\\\textbf{Taylor D. Sparks}: \
 Supervision, Funding acquisition\\n\\\\end{section}\"\>"], "Output",
  CellChangeTimes->{
-  3.843063919935356*^9, 3.856460501715393*^9, {3.856460652832733*^9, 
-   3.8564606642750387`*^9}, 3.861141250200526*^9, 3.866861720834629*^9, 
+  3.843063919935356*^9, 3.856460501715393*^9, {3.856460652832733*^9,
+   3.8564606642750387`*^9}, 3.861141250200526*^9, 3.866861720834629*^9,
    3.8668618266166053`*^9, 3.8668618610729494`*^9, 3.882112777967165*^9},
  Background->RGBColor[0.87, 0.94, 1],
  CellLabel->"Out[4]=",ExpressionUUID->"5b39b5c0-95f7-49cb-b41f-e16a6573a97a"]
@@ -125,4 +125,3 @@ Cell[2986, 79, 727, 10, 150, "Output",ExpressionUUID->"5b39b5c0-95f7-49cb-b41f-e
 }
 ]
 *)
-
