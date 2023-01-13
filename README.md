@@ -75,7 +75,7 @@ My plans for implementation include:
   spheres, 6 parameters that define three separate truncated log-normal
   distributions, and 3 parameters that define the weight fractions
   [[code](https://github.com/sparks-baird/bayes-opt-particle-packing)]
-  [[paper1](https://github.com/sparks-baird/bayes-opt-particle-packing/blob/main/paper/main.pdf)] [[paper2](https://github.com/sparks-baird/matsci-opt-benchmarks/blob/main/reports/Datainbrief.docx)] [[data ![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7513019.svg)](https://doi.org/10.5281/zenodo.7513019)]
+  [[paper1](https://github.com/sparks-baird/bayes-opt-particle-packing/blob/main/paper/main.pdf)] [[paper2](https://doi.org/10.26434/chemrxiv-2023-fjjk7)] [[data ![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7513019.svg)](https://doi.org/10.5281/zenodo.7513019)]
 - discrete intensity vs. wavelength spectra (measured experimentally via a
   spectrophotometer) as a function of red, green, and blue LED powers and three sensor
   settings: number of integration steps, integration time per step, and signal gain
