@@ -1,8 +1,10 @@
 # matsci-opt-benchmarks
 
-Add a short description here!
+A collection of benchmarking problems and datasets for testing the performance of advanced optimization algorithms in the field of materials science and chemistry.
 
 
+
+<!-- 
 ## Note
 
 > This is the main page of your project's [Sphinx] documentation. It is
@@ -11,7 +13,7 @@ Add a short description here!
 > them in the `Contents` section below.
 >
 > Please check [Sphinx] and [MyST] for more information
-> about how to document your project and how to configure your preferences.
+> about how to document your project and how to configure your preferences. -->
 
 
 ## Contents
