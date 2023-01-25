@@ -1,7 +1,9 @@
 # .coveragerc to control coverage.py
 [run]
 branch = True
-source = matsci_opt_benchmarks.particle_packing
+source =
+    matsci_opt_benchmarks.particle_packing
+    matsci_opt_benchmarks.crabnet_hyperparameter
 # omit = bad_file.py
 
 [paths]
