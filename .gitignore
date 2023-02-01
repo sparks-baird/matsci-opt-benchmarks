@@ -55,3 +55,4 @@ MANIFEST
 scripts/particle_packing/my_secrets.py
 notebooks/particle_packing/my_secrets.py
 reports/~WRL1838.tmp
+scripts/crabnet_hyperparameter/my_secrets.py
