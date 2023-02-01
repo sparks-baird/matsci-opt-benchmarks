@@ -2,6 +2,7 @@
 import json
 from datetime import datetime
 from os import path
+from pathlib import Path
 from random import shuffle
 from time import time
 from uuid import uuid4
@@ -12,8 +13,7 @@ from ax.service.ax_client import AxClient
 from my_secrets import MONGODB_API_KEY
 from submitit import AutoExecutor
 
-from matsci_opt_benchmarks.particle_packing.utils.data import get_parameters
-from matsci_opt_benchmarks.particle_packing.utils.packing_generation import evaluate
+from matsci_opt_benchmarks.crabnet_hyperparameter.core import evaluate, get_parameters
 
 # https://www.chpc.utah.edu/documentation/software/modules-advanced.php
 # ERROR: Could not install packages due to an OSError: [Errno 122] Disk quota exceeded:
@@ -31,40 +31,30 @@ else:
     num_samples = 2**16  # 2**16 == 65536
     num_repeats = 15
 
-slurm_savepath = path.join("data", "processed", "packing-generation-results.csv")
-job_pkl_path = path.join("data", "interim", "packing-generation-jobs.pkl")
+slurm_savepath = path.join("data", "processed", "crabnet-hyperparameter-results.csv")
+job_pkl_path = path.join("data", "interim", "crabnet-hyperparameter-jobs.pkl")
 
 session_id = str(uuid4())
 
-(
-    subfrac_names,
-    parameters,
-    generous_parameters,
-    mean_names_out,
-    std_names_out,
-    orig_mean_names,
-    orig_std_names,
-) = get_parameters(remove_composition_degeneracy=True, remove_scaling_degeneracy=True)
+parameters, parameter_constraints = get_parameters(...)
 
-parameters.append({"name": "num_particles", "type": "range", "bounds": [100, 1000]})
-parameters.append({"name": "safety_factor", "type": "range", "bounds": [1.0, 2.5]})
+# add number of training points (fidelity parameter)
+
 ax_client = AxClient()
 ax_client.create_experiment(
-    name="boppf_sobol",
+    name="crabnet_sobol",
     parameters=parameters,
-    objective_name="packing_fraction",
-    minimize=False,
-    parameter_constraints=["std1 <= std2", "comp1 + comp2 <= 1.0"],
+    objective_name="mae",
+    minimize=True,
+    parameter_constraints=parameter_constraints,
 )
 search_space = ax_client.experiment.search_space
 m = get_sobol(search_space, fallback_to_sample_polytope=True, seed=SEED)
 gr = m.gen(n=num_samples)
 param_df = gr.param_df.copy()
-# param_df["num_particles"] = 1000
-param_df["util_dir"] = path.join(
-    "src", "matsci_opt_benchmarks", "particle_packing", "utils"
-)
-param_df["data_dir"] = path.join("data", "interim", "particle_packing")
+data_dir = path.join("data", "interim", "crabnet_hyperparameter")
+Path(data_dir).mkdir(parents=True, exist_ok=True)
+param_df["data_dir"] = data_dir
 parameter_sets = param_df.to_dict(orient="records")
 parameter_sets = parameter_sets * num_repeats
 shuffle(parameter_sets)
@@ -73,9 +63,10 @@ if dummy:
     parameter_sets = parameter_sets[:10]
     batch_size = 5
 else:
-    batch_size = 700
+    batch_size = 50
 
-url = "https://data.mongodb-api.com/app/data-plyju/endpoint/data/v1/action/insertOne"  # noqa: E501
+app_name = "data-plyju"  # make a new one on MongoDB
+url = "https://data.mongodb-api.com/app/{app_name}/endpoint/data/v1/action/insertOne"  # noqa: E501
 
 
 def mongodb_evaluate(parameter_set, verbose=False):
@@ -100,7 +91,7 @@ def mongodb_evaluate(parameter_set, verbose=False):
     payload = json.dumps(
         {
             "collection": "sobol",
-            "database": "particle-packing",
+            "database": "crabnet-hyperparameter",
             "dataSource": "matsci-opt-benchmarks",
             "document": results,
         }
@@ -133,7 +124,7 @@ def chunks(lst, n):
 parameter_batch_sets = list(chunks(parameter_sets, batch_size))
 
 # %% submission
-log_folder = "data/interim/particle_packing/%j"
+log_folder = "data/interim/crabnet_hyperparameter/%j"
 walltime_min = int(round(((120 / 60) * batch_size) + 3))
 # use `myallocation` command to see available account/partition combos
 # account = "sparks"
