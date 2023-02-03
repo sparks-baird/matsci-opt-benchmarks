@@ -61,11 +61,11 @@ shuffle(parameter_sets)
 
 if dummy:
     parameter_sets = parameter_sets[:10]
-    batch_size = 5
+    batch_size = 2
 else:
-    batch_size = 50
+    batch_size = 20
 
-app_name = "data-plyju"  # make a new one on MongoDB
+app_name = "data-plyju"  # specific to matsci-opt-benchmarks MongoDB project
 url = "https://data.mongodb-api.com/app/{app_name}/endpoint/data/v1/action/insertOne"  # noqa: E501
 
 
@@ -125,19 +125,24 @@ parameter_batch_sets = list(chunks(parameter_sets, batch_size))
 
 # %% submission
 log_folder = "data/interim/crabnet_hyperparameter/%j"
-walltime_min = int(round(((120 / 60) * batch_size) + 3))
+walltime_min = int(round((20 * batch_size) + 3))
 # use `myallocation` command to see available account/partition combos
 # account = "sparks"
 # partition = "kingspeak"
-account = "owner-guest"
-partition = "kingspeak-guest"
+# account = "owner-guest"
+# partition = "kingspeak-guest"
+partition = "notchpeak-gpu"
+account = "notchpeak-gpu"
 executor = AutoExecutor(folder=log_folder)
 executor.update_parameters(
     timeout_min=walltime_min,
     slurm_nodes=None,
     slurm_partition=partition,
+    slurm_gpus_per_task=1,
+    slurm_mem_per_gpu=6000,
+    slurm_cpus_per_gpu=4,
     # slurm_cpus_per_task=1,
-    slurm_additional_parameters={"ntasks": 1, "account": account},
+    slurm_additional_parameters={"account": account},
 )
 
 # sbatch array
