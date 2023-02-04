@@ -1,0 +1,127 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 12.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      4855,        120]
+NotebookOptionsPosition[      3741,         93]
+NotebookOutlinePosition[      4369,        113]
+CellTagsIndexPosition[      4326,        110]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["CRediT statement", "Title",
+ CellChangeTimes->{{3.8244795173132515`*^9,
+  3.8244795210602*^9}},ExpressionUUID->"f9dc8fd9-891f-45f1-8142-9e84b888b93e"],
+
+Cell["\<\
+Parse Google Form responses from authors to form a Contributor Roles Taxonomy \
+(CRediT) statement.\
+\>", "Subtitle",
+ CellChangeTimes->{{3.824479524063106*^9, 3.824479536997778*^9}, {
+  3.8244839396214275`*^9,
+  3.8244839505902877`*^9}},ExpressionUUID->"23aabeaa-135e-43ed-9d10-\
+ece5729077df"],
+
+Cell[BoxData[
+ RowBox[{"<<", "CreditStatement`"}]], "Input",
+ CellChangeTimes->{{3.8430011708024697`*^9, 3.843001176182165*^9}},
+ CellLabel->"In[1]:=",ExpressionUUID->"9006811a-4bbe-4d1b-ba5d-6abbf956b2f6"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+  "editURL", "=",
+   "\"\<https://docs.google.com/spreadsheets/d/1CqwVXk6iHev4-Vprpw9P8pn-k_\
+eNFvI6BuM5U06oREE/edit?usp=sharing\>\""}], ";"}], "\[IndentingNewLine]",
+ RowBox[{
+  RowBox[{"saveFolder", "=",
+   RowBox[{"NotebookDirectory", "[", "]"}]}], ";"}], "\[IndentingNewLine]",
+ RowBox[{"CreditStatement", "[",
+  RowBox[{"editURL", ",",
+   RowBox[{"Folder", "\[Rule]", "saveFolder"}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.843001165103383*^9, 3.84300118514062*^9}, {
+   3.84300168392706*^9, 3.843001737137061*^9}, {3.8430031127974906`*^9,
+   3.8430031132584715`*^9}, {3.843063915154503*^9, 3.8430639155982857`*^9}, {
+   3.856460485268319*^9, 3.856460493237876*^9}, {3.856460631151621*^9,
+   3.856460663295915*^9}, {3.861141232422146*^9, 3.8611412412155943`*^9}, {
+   3.866861701694744*^9, 3.866861711944251*^9}, {3.866861798833713*^9,
+   3.8668618535205703`*^9}, 3.882112765287129*^9},
+ CellLabel->"In[2]:=",ExpressionUUID->"f4fe33ef-bafa-4287-b492-4afc1ee6d266"],
+
+Cell[BoxData[
+ TemplateBox[{
+  "StringSplit", "strse",
+   "\"String or list of strings expected at position \\!\\(\\*RowBox[{\\\"1\\\
+\"}]\\) in \\!\\(\\*RowBox[{\\\"StringSplit\\\", \\\"[\\\", \
+RowBox[{\\\"None\\\", \\\",\\\", \\\"\\\\\\\"=\\\\\\\"\\\"}], \\\"]\\\"}]\\).\
+\"", 2, 4, 1, 25406849070660486226, "Local"},
+  "MessageTemplate"]], "Message", "MSG",
+ CellChangeTimes->{
+  3.8564604989923935`*^9, {3.856460652834733*^9, 3.85646066359214*^9},
+   3.8611412447088947`*^9, 3.8668617177506475`*^9, 3.8668618260596066`*^9,
+   3.8668618605138493`*^9, 3.882112773707203*^9},
+ CellLabel->
+  "During evaluation of \
+In[2]:=",ExpressionUUID->"730ecd6f-ce43-40b2-9432-64680c5c16eb"],
+
+Cell[BoxData["\<\"\\\\begin{section}\\n\\\\textbf{Sterling G. Baird}: Project \
+administration, Conceptualization, Methodology, Software, Validation, Formal \
+analysis, Investigation, Data Curation, Writing - Original Draft, Writing - \
+Review \\\\& Editing, Visualization. \\\\textbf{Taylor D. Sparks}: \
+Supervision, Funding acquisition\\n\\\\end{section}\"\>"], "Output",
+ CellChangeTimes->{
+  3.843063919935356*^9, 3.856460501715393*^9, {3.856460652832733*^9,
+   3.8564606642750387`*^9}, 3.861141250200526*^9, 3.866861720834629*^9,
+   3.8668618266166053`*^9, 3.8668618610729494`*^9, 3.882112777967165*^9},
+ Background->RGBColor[0.87, 0.94, 1],
+ CellLabel->"Out[4]=",ExpressionUUID->"5b39b5c0-95f7-49cb-b41f-e16a6573a97a"]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1141.2, 568.8},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+WindowStatusArea->"credit-statement.nb last backed up to credit-statement.nb~ \
+on Thu 11 Mar 2021 at 4:55:53 PM",
+TaggingRules->{
+ "WelcomeScreenSettings" -> {"FEStarting" -> False}, "TryRealOnly" -> False},
+FrontEndVersion->"13.0 for Microsoft Windows (64-bit) (February 4, 2022)",
+StyleDefinitions->"defaultSyntaxHighlight.nb",
+ExpressionUUID->"052801c3-13e2-4630-aa14-2a8fd2d148fa"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 157, 2, 98, "Title",ExpressionUUID->"f9dc8fd9-891f-45f1-8142-9e84b888b93e"],
+Cell[740, 26, 306, 7, 53, "Subtitle",ExpressionUUID->"23aabeaa-135e-43ed-9d10-ece5729077df"],
+Cell[1049, 35, 206, 3, 28, "Input",ExpressionUUID->"9006811a-4bbe-4d1b-ba5d-6abbf956b2f6"],
+Cell[CellGroupData[{
+Cell[1280, 42, 1016, 19, 67, "Input",ExpressionUUID->"f4fe33ef-bafa-4287-b492-4afc1ee6d266"],
+Cell[2299, 63, 684, 14, 28, "Message",ExpressionUUID->"730ecd6f-ce43-40b2-9432-64680c5c16eb"],
+Cell[2986, 79, 727, 10, 150, "Output",ExpressionUUID->"5b39b5c0-95f7-49cb-b41f-e16a6573a97a"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
