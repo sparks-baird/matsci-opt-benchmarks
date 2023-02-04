@@ -2,3 +2,5 @@
 *
 # Except this file
 !.gitignore
+!particle_packing/.gitignore
+!particle_packing/dummy/.gitignore
