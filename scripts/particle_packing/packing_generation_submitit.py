@@ -6,6 +6,7 @@ from random import shuffle
 from time import time
 from uuid import uuid4
 
+import ray
 import requests
 from ax.modelbridge.factory import get_sobol
 from ax.service.ax_client import AxClient
@@ -21,7 +22,6 @@ from matsci_opt_benchmarks.particle_packing.utils.packing_generation import eval
 # particle-packing/lib/python3.9/site-packages/joblib-1.2.0.dist-info/
 # INSTALLER2p04xuw3.tmp'
 
-
 dummy = False
 SEED = 10
 if dummy:
@@ -35,6 +35,8 @@ slurm_savepath = path.join("data", "processed", "packing-generation-results.csv"
 job_pkl_path = path.join("data", "interim", "packing-generation-jobs.pkl")
 
 session_id = str(uuid4())
+
+ray.shutdown()
 
 (
     subfrac_names,
@@ -72,12 +74,15 @@ shuffle(parameter_sets)
 if dummy:
     parameter_sets = parameter_sets[:10]
     batch_size = 5
+    ntasks = 2
 else:
     batch_size = 700
+    ntasks = 20
 
 url = "https://data.mongodb-api.com/app/data-plyju/endpoint/data/v1/action/insertOne"  # noqa: E501
 
 
+@ray.remote
 def mongodb_evaluate(parameter_set, verbose=False):
     """Evaluate a parameter set and save the results to MongoDB."""
     t0 = time()
@@ -121,7 +126,10 @@ def mongodb_evaluate(parameter_set, verbose=False):
 
 
 def mongodb_evaluate_batch(parameter_sets, verbose=False):
-    return [mongodb_evaluate(p, verbose=verbose) for p in parameter_sets]
+    ray.init(ignore_reinit_error=True, log_to_driver=False, num_cpus=ntasks)
+    return ray.get(
+        [mongodb_evaluate.remote(p, verbose=verbose) for p in parameter_sets]
+    )
 
 
 def chunks(lst, n):
@@ -143,10 +151,8 @@ partition = "kingspeak-guest"
 executor = AutoExecutor(folder=log_folder)
 executor.update_parameters(
     timeout_min=walltime_min,
-    slurm_nodes=None,
     slurm_partition=partition,
-    # slurm_cpus_per_task=1,
-    slurm_additional_parameters={"ntasks": 1, "account": account},
+    slurm_additional_parameters={"ntasks": ntasks, "account": account},
 )
 
 # sbatch array
