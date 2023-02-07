@@ -56,3 +56,9 @@ scripts/particle_packing/my_secrets.py
 notebooks/particle_packing/my_secrets.py
 reports/~WRL1838.tmp
 scripts/crabnet_hyperparameter/my_secrets.py
+**/my_secrets.json
+**/my_secrets.py
+**/secrets.py
+notebooks/particle_packing/sobol_reg_fba_time_s.pkl
+notebooks/particle_packing/spf_fba_isna_prob.pkl
+reports/particle_packing/~$tainbrief.docx

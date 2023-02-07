@@ -174,6 +174,7 @@ Then take a look into the `scripts` and `notebooks` folders.
 │                              development or `python setup.py bdist_wheel` to build.
 ├── src
 │   └── particle_packing    <- Actual Python package where the main functionality goes.
+│   └── crabnet_hyperparameter <- Actual Python package where the main functionality goes.
 ├── tests                   <- Unit tests which can be run with `pytest`.
 ├── .coveragerc             <- Configuration for coverage reports of unit tests.
 ├── .isort.cfg              <- Configuration for git hook that sorts imports.
