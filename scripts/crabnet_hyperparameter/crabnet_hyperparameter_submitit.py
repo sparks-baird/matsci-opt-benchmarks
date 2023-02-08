@@ -36,7 +36,7 @@ job_pkl_path = path.join("data", "interim", "crabnet-hyperparameter-jobs.pkl")
 
 session_id = str(uuid4())
 
-parameters = get_parameters()
+parameters, parameter_constraints = get_parameters()
 
 # add number of training points (fidelity parameter)
 
@@ -45,9 +45,10 @@ ax_client.create_experiment(
     name="crabnet_sobol",
     parameters=parameters,
     objective_name="mae",
-    minimize=True
-    # parameter_constraints=parameter_constraints,
+    minimize=True,
+    parameter_constraints=parameter_constraints,
 )
+
 search_space = ax_client.experiment.search_space
 m = get_sobol(search_space, fallback_to_sample_polytope=True, seed=SEED)
 gr = m.gen(n=num_samples)
@@ -71,7 +72,7 @@ url = "https://data.mongodb-api.com/app/{app_name}/endpoint/data/v1/action/inser
 
 def mongodb_evaluate(parameter_set, verbose=False):
     """Evaluate a parameter set and save the results to MongoDB."""
-    t0 = time()
+    # t0 = time()
     results = evaluate(parameter_set, dummy)
     print(results)
     utc = datetime.utcnow()
@@ -80,7 +81,7 @@ def mongodb_evaluate(parameter_set, verbose=False):
         "session_id": session_id,
         "timestamp": utc.timestamp(),
         "date": str(utc),
-        "runtime": time() - t0,
+        # "runtime": time() - t0,
         "seed": SEED,
         "num_samples": num_samples,
         "num_repeats": num_repeats,
@@ -145,7 +146,9 @@ executor.update_parameters(
     slurm_additional_parameters={"account": account},
 )
 
+evaluate(parameter_batch_sets[0][0], dummy=True)
 # sbatch array
+
 jobs = executor.map_array(mongodb_evaluate_batch, parameter_batch_sets)
 # jobs = executor.map_array(mongodb_evaluate, parameter_sets)
 print("Submitted jobs")
