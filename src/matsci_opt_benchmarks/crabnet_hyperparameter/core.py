@@ -33,6 +33,7 @@ from matbench.bench import MatbenchBenchmark
 import numpy as np
 import pandas as pd
 import pprint
+from time import time
 
 
 __author__ = "sgbaird"
@@ -95,16 +96,18 @@ def get_parameters():
         {"name": 'elem_prop', "type": "choice", "values": ['mat2vec', 'magpie']}
     ]
 
+    parameter_constraints = ["betas_1 < betas_2", "emb_scaler + pos_scaler <= 1.0"]
+
     # return parameters, parameter_constraints
-    return parameters
+    return parameters, parameter_constraints
 
 
 
-def evaluate(parameters):
+def evaluate(parameters, dummy:bool):
 
-    results = matbench_metric_calculator(parameters)
+    results = matbench_metric_calculator(parameters, dummy=dummy)
 
-    outputs = {"mae": results[0]["average_mae"], "rmse": results[0]["average_rmse"], "model_size": results[0]["model_size"]}
+    outputs = {"mae": results[0]["average_mae"], "rmse": results[0]["average_rmse"], "model_size": results[0]["model_size"], "runtime": results[0]["runtime"]}
 
     return outputs
 
@@ -153,7 +156,9 @@ def correct_parameterization(parameterization: dict, verbose=False):
 
 
 def matbench_metric_calculator(crabnet_param, dummy:bool):
-    
+
+    t0 = time()
+
     print('user parameters are :', crabnet_param)
     ## default hyperparameters 
     parameterization = {
@@ -207,7 +212,8 @@ def matbench_metric_calculator(crabnet_param, dummy:bool):
             task.record(fold, predictions)
             
     model_size = count_parameters(cb.model)
-    return({'average_mae':task.scores['mae']['mean'], 'average_rmse':task.scores['rmse']['mean'], "model_size": model_size}, crabnet_param)
+
+    return({'average_mae':task.scores['mae']['mean'], 'average_rmse':task.scores['rmse']['mean'], "model_size": model_size, "runtime": time() - t0}, crabnet_param)
 
  
 
