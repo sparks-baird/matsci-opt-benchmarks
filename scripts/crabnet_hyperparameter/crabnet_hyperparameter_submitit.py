@@ -53,9 +53,9 @@ search_space = ax_client.experiment.search_space
 m = get_sobol(search_space, fallback_to_sample_polytope=True, seed=SEED)
 gr = m.gen(n=num_samples)
 param_df = gr.param_df.copy()
-data_dir = path.join("data", "interim", "crabnet_hyperparameter")
-Path(data_dir).mkdir(parents=True, exist_ok=True)
-param_df["data_dir"] = data_dir
+# data_dir = path.join("data", "interim", "crabnet_hyperparameter")
+# Path(data_dir).mkdir(parents=True, exist_ok=True)
+# param_df["data_dir"] = data_dir
 parameter_sets = param_df.to_dict(orient="records")
 parameter_sets = parameter_sets * num_repeats
 shuffle(parameter_sets)
