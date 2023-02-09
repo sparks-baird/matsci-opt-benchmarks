@@ -22,19 +22,17 @@ References:
 
 import argparse
 import logging
+import pprint
 import sys
+from time import time
 
-from matsci_opt_benchmarks.crabnet_hyperparameter import __version__
-
+import numpy as np
+import pandas as pd
 from crabnet.crabnet_ import CrabNet
 from crabnet.utils.utils import count_parameters
 from matbench.bench import MatbenchBenchmark
 
-import numpy as np
-import pandas as pd
-import pprint
-from time import time
-
+from matsci_opt_benchmarks.crabnet_hyperparameter import __version__
 
 __author__ = "sgbaird"
 __copyright__ = "sgbaird"
@@ -68,32 +66,32 @@ def fib(n):
 
 #############
 
+
 def get_parameters():
-    
-    parameters = [ 
-        {"name": 'N', "type": "range", "bounds": [1,10]},
-        {"name": 'alpha', "type": "range", "bounds": [0.0,1.0]},
-        {"name": 'd_model', "type": "range", "bounds": [100,1024]},
-        {"name": 'dim_feedforward', "type": "range", "bounds": [1024,4096]},
-        {"name": 'dropout', "type": "range", "bounds": [0.0,1.0]},
-        {"name": 'emb_scaler', "type": "range", "bounds": [0.0,1.0]},
-        {"name": 'eps', "type": "range", "bounds": [1e-7, 1e-4]},
-        {"name": 'epochs_step', "type": "range", "bounds": [5,20]},
-        {"name": 'fudge', "type": "range", "bounds": [0.0,1.0]},
-        {"name": 'heads', "type": "range", "bounds": [1,10]},
-        {"name": 'k', "type": "range", "bounds": [2,10]},
-        {"name": 'lr', "type": "range", "bounds": [1e-4, 6e-3]},
-        {"name": 'pe_resolution', "type": "range", "bounds": [2500, 10000]},
-        {"name": 'ple_resolution', "type": "range", "bounds": [2500, 10000]},
-        {"name": 'pos_scaler', "type": "range", "bounds": [0.0,1.0]},
-        {"name": 'weight_decay', "type": "range", "bounds": [0.0,1.0]},
-        {"name": 'batch_size', "type": "range", "bounds": [32,256]},
-        {"name": 'out_hidden4', "type": "range", "bounds": [32,512]},
-        {"name": 'betas1', "type": "range", "bounds": [0.5,0.9999]},
-        {"name": 'betas2', "type": "range", "bounds": [0.5,0.9999]},
-        {"name": 'bias', "type": "choice", "values": [False, True]},
-        {"name": 'criterion', "type": "choice", "values": ['RobustL1', 'RobustL2']},
-        {"name": 'elem_prop', "type": "choice", "values": ['mat2vec', 'magpie']}
+    parameters = [
+        {"name": "N", "type": "range", "bounds": [1, 10]},
+        {"name": "alpha", "type": "range", "bounds": [0.0, 1.0]},
+        {"name": "d_model", "type": "range", "bounds": [100, 1024]},
+        {"name": "dim_feedforward", "type": "range", "bounds": [1024, 4096]},
+        {"name": "dropout", "type": "range", "bounds": [0.0, 1.0]},
+        {"name": "emb_scaler", "type": "range", "bounds": [0.0, 1.0]},
+        {"name": "eps", "type": "range", "bounds": [1e-7, 1e-4]},
+        {"name": "epochs_step", "type": "range", "bounds": [5, 20]},
+        {"name": "fudge", "type": "range", "bounds": [0.0, 1.0]},
+        {"name": "heads", "type": "range", "bounds": [1, 10]},
+        {"name": "k", "type": "range", "bounds": [2, 10]},
+        {"name": "lr", "type": "range", "bounds": [1e-4, 6e-3]},
+        {"name": "pe_resolution", "type": "range", "bounds": [2500, 10000]},
+        {"name": "ple_resolution", "type": "range", "bounds": [2500, 10000]},
+        {"name": "pos_scaler", "type": "range", "bounds": [0.0, 1.0]},
+        {"name": "weight_decay", "type": "range", "bounds": [0.0, 1.0]},
+        {"name": "batch_size", "type": "range", "bounds": [32, 256]},
+        {"name": "out_hidden4", "type": "range", "bounds": [32, 512]},
+        {"name": "betas1", "type": "range", "bounds": [0.5, 0.9999]},
+        {"name": "betas2", "type": "range", "bounds": [0.5, 0.9999]},
+        {"name": "bias", "type": "choice", "values": [False, True]},
+        {"name": "criterion", "type": "choice", "values": ["RobustL1", "RobustL2"]},
+        {"name": "elem_prop", "type": "choice", "values": ["mat2vec", "magpie"]},
     ]
 
     parameter_constraints = ["betas1 <= betas2", "emb_scaler + pos_scaler <= 1.0"]
@@ -102,19 +100,23 @@ def get_parameters():
     return parameters, parameter_constraints
 
 
-
-def evaluate(parameters, dummy:bool):
-
+def evaluate(parameters, dummy: bool):
     results = matbench_metric_calculator(parameters, dummy=dummy)
 
-    outputs = {"mae": results[0]["average_mae"], "rmse": results[0]["average_rmse"], "model_size": results[0]["model_size"], "runtime": results[0]["runtime"]}
+    outputs = {
+        "mae": results[0]["average_mae"],
+        "rmse": results[0]["average_rmse"],
+        "model_size": results[0]["model_size"],
+        "runtime": results[0]["runtime"],
+    }
 
     return outputs
 
 
-
 def correct_parameterization(parameterization: dict, verbose=False):
-    # take dictionary of tunable hyperparameters and output hyperparameter combinations compatible with CrabNet
+    # take dictionary of tunable hyperparameters and output hyperparameter
+    # combinations compatible with CrabNet
+
     if verbose:
         pprint.pprint(parameterization)
 
@@ -155,67 +157,94 @@ def correct_parameterization(parameterization: dict, verbose=False):
     return parameterization
 
 
-def matbench_metric_calculator(crabnet_param, dummy:bool):
-
+def matbench_metric_calculator(crabnet_param, dummy: bool):
     t0 = time()
 
-    print('user parameters are :', crabnet_param)
-    ## default hyperparameters 
+    print("user parameters are :", crabnet_param)
+    # default hyperparameters
     parameterization = {
-        'N':3,'alpha':0.5,'d_model':512, 'dim_feedforward':2048, 'dropout':0.1,   
-        'emb_scaler':1.0,'epochs_step':10,'eps':0.000001,'fudge':0.02,'heads':4,
-        'k':6,'lr':0.001,'pe_resolution':5000,'ple_resolution':5000,
-        'pos_scaler':1.0,'weight_decay':0,'batch_size':32,'out_hidden4':128,'betas1':0.9,'betas2':0.999,
-        'losscurve' : False, 'learningcurve' : False, 'bias':False,'criterion':'RobustL1' , 'elem_prop':'mat2vec'
-        
-        }
-    
-    ## update the values of the selected hyperparameters 
+        "N": 3,
+        "alpha": 0.5,
+        "d_model": 512,
+        "dim_feedforward": 2048,
+        "dropout": 0.1,
+        "emb_scaler": 1.0,
+        "epochs_step": 10,
+        "eps": 0.000001,
+        "fudge": 0.02,
+        "heads": 4,
+        "k": 6,
+        "lr": 0.001,
+        "pe_resolution": 5000,
+        "ple_resolution": 5000,
+        "pos_scaler": 1.0,
+        "weight_decay": 0,
+        "batch_size": 32,
+        "out_hidden4": 128,
+        "betas1": 0.9,
+        "betas2": 0.999,
+        "losscurve": False,
+        "learningcurve": False,
+        "bias": False,
+        "criterion": "RobustL1",
+        "elem_prop": "mat2vec",
+    }
+
+    # update the values of the selected hyperparameters
     parameterization.update(crabnet_param)
-    
+
     print(parameterization)
-    
+
     cb = CrabNet(**correct_parameterization(parameterization))
-   
-    mb = MatbenchBenchmark(autoload=False, subset = ["matbench_expt_gap"])
+
+    mb = MatbenchBenchmark(autoload=False, subset=["matbench_expt_gap"])
 
     for task in mb.tasks:
         task.load()
         for fold in task.folds:
-
-            # Inputs are either chemical compositions as strings
-            # or crystal structures as pymatgen.Structure objects.
-            # Outputs are either floats (regression tasks) or bools (classification tasks)
+            # Inputs are either chemical compositions as strings or crystal
+            # structures as pymatgen.Structure objects. Outputs are either
+            # floats (regression tasks) or bools (classification tasks)
             train_inputs, train_outputs = task.get_train_and_val_data(fold)
 
             # prep input for CrabNet
-            train_df = pd.concat((train_inputs, train_outputs), axis=1, keys=["formula", "target"])
+            train_df = pd.concat(
+                (train_inputs, train_outputs), axis=1, keys=["formula", "target"]
+            )
 
             if dummy:
                 train_df = train_df.head(10)
 
             # train and validate your model
-            cb.fit(train_df = train_df)
+            cb.fit(train_df=train_df)
 
             # Get testing data
             test_inputs, test_outputs = task.get_test_data(fold, include_target=True)
-            test_df = pd.concat((test_inputs, test_outputs), axis=1, keys=["formula", "target"])
+            test_df = pd.concat(
+                (test_inputs, test_outputs), axis=1, keys=["formula", "target"]
+            )
 
             # Predict on the testing data
             # Your output should be a pandas series, numpy array, or python iterable
             # where the array elements are floats or bools
-            predictions = cb.predict(test_df = test_df)
+            predictions = cb.predict(test_df=test_df)
 
             predictions = np.nan_to_num(predictions)
 
             # Record your data!
             task.record(fold, predictions)
-            
+
     model_size = count_parameters(cb.model)
 
-    return({'average_mae':task.scores['mae']['mean'], 'average_rmse':task.scores['rmse']['mean'], "model_size": model_size, "runtime": time() - t0}, crabnet_param)
-
- 
+    return (
+        {
+            "average_mae": task.scores["mae"]["mean"],
+            "average_rmse": task.scores["rmse"]["mean"],
+            "model_size": model_size,
+            "runtime": time() - t0,
+        },
+        crabnet_param,
+    )
 
 
 #############
