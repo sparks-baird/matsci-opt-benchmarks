@@ -2,9 +2,7 @@
 import json
 from datetime import datetime
 from os import path
-from pathlib import Path
 from random import shuffle
-from time import time
 from uuid import uuid4
 
 import requests
