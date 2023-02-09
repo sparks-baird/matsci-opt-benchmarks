@@ -72,21 +72,21 @@ def get_parameters():
     
     parameters = [ 
         {"name": 'N', "type": "range", "bounds": [1,10]},
-        {"name": 'alpha', "type": "range", "bounds": [0,1]},
+        {"name": 'alpha', "type": "range", "bounds": [0.0,1.0]},
         {"name": 'd_model', "type": "range", "bounds": [100,1024]},
         {"name": 'dim_feedforward', "type": "range", "bounds": [1024,4096]},
-        {"name": 'dropout', "type": "range", "bounds": [0,1]},
-        {"name": 'emb_scaler', "type": "range", "bounds": [0,1.0]},
+        {"name": 'dropout', "type": "range", "bounds": [0.0,1.0]},
+        {"name": 'emb_scaler', "type": "range", "bounds": [0.0,1.0]},
         {"name": 'eps', "type": "range", "bounds": [1e-7, 1e-4]},
         {"name": 'epochs_step', "type": "range", "bounds": [5,20]},
-        {"name": 'fudge', "type": "range", "bounds": [0,1.0]},
+        {"name": 'fudge', "type": "range", "bounds": [0.0,1.0]},
         {"name": 'heads', "type": "range", "bounds": [1,10]},
         {"name": 'k', "type": "range", "bounds": [2,10]},
         {"name": 'lr', "type": "range", "bounds": [1e-4, 6e-3]},
         {"name": 'pe_resolution', "type": "range", "bounds": [2500, 10000]},
         {"name": 'ple_resolution', "type": "range", "bounds": [2500, 10000]},
-        {"name": 'pos_scaler', "type": "range", "bounds": [0,1.0]},
-        {"name": 'weight_decay', "type": "range", "bounds": [0,1.0]},
+        {"name": 'pos_scaler', "type": "range", "bounds": [0.0,1.0]},
+        {"name": 'weight_decay', "type": "range", "bounds": [0.0,1.0]},
         {"name": 'batch_size', "type": "range", "bounds": [32,256]},
         {"name": 'out_hidden4', "type": "range", "bounds": [32,512]},
         {"name": 'betas1', "type": "range", "bounds": [0.5,0.9999]},
@@ -96,7 +96,7 @@ def get_parameters():
         {"name": 'elem_prop', "type": "choice", "values": ['mat2vec', 'magpie']}
     ]
 
-    parameter_constraints = ["betas_1 < betas_2", "emb_scaler + pos_scaler <= 1.0"]
+    parameter_constraints = ["betas1 <= betas2", "emb_scaler + pos_scaler <= 1.0"]
 
     # return parameters, parameter_constraints
     return parameters, parameter_constraints
