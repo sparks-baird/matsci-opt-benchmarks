@@ -28,11 +28,11 @@ from copy import copy
 from time import time
 
 import numpy as np
-from numpy.random import default_rng
 import pandas as pd
 from crabnet.crabnet_ import CrabNet
 from crabnet.utils.utils import count_parameters
 from matbench.bench import MatbenchBenchmark
+from numpy.random import default_rng
 
 from matsci_opt_benchmarks.crabnet_hyperparameter import __version__
 

@@ -7,12 +7,12 @@ module load cuda/11.6.2
 """
 # %% imports
 import json
-import pandas as pd
 from datetime import datetime
 from os import path
 from random import shuffle
 from uuid import uuid4
 
+import pandas as pd
 import requests
 from ax.modelbridge.factory import get_sobol
 from ax.service.ax_client import AxClient
