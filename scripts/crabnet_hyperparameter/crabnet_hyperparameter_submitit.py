@@ -60,11 +60,11 @@ gr = m.gen(n=num_samples)
 param_df = gr.param_df.copy()
 
 # UNCOMMENT FOR DEBUGGING
-param_df["force_cpu"] = True
+param_df.loc[:, "force_cpu"] = True
 
 if dummy:
     # override to about 10 samples (assuming matbench_expt_gap)
-    param_df["train_frac"] = 0.003
+    param_df.loc[:, "train_frac"] = 0.003
 
 parameter_sets = param_df.to_dict(orient="records")
 parameter_sets = parameter_sets * num_repeats
