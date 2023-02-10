@@ -3,6 +3,7 @@ channels:
   - defaults
   - conda-forge
   - pytorch
+  - nvidia
   # - fastai
 dependencies:
   - python>=3.6
@@ -23,6 +24,8 @@ dependencies:
   # - altair
   # - yellowbrick
   # ML, STATS & DEEP LEARNING
+  - pytorch
+  - pytorch-cuda=11.7
   # - statsmodels
   # - scikit-learn
   # - sktime
@@ -44,6 +47,7 @@ dependencies:
      # add here only pip-packages that are not available in conda/conda-forge! E.g.:
      - ax-platform
      - submitit
+     - matbench
      # - icecream
      # - jax
      # - numpyro
