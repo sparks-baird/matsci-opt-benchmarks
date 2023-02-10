@@ -164,12 +164,6 @@ evaluate(parameter_batch_sets[0][0], dummy=True)
     mongodb_evaluate_batch(parameter_batch_set, verbose=True)
     for parameter_batch_set in parameter_batch_sets
 ]
-# sbatch array
-
-[
-    mongodb_evaluate_batch(parameter_batch_set, verbose=True)
-    for parameter_batch_set in parameter_batch_sets
-]
 
 jobs = executor.map_array(mongodb_evaluate_batch, parameter_batch_sets)
 # jobs = executor.map_array(mongodb_evaluate, parameter_sets)
