@@ -59,8 +59,8 @@ m = get_sobol(search_space, fallback_to_sample_polytope=True, seed=SEED)
 gr = m.gen(n=num_samples)
 param_df = gr.param_df.copy()
 
-# uncomment for debugging
-# param_df["force_cpu"] = True
+# UNCOMMENT FOR DEBUGGING
+param_df["force_cpu"] = True
 
 parameter_sets = param_df.to_dict(orient="records")
 parameter_sets = parameter_sets * num_repeats
@@ -156,7 +156,14 @@ executor.update_parameters(
     slurm_additional_parameters={"account": account},
 )
 
-# evaluate(parameter_batch_sets[0][0], dummy=True)
+
+evaluate(parameter_batch_sets[0][0], dummy=True)
+
+# UNCOMMENT FOR DEBUGGING
+[
+    mongodb_evaluate_batch(parameter_batch_set, verbose=True)
+    for parameter_batch_set in parameter_batch_sets
+]
 # sbatch array
 
 [
