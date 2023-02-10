@@ -1,3 +1,10 @@
+"""
+In CHPC terminal:
+
+```bash
+module load cuda/11.6.2
+```
+"""
 # %% imports
 import json
 from datetime import datetime
@@ -20,7 +27,7 @@ from matsci_opt_benchmarks.crabnet_hyperparameter.core import evaluate, get_para
 # INSTALLER2p04xuw3.tmp'
 
 
-dummy = False
+dummy = True
 SEED = 10
 if dummy:
     num_samples = 2**3  # 2**3 == 8
@@ -51,9 +58,10 @@ search_space = ax_client.experiment.search_space
 m = get_sobol(search_space, fallback_to_sample_polytope=True, seed=SEED)
 gr = m.gen(n=num_samples)
 param_df = gr.param_df.copy()
-# data_dir = path.join("data", "interim", "crabnet_hyperparameter")
-# Path(data_dir).mkdir(parents=True, exist_ok=True)
-# param_df["data_dir"] = data_dir
+
+# uncomment for debugging
+# param_df["force_cpu"] = True
+
 parameter_sets = param_df.to_dict(orient="records")
 parameter_sets = parameter_sets * num_repeats
 shuffle(parameter_sets)
@@ -65,7 +73,7 @@ else:
     batch_size = 20
 
 app_name = "data-plyju"  # specific to matsci-opt-benchmarks MongoDB project
-url = "https://data.mongodb-api.com/app/{app_name}/endpoint/data/v1/action/insertOne"  # noqa: E501
+url = f"https://data.mongodb-api.com/app/{app_name}/endpoint/data/v1/action/insertOne"  # noqa: E501
 
 
 def mongodb_evaluate(parameter_set, verbose=False):
@@ -84,8 +92,6 @@ def mongodb_evaluate(parameter_set, verbose=False):
         "num_samples": num_samples,
         "num_repeats": num_repeats,
     }
-    results.pop("data_dir")
-    results.pop("util_dir")
 
     payload = json.dumps(
         {
@@ -128,10 +134,16 @@ walltime_min = int(round((20 * batch_size) + 3))
 # use `myallocation` command to see available account/partition combos
 # account = "sparks"
 # partition = "kingspeak"
+
 # account = "owner-guest"
 # partition = "kingspeak-guest"
-partition = "notchpeak-gpu"
-account = "notchpeak-gpu"
+
+# partition = "notchpeak-gpu"
+# account = "notchpeak-gpu"
+
+partition = "notchpeak-shared-short"
+account = "notchpeak-shared-short"
+
 executor = AutoExecutor(folder=log_folder)
 executor.update_parameters(
     timeout_min=walltime_min,
@@ -144,8 +156,13 @@ executor.update_parameters(
     slurm_additional_parameters={"account": account},
 )
 
-evaluate(parameter_batch_sets[0][0], dummy=True)
+# evaluate(parameter_batch_sets[0][0], dummy=True)
 # sbatch array
+
+[
+    mongodb_evaluate_batch(parameter_batch_set, verbose=True)
+    for parameter_batch_set in parameter_batch_sets
+]
 
 jobs = executor.map_array(mongodb_evaluate_batch, parameter_batch_sets)
 # jobs = executor.map_array(mongodb_evaluate, parameter_sets)
