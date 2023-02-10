@@ -28,6 +28,7 @@ from copy import copy
 from time import time
 
 import numpy as np
+from numpy.random import default_rng
 import pandas as pd
 from crabnet.crabnet_ import CrabNet
 from crabnet.utils.utils import count_parameters
@@ -169,6 +170,8 @@ def matbench_metric_calculator(parameters):
 
     parameters = copy(parameters)
     train_frac = parameters.pop("train_frac")
+    seed = parameters.pop("seed")
+    rng = default_rng(seed)
     # default hyperparameters
     parameterization = {
         "N": 3,
@@ -220,7 +223,7 @@ def matbench_metric_calculator(parameters):
                 (train_inputs, train_outputs), axis=1, keys=["formula", "target"]
             )
 
-            train_df = train_df.sample(frac=train_frac)
+            train_df = train_df.sample(frac=train_frac, random_state=rng)
 
             # train and validate your model
             cb.fit(train_df=train_df)

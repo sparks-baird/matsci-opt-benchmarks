@@ -7,6 +7,7 @@ module load cuda/11.6.2
 """
 # %% imports
 import json
+import pandas as pd
 from datetime import datetime
 from os import path
 from random import shuffle
@@ -28,13 +29,15 @@ from matsci_opt_benchmarks.crabnet_hyperparameter.core import evaluate, get_para
 
 
 dummy = True
-SEED = 10
+SOBOL_SEED = 42
 if dummy:
     num_samples = 2**3  # 2**3 == 8
     num_repeats = 2
 else:
     num_samples = 2**16  # 2**16 == 65536
     num_repeats = 15
+
+SAMPLE_SEEDS = list(range(10, 10 + num_repeats))
 
 slurm_savepath = path.join("data", "processed", "crabnet-hyperparameter-results.csv")
 job_pkl_path = path.join("data", "interim", "crabnet-hyperparameter-jobs.pkl")
@@ -55,16 +58,25 @@ ax_client.create_experiment(
 )
 
 search_space = ax_client.experiment.search_space
-m = get_sobol(search_space, fallback_to_sample_polytope=True, seed=SEED)
+m = get_sobol(search_space, fallback_to_sample_polytope=True, seed=SOBOL_SEED)
 gr = m.gen(n=num_samples)
 param_df = gr.param_df.copy()
 
 # UNCOMMENT FOR DEBUGGING
-param_df.loc[:, "force_cpu"] = True
+# param_df.loc[:, "force_cpu"] = True
 
 if dummy:
     # override to about 10 samples (assuming matbench_expt_gap)
     param_df.loc[:, "train_frac"] = 0.003
+
+# make repeats of dataframe with new rows except with different seed variables
+tmp_dfs = []
+for seed in SAMPLE_SEEDS:
+    param_tmp_df = param_df.copy()
+    param_tmp_df["seed"] = seed
+    tmp_dfs.append(param_tmp_df)
+
+param_df = pd.concat(tmp_dfs, ignore_index=True)
 
 parameter_sets = param_df.to_dict(orient="records")
 parameter_sets = parameter_sets * num_repeats
@@ -91,7 +103,7 @@ def mongodb_evaluate(parameters, verbose=False):
         "session_id": session_id,
         "timestamp": utc.timestamp(),
         "date": str(utc),
-        "seed": SEED,
+        "seed": SOBOL_SEED,
         "num_samples": num_samples,
         "num_repeats": num_repeats,
     }
