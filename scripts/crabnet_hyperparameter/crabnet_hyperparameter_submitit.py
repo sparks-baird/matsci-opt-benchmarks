@@ -103,7 +103,8 @@ def mongodb_evaluate(parameters, verbose=False):
         "session_id": session_id,
         "timestamp": utc.timestamp(),
         "date": str(utc),
-        "seed": SOBOL_SEED,
+        "sobol_seed": SOBOL_SEED,
+        "sample_seed": parameters["seed"],
         "num_samples": num_samples,
         "num_repeats": num_repeats,
     }
