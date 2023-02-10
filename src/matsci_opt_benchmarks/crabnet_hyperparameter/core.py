@@ -96,16 +96,16 @@ def get_parameters():
             "type": "choice",
             "values": ["mat2vec", "magpie", "onehot"],
         },
+        {"name": "train_frac", "type": "range", "bounds": [0.01, 1.0]},
     ]
 
     parameter_constraints = ["betas1 <= betas2", "emb_scaler + pos_scaler <= 1.0"]
 
-    # return parameters, parameter_constraints
     return parameters, parameter_constraints
 
 
-def evaluate(parameters, dummy: bool):
-    results = matbench_metric_calculator(parameters, dummy=dummy)
+def evaluate(parameters):
+    results = matbench_metric_calculator(parameters)
 
     outputs = {
         "mae": results[0]["average_mae"],
@@ -117,54 +117,54 @@ def evaluate(parameters, dummy: bool):
     return outputs
 
 
-def correct_parameterization(parameterization: dict, verbose=False):
+def correct_parameterization(parameters: dict, verbose=False):
     # take dictionary of tunable hyperparameters and output hyperparameter
     # combinations compatible with CrabNet
 
     if verbose:
-        pprint.pprint(parameterization)
+        pprint.pprint(parameters)
 
-    parameterization["out_hidden"] = [
-        parameterization.get("out_hidden4") * 8,
-        parameterization.get("out_hidden4") * 4,
-        parameterization.get("out_hidden4") * 2,
-        parameterization.get("out_hidden4"),
+    parameters["out_hidden"] = [
+        parameters.get("out_hidden4") * 8,
+        parameters.get("out_hidden4") * 4,
+        parameters.get("out_hidden4") * 2,
+        parameters.get("out_hidden4"),
     ]
-    parameterization.pop("out_hidden4")
+    parameters.pop("out_hidden4")
 
-    parameterization["betas"] = (
-        parameterization.get("betas1"),
-        parameterization.get("betas2"),
+    parameters["betas"] = (
+        parameters.get("betas1"),
+        parameters.get("betas2"),
     )
-    parameterization.pop("betas1")
-    parameterization.pop("betas2")
+    parameters.pop("betas1")
+    parameters.pop("betas2")
 
-    d_model = parameterization["d_model"]
+    d_model = parameters["d_model"]
 
     # make heads even (unless it's 1) (because d_model must be even)
-    heads = parameterization["heads"]
+    heads = parameters["heads"]
     if np.mod(heads, 2) != 0:
         heads = heads + 1
-    parameterization["heads"] = heads
+    parameters["heads"] = heads
 
     # NOTE: d_model must be divisible by heads
-    d_model = parameterization["heads"] * round(d_model / parameterization["heads"])
+    d_model = parameters["heads"] * round(d_model / parameters["heads"])
 
-    parameterization["d_model"] = d_model
+    parameters["d_model"] = d_model
 
-    parameterization["pos_scaler_log"] = (
-        1 - parameterization["emb_scaler"] - parameterization["pos_scaler"]
+    parameters["pos_scaler_log"] = (
+        1 - parameters["emb_scaler"] - parameters["pos_scaler"]
     )
 
-    parameterization["epochs"] = parameterization["epochs_step"] * 4
+    parameters["epochs"] = parameters["epochs_step"] * 4
 
-    return parameterization
+    return parameters
 
 
-def matbench_metric_calculator(crabnet_param, dummy: bool):
+def matbench_metric_calculator(parameters):
     t0 = time()
 
-    print("user parameters are :", crabnet_param)
+    print("user parameters are :", parameters)
     # default hyperparameters
     parameterization = {
         "N": 3,
@@ -195,7 +195,7 @@ def matbench_metric_calculator(crabnet_param, dummy: bool):
     }
 
     # update the values of the selected hyperparameters
-    parameterization.update(crabnet_param)
+    parameterization.update(parameters)
 
     print(parameterization)
 
@@ -216,8 +216,7 @@ def matbench_metric_calculator(crabnet_param, dummy: bool):
                 (train_inputs, train_outputs), axis=1, keys=["formula", "target"]
             )
 
-            if dummy:
-                train_df = train_df.head(10)
+            train_df = train_df.sample(frac=parameters["train_frac"])
 
             # train and validate your model
             cb.fit(train_df=train_df)
@@ -247,7 +246,7 @@ def matbench_metric_calculator(crabnet_param, dummy: bool):
             "model_size": model_size,
             "runtime": time() - t0,
         },
-        crabnet_param,
+        parameters,
     )
 
 
