@@ -24,6 +24,7 @@ import argparse
 import logging
 import pprint
 import sys
+from copy import copy
 from time import time
 
 import numpy as np
@@ -166,6 +167,7 @@ def matbench_metric_calculator(parameters):
 
     print("user parameters are :", parameters)
 
+    parameters = copy(parameters)
     train_frac = parameters.pop("train_frac")
     # default hyperparameters
     parameterization = {
