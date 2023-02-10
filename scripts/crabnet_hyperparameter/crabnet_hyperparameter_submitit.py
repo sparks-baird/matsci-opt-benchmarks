@@ -160,13 +160,14 @@ executor.update_parameters(
 )
 
 
-evaluate(parameter_batch_sets[0][0])
+# # UNCOMMENT FOR DEBUGGING
+# evaluate(parameter_batch_sets[0][0])
 
-# UNCOMMENT FOR DEBUGGING
-[
-    mongodb_evaluate_batch(parameter_batch_set, verbose=True)
-    for parameter_batch_set in parameter_batch_sets
-]
+# # UNCOMMENT FOR DEBUGGING
+# [
+#     mongodb_evaluate_batch(parameter_batch_set, verbose=True)
+#     for parameter_batch_set in parameter_batch_sets
+# ]
 
 jobs = executor.map_array(mongodb_evaluate_batch, parameter_batch_sets)
 # jobs = executor.map_array(mongodb_evaluate, parameter_sets)
