@@ -51,9 +51,10 @@ search_space = ax_client.experiment.search_space
 m = get_sobol(search_space, fallback_to_sample_polytope=True, seed=SEED)
 gr = m.gen(n=num_samples)
 param_df = gr.param_df.copy()
-# data_dir = path.join("data", "interim", "crabnet_hyperparameter")
-# Path(data_dir).mkdir(parents=True, exist_ok=True)
-# param_df["data_dir"] = data_dir
+
+# UNCOMMENT FOR DEBUGGING
+param_df["force_cpu"] = True
+
 parameter_sets = param_df.to_dict(orient="records")
 parameter_sets = parameter_sets * num_repeats
 shuffle(parameter_sets)
@@ -145,6 +146,12 @@ executor.update_parameters(
 )
 
 evaluate(parameter_batch_sets[0][0], dummy=True)
+
+# UNCOMMENT FOR DEBUGGING
+[
+    mongodb_evaluate_batch(parameter_batch_set, verbose=True)
+    for parameter_batch_set in parameter_batch_sets
+]
 # sbatch array
 
 jobs = executor.map_array(mongodb_evaluate_batch, parameter_batch_sets)
