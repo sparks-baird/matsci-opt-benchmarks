@@ -76,18 +76,17 @@ app_name = "data-plyju"  # specific to matsci-opt-benchmarks MongoDB project
 url = f"https://data.mongodb-api.com/app/{app_name}/endpoint/data/v1/action/insertOne"  # noqa: E501
 
 
-def mongodb_evaluate(parameter_set, verbose=False):
+def mongodb_evaluate(parameters, verbose=False):
     """Evaluate a parameter set and save the results to MongoDB."""
-    # t0 = time()
-    results = evaluate(parameter_set, dummy)
+    results = evaluate(parameters, dummy)
     print(results)
     utc = datetime.utcnow()
     results = {
+        **parameters,
         **results,
         "session_id": session_id,
         "timestamp": utc.timestamp(),
         "date": str(utc),
-        # "runtime": time() - t0,
         "seed": SEED,
         "num_samples": num_samples,
         "num_repeats": num_repeats,
