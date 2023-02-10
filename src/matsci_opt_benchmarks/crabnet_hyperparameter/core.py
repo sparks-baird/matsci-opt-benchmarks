@@ -77,7 +77,7 @@ def get_parameters():
         {"name": "emb_scaler", "type": "range", "bounds": [0.0, 1.0]},
         {"name": "eps", "type": "range", "bounds": [1e-7, 1e-4]},
         {"name": "epochs_step", "type": "range", "bounds": [5, 20]},
-        {"name": "fudge", "type": "range", "bounds": [0.0, 1.0]},
+        {"name": "fudge", "type": "range", "bounds": [0.0, 0.1]},
         {"name": "heads", "type": "range", "bounds": [1, 10]},
         {"name": "k", "type": "range", "bounds": [2, 10]},
         {"name": "lr", "type": "range", "bounds": [1e-4, 6e-3]},
@@ -91,7 +91,11 @@ def get_parameters():
         {"name": "betas2", "type": "range", "bounds": [0.5, 0.9999]},
         {"name": "bias", "type": "choice", "values": [False, True]},
         {"name": "criterion", "type": "choice", "values": ["RobustL1", "RobustL2"]},
-        {"name": "elem_prop", "type": "choice", "values": ["mat2vec", "magpie"]},
+        {
+            "name": "elem_prop",
+            "type": "choice",
+            "values": ["mat2vec", "magpie", "onehot"],
+        },
     ]
 
     parameter_constraints = ["betas1 <= betas2", "emb_scaler + pos_scaler <= 1.0"]
