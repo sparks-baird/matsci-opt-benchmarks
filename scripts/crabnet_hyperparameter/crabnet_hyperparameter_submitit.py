@@ -82,7 +82,7 @@ url = f"https://data.mongodb-api.com/app/{app_name}/endpoint/data/v1/action/inse
 
 def mongodb_evaluate(parameters, verbose=False):
     """Evaluate a parameter set and save the results to MongoDB."""
-    results = evaluate(parameters, dummy)
+    results = evaluate(parameters)
     print(results)
     utc = datetime.utcnow()
     results = {
