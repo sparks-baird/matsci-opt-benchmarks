@@ -165,6 +165,8 @@ def matbench_metric_calculator(parameters):
     t0 = time()
 
     print("user parameters are :", parameters)
+
+    train_frac = parameters.pop("train_frac")
     # default hyperparameters
     parameterization = {
         "N": 3,
@@ -216,7 +218,7 @@ def matbench_metric_calculator(parameters):
                 (train_inputs, train_outputs), axis=1, keys=["formula", "target"]
             )
 
-            train_df = train_df.sample(frac=parameters["train_frac"])
+            train_df = train_df.sample(frac=train_frac)
 
             # train and validate your model
             cb.fit(train_df=train_df)
