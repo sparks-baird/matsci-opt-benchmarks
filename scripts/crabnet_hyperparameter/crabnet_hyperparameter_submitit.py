@@ -18,6 +18,7 @@ from ax.modelbridge.factory import get_sobol
 from ax.service.ax_client import AxClient
 from my_secrets import MONGODB_API_KEY
 from submitit import AutoExecutor
+from numpy.random import default_rng
 
 from matsci_opt_benchmarks.crabnet_hyperparameter.core import evaluate, get_parameters
 
@@ -43,11 +44,12 @@ else:
 
     # PRODUCTION PARAMETERS
     num_sobol_samples = 2**16  # 2**16 == 65536
-    num_repeats = 2
+    num_repeats = 1
     batch_size = 130
     walltime_min = int(round((3 * batch_size) + 3))
 
-SAMPLE_SEEDS = list(range(10, 10 + num_repeats))
+rng = default_rng()
+SAMPLE_SEEDS = list(rng.integers(0, 1000, num_repeats))
 
 slurm_savepath = path.join("data", "processed", "crabnet-hyperparameter-results.csv")
 job_pkl_path = path.join("data", "interim", "crabnet-hyperparameter-jobs.pkl")
@@ -81,6 +83,25 @@ if dummy:
 
 # fix the hardware for fairer benchmark comparisons
 hardware = "2080ti"
+# hardware = "1080ti"  # use with notchpeak-shared-short
+
+# use `myallocation` command to see available account/partition combos
+# account = "sparks"
+# partition = "kingspeak"
+
+# account = "owner-guest"
+# partition = "kingspeak-guest"
+
+# partition = "notchpeak-gpu"
+# account = "notchpeak-gpu"
+
+# partition = "notchpeak-shared-short"
+# account = "notchpeak-shared-short"
+
+# Many more RTX 2080 Ti GPUs available on notchpeak-gpu-guest
+partition = "notchpeak-gpu-guest"
+account = "owner-gpu-guest"
+
 # request a single GPU to allow for node sharing
 # https://www.chpc.utah.edu/documentation/guides/gpus-accelerators.php#ns
 num_gpus = 1
@@ -159,30 +180,14 @@ parameter_batch_sets = list(chunks(parameter_sets, batch_size))
 
 # %% submission
 log_folder = "data/interim/crabnet_hyperparameter/%j"
-# use `myallocation` command to see available account/partition combos
-# account = "sparks"
-# partition = "kingspeak"
-
-# account = "owner-guest"
-# partition = "kingspeak-guest"
-
-# partition = "notchpeak-gpu"
-# account = "notchpeak-gpu"
-
-# partition = "notchpeak-shared-short"
-# account = "notchpeak-shared-short"
-
-# Many more RTX 2080 Ti GPUs available on notchpeak-gpu-guest
-partition = "notchpeak-gpu-guest"
-account = "owner-gpu-guest"
 
 executor = AutoExecutor(folder=log_folder)
 executor.update_parameters(
     timeout_min=walltime_min,
-    slurm_nodes=None,
+    # slurm_nodes=None,
     slurm_partition=partition,
     # slurm_gpus_per_task=1,
-    slurm_mem_per_gpu=6000,
+    slurm_mem_per_gpu=11000,  # 11 GB for RTX 2080 Ti
     # slurm_cpus_per_gpu=4,
     slurm_additional_parameters={
         "account": account,

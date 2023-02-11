@@ -106,17 +106,17 @@ def get_parameters():
     return parameters, parameter_constraints
 
 
-def evaluate(parameters):
-    results = matbench_metric_calculator(parameters)
+# def evaluate(parameters):
+#     results = matbench_metric_calculator(parameters)
 
-    outputs = {
-        "mae": results["average_mae"],
-        "rmse": results["average_rmse"],
-        "model_size": results["model_size"],
-        "runtime": results["runtime"],
-    }
+#     outputs = {
+#         "mae": results["average_mae"],
+#         "rmse": results["average_rmse"],
+#         "model_size": results["model_size"],
+#         "runtime": results["runtime"],
+#     }
 
-    return outputs
+#     return outputs
 
 
 def correct_parameterization(parameters: dict, verbose=False):
@@ -163,7 +163,7 @@ def correct_parameterization(parameters: dict, verbose=False):
     return parameters
 
 
-def matbench_metric_calculator(parameters):
+def evaluate(parameters):
     t0 = time()
 
     print("user parameters are:", parameters)
@@ -215,48 +215,52 @@ def matbench_metric_calculator(parameters):
 
     # TODO: try-except with NaN output if failure
 
-    for task in mb.tasks:
-        task.load()
-        for fold in task.folds:
-            # Inputs are either chemical compositions as strings or crystal
-            # structures as pymatgen.Structure objects. Outputs are either
-            # floats (regression tasks) or bools (classification tasks)
-            train_inputs, train_outputs = task.get_train_and_val_data(fold)
+    try:
+        for task in mb.tasks:
+            task.load()
+            for fold in task.folds:
+                # Inputs are either chemical compositions as strings or crystal
+                # structures as pymatgen.Structure objects. Outputs are either
+                # floats (regression tasks) or bools (classification tasks)
+                train_inputs, train_outputs = task.get_train_and_val_data(fold)
 
-            # prep input for CrabNet
-            train_df = pd.concat(
-                (train_inputs, train_outputs), axis=1, keys=["formula", "target"]
-            )
+                # prep input for CrabNet
+                train_df = pd.concat(
+                    (train_inputs, train_outputs), axis=1, keys=["formula", "target"]
+                )
 
-            train_df = train_df.sample(frac=train_frac, random_state=rng)
+                train_df = train_df.sample(frac=train_frac, random_state=rng)
 
-            # train and validate your model
-            cb.fit(train_df=train_df)
+                # train and validate your model
+                cb.fit(train_df=train_df)
 
-            # Get testing data
-            test_inputs, test_outputs = task.get_test_data(fold, include_target=True)
-            test_df = pd.concat(
-                (test_inputs, test_outputs), axis=1, keys=["formula", "target"]
-            )
+                # Get testing data
+                test_inputs, test_outputs = task.get_test_data(
+                    fold, include_target=True
+                )
+                test_df = pd.concat(
+                    (test_inputs, test_outputs), axis=1, keys=["formula", "target"]
+                )
 
-            # Predict on the testing data
-            # Your output should be a pandas series, numpy array, or python iterable
-            # where the array elements are floats or bools
-            predictions = cb.predict(test_df=test_df)
+                # Predict on the testing data
+                # Your output should be a pandas series, numpy array, or python iterable
+                # where the array elements are floats or bools
+                predictions = cb.predict(test_df=test_df)
 
-            predictions = np.nan_to_num(predictions)
+                predictions = np.nan_to_num(predictions)
 
-            # Record your data!
-            task.record(fold, predictions)
+                # Record your data!
+                task.record(fold, predictions)
+            scores = task.scores
+            # `fit` needs to be called prior to `count_parameters`
+            # all 5 models should be same size, but we take the last for simplicity
+            model_size = count_parameters(cb.model)
 
-    model_size = count_parameters(cb.model)
+        # REVIEW: if using multiple tasks, return multiple `scores` dicts
 
-    return {
-        "average_mae": task.scores["mae"]["mean"],
-        "average_rmse": task.scores["rmse"]["mean"],
-        "model_size": model_size,
-        "runtime": time() - t0,
-    }
+        return {"scores": scores, "model_size": model_size, "runtime": time() - t0}
+    except Exception as e:
+        return {"error": str(e), "runtime": time() - t0}
 
 
 #############
