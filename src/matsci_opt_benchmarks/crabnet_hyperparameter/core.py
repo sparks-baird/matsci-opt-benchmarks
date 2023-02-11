@@ -110,10 +110,10 @@ def evaluate(parameters):
     results = matbench_metric_calculator(parameters)
 
     outputs = {
-        "mae": results[0]["average_mae"],
-        "rmse": results[0]["average_rmse"],
-        "model_size": results[0]["model_size"],
-        "runtime": results[0]["runtime"],
+        "mae": results["average_mae"],
+        "rmse": results["average_rmse"],
+        "model_size": results["model_size"],
+        "runtime": results["runtime"],
     }
 
     return outputs
@@ -249,15 +249,12 @@ def matbench_metric_calculator(parameters):
 
     model_size = count_parameters(cb.model)
 
-    return (
-        {
-            "average_mae": task.scores["mae"]["mean"],
-            "average_rmse": task.scores["rmse"]["mean"],
-            "model_size": model_size,
-            "runtime": time() - t0,
-        },
-        parameters,
-    )
+    return {
+        "average_mae": task.scores["mae"]["mean"],
+        "average_rmse": task.scores["rmse"]["mean"],
+        "model_size": model_size,
+        "runtime": time() - t0,
+    }
 
 
 #############
