@@ -3,6 +3,7 @@ channels:
   - defaults
   - conda-forge
   - pytorch
+  - nvidia
   # - fastai
 dependencies:
   - python>=3.6
@@ -23,6 +24,8 @@ dependencies:
   # - altair
   # - yellowbrick
   # ML, STATS & DEEP LEARNING
+  - pytorch
+  - pytorch-cuda=11.7
   # - statsmodels
   # - scikit-learn
   # - sktime
