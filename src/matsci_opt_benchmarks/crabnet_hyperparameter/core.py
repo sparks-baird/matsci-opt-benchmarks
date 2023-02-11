@@ -166,12 +166,15 @@ def correct_parameterization(parameters: dict, verbose=False):
 def matbench_metric_calculator(parameters):
     t0 = time()
 
-    print("user parameters are :", parameters)
+    print("user parameters are:", parameters)
 
     parameters = copy(parameters)
     train_frac = parameters.pop("train_frac")
-    seed = parameters.pop("seed")
+    seed = parameters.pop("sample_seed")
+    if "hardware" in parameters:
+        parameters.pop("hardware")
     rng = default_rng(seed)
+
     # default hyperparameters
     parameterization = {
         "N": 3,
@@ -351,3 +354,32 @@ if __name__ == "__main__":
     #     python -m matsci_opt_benchmarks.crabnet_hyperparameter.skeleton 42
     #
     run()
+
+# %% Code Graveyard
+
+# crabnet_param_names = [
+#     "N",
+#     "alpha",
+#     "d_model",
+#     "dim_feedforward",
+#     "dropout",
+#     "emb_scaler",
+#     "epochs_step",
+#     "eps",
+#     "fudge",
+#     "heads",
+#     "k",
+#     "lr",
+#     "pe_resolution",
+#     "ple_resolution",
+#     "pos_scaler",
+#     "weight_decay",
+#     "batch_size",
+#     "out_hidden4",
+#     "betas1",
+#     "betas2",
+#     "bias",
+#     "criterion",
+#     "elem_prop",
+# ]
+# new_parameters = {p: parameters[p] for p in parameters if p in crabnet_param_names}

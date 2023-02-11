@@ -27,15 +27,24 @@ from matsci_opt_benchmarks.crabnet_hyperparameter.core import evaluate, get_para
 # particle-packing/lib/python3.9/site-packages/joblib-1.2.0.dist-info/
 # INSTALLER2p04xuw3.tmp'
 
-
-dummy = True
+dummy = False
+runtime_check = True
 SOBOL_SEED = 42
 if dummy:
-    num_samples = 2**3  # 2**3 == 8
+    num_sobol_samples = 2**3  # 2**3 == 8
     num_repeats = 2
+    batch_size = 2
+    walltime_min = 5
+elif runtime_check:
+    num_sobol_samples = 2**7  # 2**7 == 128
+    num_repeats = 1
+    batch_size = 3
+    walltime_min = int(round((20 * batch_size) + 3))
 else:
-    num_samples = 2**16  # 2**16 == 65536
-    num_repeats = 15
+    num_sobol_samples = 2**14  # 2**14 == 16384
+    num_repeats = 1
+    batch_size = 20
+    walltime_min = int(round((20 * batch_size) + 3))
 
 SAMPLE_SEEDS = list(range(10, 10 + num_repeats))
 
@@ -59,7 +68,7 @@ ax_client.create_experiment(
 
 search_space = ax_client.experiment.search_space
 m = get_sobol(search_space, fallback_to_sample_polytope=True, seed=SOBOL_SEED)
-gr = m.gen(n=num_samples)
+gr = m.gen(n=num_sobol_samples)
 param_df = gr.param_df.copy()
 
 # UNCOMMENT FOR DEBUGGING
@@ -69,11 +78,18 @@ if dummy:
     # override to about 10 samples (assuming matbench_expt_gap)
     param_df.loc[:, "train_frac"] = 0.003
 
+# fix the hardware for fairer benchmark comparisons
+hardware = "2080ti"
+# request a single GPU to allow for node sharing
+# https://www.chpc.utah.edu/documentation/guides/gpus-accelerators.php#ns
+num_gpus = 1
+param_df["hardware"] = hardware
+
 # make repeats of dataframe with new rows except with different seed variables
 tmp_dfs = []
 for seed in SAMPLE_SEEDS:
     param_tmp_df = param_df.copy()
-    param_tmp_df["seed"] = seed
+    param_tmp_df["sample_seed"] = seed
     tmp_dfs.append(param_tmp_df)
 
 param_df = pd.concat(tmp_dfs, ignore_index=True)
@@ -84,9 +100,6 @@ shuffle(parameter_sets)
 
 if dummy:
     parameter_sets = parameter_sets[:10]
-    batch_size = 2
-else:
-    batch_size = 20
 
 app_name = "data-plyju"  # specific to matsci-opt-benchmarks MongoDB project
 url = f"https://data.mongodb-api.com/app/{app_name}/endpoint/data/v1/action/insertOne"  # noqa: E501
@@ -104,8 +117,7 @@ def mongodb_evaluate(parameters, verbose=False):
         "timestamp": utc.timestamp(),
         "date": str(utc),
         "sobol_seed": SOBOL_SEED,
-        "sample_seed": parameters["seed"],
-        "num_samples": num_samples,
+        "num_sobol_samples": num_sobol_samples,
         "num_repeats": num_repeats,
     }
 
@@ -146,7 +158,6 @@ parameter_batch_sets = list(chunks(parameter_sets, batch_size))
 
 # %% submission
 log_folder = "data/interim/crabnet_hyperparameter/%j"
-walltime_min = int(round((20 * batch_size) + 3))
 # use `myallocation` command to see available account/partition combos
 # account = "sparks"
 # partition = "kingspeak"
@@ -157,19 +168,25 @@ walltime_min = int(round((20 * batch_size) + 3))
 # partition = "notchpeak-gpu"
 # account = "notchpeak-gpu"
 
-partition = "notchpeak-shared-short"
-account = "notchpeak-shared-short"
+# partition = "notchpeak-shared-short"
+# account = "notchpeak-shared-short"
+
+# Many more RTX 2080 Ti GPUs available on notchpeak-gpu-guest
+partition = "notchpeak-gpu-guest"
+account = "owner-gpu-guest"
 
 executor = AutoExecutor(folder=log_folder)
 executor.update_parameters(
     timeout_min=walltime_min,
     slurm_nodes=None,
     slurm_partition=partition,
-    slurm_gpus_per_task=1,
+    # slurm_gpus_per_task=1,
     slurm_mem_per_gpu=6000,
-    slurm_cpus_per_gpu=4,
-    # slurm_cpus_per_task=1,
-    slurm_additional_parameters={"account": account},
+    # slurm_cpus_per_gpu=4,
+    slurm_additional_parameters={
+        "account": account,
+        "gres": f"gpu:{hardware}:{num_gpus}",
+    },
 )
 
 
