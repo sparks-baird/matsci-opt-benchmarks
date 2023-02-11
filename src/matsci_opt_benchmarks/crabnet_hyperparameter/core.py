@@ -213,6 +213,8 @@ def matbench_metric_calculator(parameters):
 
     mb = MatbenchBenchmark(autoload=False, subset=["matbench_expt_gap"])
 
+    # TODO: try-except with NaN output if failure
+
     for task in mb.tasks:
         task.load()
         for fold in task.folds:
