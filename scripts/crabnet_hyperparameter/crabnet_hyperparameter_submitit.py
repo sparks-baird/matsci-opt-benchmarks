@@ -28,23 +28,24 @@ from matsci_opt_benchmarks.crabnet_hyperparameter.core import evaluate, get_para
 # INSTALLER2p04xuw3.tmp'
 
 dummy = False
-runtime_check = True
 SOBOL_SEED = 42
 if dummy:
     num_sobol_samples = 2**3  # 2**3 == 8
     num_repeats = 2
     batch_size = 2
     walltime_min = 5
-elif runtime_check:
-    num_sobol_samples = 2**7  # 2**7 == 128
-    num_repeats = 1
-    batch_size = 3
-    walltime_min = int(round((20 * batch_size) + 3))
 else:
-    num_sobol_samples = 2**14  # 2**14 == 16384
-    num_repeats = 1
-    batch_size = 20
-    walltime_min = int(round((20 * batch_size) + 3))
+    # RUNTIME CHECK PARAMETERS
+    # num_sobol_samples = 2**7  # 2**7 == 128
+    # num_repeats = 1
+    # batch_size = 3
+    # walltime_min = int(round((20 * batch_size) + 3))
+
+    # PRODUCTION PARAMETERS
+    num_sobol_samples = 2**16  # 2**16 == 65536
+    num_repeats = 2
+    batch_size = 130
+    walltime_min = int(round((3 * batch_size) + 3))
 
 SAMPLE_SEEDS = list(range(10, 10 + num_repeats))
 
