@@ -17,8 +17,8 @@ import requests
 from ax.modelbridge.factory import get_sobol
 from ax.service.ax_client import AxClient
 from my_secrets import MONGODB_API_KEY
-from submitit import AutoExecutor
 from numpy.random import default_rng
+from submitit import AutoExecutor
 
 from matsci_opt_benchmarks.crabnet_hyperparameter.core import evaluate, get_parameters
 
