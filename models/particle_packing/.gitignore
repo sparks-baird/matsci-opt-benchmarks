@@ -3,3 +3,4 @@
 # Except this file
 !.gitignore
 !dummy
+!trained_models
