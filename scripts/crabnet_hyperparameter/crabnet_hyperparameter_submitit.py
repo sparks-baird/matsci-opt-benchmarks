@@ -184,11 +184,8 @@ log_folder = "data/interim/crabnet_hyperparameter/%j"
 executor = AutoExecutor(folder=log_folder)
 executor.update_parameters(
     timeout_min=walltime_min,
-    # slurm_nodes=None,
     slurm_partition=partition,
-    # slurm_gpus_per_task=1,
-    slurm_mem_per_gpu=11000,  # 11 GB for RTX 2080 Ti
-    # slurm_cpus_per_gpu=4,
+    slurm_mem_per_gpu=11000,  # 11 GB for RTX 2080 Ti, maybe unnecessary to specify
     slurm_additional_parameters={
         "account": account,
         "gres": f"gpu:{hardware}:{num_gpus}",
@@ -196,18 +193,35 @@ executor.update_parameters(
 )
 
 
-# # UNCOMMENT FOR DEBUGGING
+# # UNCOMMENT FOR DEBUGGING on Windows
 # evaluate(parameter_batch_sets[0][0])
 
-# # UNCOMMENT FOR DEBUGGING
+# # UNCOMMENT FOR DEBUGGING on Windows
 # [
 #     mongodb_evaluate_batch(parameter_batch_set, verbose=True)
 #     for parameter_batch_set in parameter_batch_sets
 # ]
 
 jobs = executor.map_array(mongodb_evaluate_batch, parameter_batch_sets)
-# jobs = executor.map_array(mongodb_evaluate, parameter_sets)
 print("Submitted jobs")
+
+results = [job.result() for job in jobs]
+
+1 + 1
+
+# %% Code Graveyard
+# import pymongo
+# from urllib.parse import quote_plus
+# password needs to be URL encoded
+# client = pymongo.MongoClient(
+#     f"mongodb+srv://{USERNAME}:{quote_plus(PASSWORD)}@matsci-opt-benchmarks.ehu7qrh.mongodb.net/?retryWrites=true&w=majority"# noqa: E501
+# )
+# collection = client["particle-packing"]["sobol"]
+# collection.insert_one(result)
+
+# import cloudpickle as pickle
+
+
 # job_ids = [job.job_id for job in jobs]
 # # https://www.hpc2n.umu.se/documentation/batchsystem/job-dependencies
 # job_ids_str = ":".join(job_ids)  # e.g. "3937257_0:3937257_1:..."
@@ -235,18 +249,17 @@ print("Submitted jobs")
 #     collector job ({collector_job.job_id}). Pickled results file saved to
 # {slurm_savepath} after all jobs have run." )
 
-results = [job.result() for job in jobs]
+# jobs = executor.map_array(mongodb_evaluate, parameter_sets)
 
-1 + 1
-
-# %% Code Graveyard
-# import pymongo
-# from urllib.parse import quote_plus
-# password needs to be URL encoded
-# client = pymongo.MongoClient(
-#     f"mongodb+srv://{USERNAME}:{quote_plus(PASSWORD)}@matsci-opt-benchmarks.ehu7qrh.mongodb.net/?retryWrites=true&w=majority"# noqa: E501
+# executor.update_parameters(
+#     timeout_min=walltime_min,
+#     # slurm_nodes=None,
+#     slurm_partition=partition,
+#     # slurm_gpus_per_task=1,
+#     slurm_mem_per_gpu=11000,  # 11 GB for RTX 2080 Ti
+#     # slurm_cpus_per_gpu=4,
+#     slurm_additional_parameters={
+#         "account": account,
+#         "gres": f"gpu:{hardware}:{num_gpus}",
+#     },
 # )
-# collection = client["particle-packing"]["sobol"]
-# collection.insert_one(result)
-
-# import cloudpickle as pickle
