@@ -1,12 +1,18 @@
+"""
+In CHPC terminal:
+
+```bash
+module load cuda/11.6.2
+```
+"""
 # %% imports
 import json
 from datetime import datetime
 from os import path
-from pathlib import Path
 from random import shuffle
-from time import time
 from uuid import uuid4
 
+import pandas as pd
 import requests
 from ax.modelbridge.factory import get_sobol
 from ax.service.ax_client import AxClient
@@ -22,8 +28,8 @@ from matsci_opt_benchmarks.crabnet_hyperparameter.core import evaluate, get_para
 # INSTALLER2p04xuw3.tmp'
 
 
-dummy = False
-SEED = 10
+dummy = True
+SOBOL_SEED = 42
 if dummy:
     num_samples = 2**3  # 2**3 == 8
     num_repeats = 2
@@ -31,12 +37,14 @@ else:
     num_samples = 2**16  # 2**16 == 65536
     num_repeats = 15
 
+SAMPLE_SEEDS = list(range(10, 10 + num_repeats))
+
 slurm_savepath = path.join("data", "processed", "crabnet-hyperparameter-results.csv")
 job_pkl_path = path.join("data", "interim", "crabnet-hyperparameter-jobs.pkl")
 
 session_id = str(uuid4())
 
-parameters, parameter_constraints = get_parameters(...)
+parameters, parameter_constraints = get_parameters()
 
 # add number of training points (fidelity parameter)
 
@@ -48,13 +56,28 @@ ax_client.create_experiment(
     minimize=True,
     parameter_constraints=parameter_constraints,
 )
+
 search_space = ax_client.experiment.search_space
-m = get_sobol(search_space, fallback_to_sample_polytope=True, seed=SEED)
+m = get_sobol(search_space, fallback_to_sample_polytope=True, seed=SOBOL_SEED)
 gr = m.gen(n=num_samples)
 param_df = gr.param_df.copy()
-data_dir = path.join("data", "interim", "crabnet_hyperparameter")
-Path(data_dir).mkdir(parents=True, exist_ok=True)
-param_df["data_dir"] = data_dir
+
+# UNCOMMENT FOR DEBUGGING
+# param_df.loc[:, "force_cpu"] = True
+
+if dummy:
+    # override to about 10 samples (assuming matbench_expt_gap)
+    param_df.loc[:, "train_frac"] = 0.003
+
+# make repeats of dataframe with new rows except with different seed variables
+tmp_dfs = []
+for seed in SAMPLE_SEEDS:
+    param_tmp_df = param_df.copy()
+    param_tmp_df["seed"] = seed
+    tmp_dfs.append(param_tmp_df)
+
+param_df = pd.concat(tmp_dfs, ignore_index=True)
+
 parameter_sets = param_df.to_dict(orient="records")
 parameter_sets = parameter_sets * num_repeats
 shuffle(parameter_sets)
@@ -66,27 +89,25 @@ else:
     batch_size = 20
 
 app_name = "data-plyju"  # specific to matsci-opt-benchmarks MongoDB project
-url = "https://data.mongodb-api.com/app/{app_name}/endpoint/data/v1/action/insertOne"  # noqa: E501
+url = f"https://data.mongodb-api.com/app/{app_name}/endpoint/data/v1/action/insertOne"  # noqa: E501
 
 
-def mongodb_evaluate(parameter_set, verbose=False):
+def mongodb_evaluate(parameters, verbose=False):
     """Evaluate a parameter set and save the results to MongoDB."""
-    t0 = time()
-    results = evaluate(parameter_set)
+    results = evaluate(parameters)
     print(results)
     utc = datetime.utcnow()
     results = {
+        **parameters,
         **results,
         "session_id": session_id,
         "timestamp": utc.timestamp(),
         "date": str(utc),
-        "runtime": time() - t0,
-        "seed": SEED,
+        "sobol_seed": SOBOL_SEED,
+        "sample_seed": parameters["seed"],
         "num_samples": num_samples,
         "num_repeats": num_repeats,
     }
-    results.pop("data_dir")
-    results.pop("util_dir")
 
     payload = json.dumps(
         {
@@ -129,10 +150,16 @@ walltime_min = int(round((20 * batch_size) + 3))
 # use `myallocation` command to see available account/partition combos
 # account = "sparks"
 # partition = "kingspeak"
+
 # account = "owner-guest"
 # partition = "kingspeak-guest"
-partition = "notchpeak-gpu"
-account = "notchpeak-gpu"
+
+# partition = "notchpeak-gpu"
+# account = "notchpeak-gpu"
+
+partition = "notchpeak-shared-short"
+account = "notchpeak-shared-short"
+
 executor = AutoExecutor(folder=log_folder)
 executor.update_parameters(
     timeout_min=walltime_min,
@@ -145,7 +172,16 @@ executor.update_parameters(
     slurm_additional_parameters={"account": account},
 )
 
-# sbatch array
+
+# # UNCOMMENT FOR DEBUGGING
+# evaluate(parameter_batch_sets[0][0])
+
+# # UNCOMMENT FOR DEBUGGING
+# [
+#     mongodb_evaluate_batch(parameter_batch_set, verbose=True)
+#     for parameter_batch_set in parameter_batch_sets
+# ]
+
 jobs = executor.map_array(mongodb_evaluate_batch, parameter_batch_sets)
 # jobs = executor.map_array(mongodb_evaluate, parameter_sets)
 print("Submitted jobs")
