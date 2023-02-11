@@ -106,17 +106,17 @@ def get_parameters():
     return parameters, parameter_constraints
 
 
-def evaluate(parameters):
-    results = matbench_metric_calculator(parameters)
+# def evaluate(parameters):
+#     results = matbench_metric_calculator(parameters)
 
-    outputs = {
-        "mae": results[0]["average_mae"],
-        "rmse": results[0]["average_rmse"],
-        "model_size": results[0]["model_size"],
-        "runtime": results[0]["runtime"],
-    }
+#     outputs = {
+#         "mae": results["average_mae"],
+#         "rmse": results["average_rmse"],
+#         "model_size": results["model_size"],
+#         "runtime": results["runtime"],
+#     }
 
-    return outputs
+#     return outputs
 
 
 def correct_parameterization(parameters: dict, verbose=False):
@@ -163,15 +163,18 @@ def correct_parameterization(parameters: dict, verbose=False):
     return parameters
 
 
-def matbench_metric_calculator(parameters):
+def evaluate(parameters):
     t0 = time()
 
-    print("user parameters are :", parameters)
+    print("user parameters are:", parameters)
 
     parameters = copy(parameters)
     train_frac = parameters.pop("train_frac")
-    seed = parameters.pop("seed")
+    seed = parameters.pop("sample_seed")
+    if "hardware" in parameters:
+        parameters.pop("hardware")
     rng = default_rng(seed)
+
     # default hyperparameters
     parameterization = {
         "N": 3,
@@ -210,51 +213,54 @@ def matbench_metric_calculator(parameters):
 
     mb = MatbenchBenchmark(autoload=False, subset=["matbench_expt_gap"])
 
-    for task in mb.tasks:
-        task.load()
-        for fold in task.folds:
-            # Inputs are either chemical compositions as strings or crystal
-            # structures as pymatgen.Structure objects. Outputs are either
-            # floats (regression tasks) or bools (classification tasks)
-            train_inputs, train_outputs = task.get_train_and_val_data(fold)
+    # TODO: try-except with NaN output if failure
 
-            # prep input for CrabNet
-            train_df = pd.concat(
-                (train_inputs, train_outputs), axis=1, keys=["formula", "target"]
-            )
+    try:
+        for task in mb.tasks:
+            task.load()
+            for fold in task.folds:
+                # Inputs are either chemical compositions as strings or crystal
+                # structures as pymatgen.Structure objects. Outputs are either
+                # floats (regression tasks) or bools (classification tasks)
+                train_inputs, train_outputs = task.get_train_and_val_data(fold)
 
-            train_df = train_df.sample(frac=train_frac, random_state=rng)
+                # prep input for CrabNet
+                train_df = pd.concat(
+                    (train_inputs, train_outputs), axis=1, keys=["formula", "target"]
+                )
 
-            # train and validate your model
-            cb.fit(train_df=train_df)
+                train_df = train_df.sample(frac=train_frac, random_state=rng)
 
-            # Get testing data
-            test_inputs, test_outputs = task.get_test_data(fold, include_target=True)
-            test_df = pd.concat(
-                (test_inputs, test_outputs), axis=1, keys=["formula", "target"]
-            )
+                # train and validate your model
+                cb.fit(train_df=train_df)
 
-            # Predict on the testing data
-            # Your output should be a pandas series, numpy array, or python iterable
-            # where the array elements are floats or bools
-            predictions = cb.predict(test_df=test_df)
+                # Get testing data
+                test_inputs, test_outputs = task.get_test_data(
+                    fold, include_target=True
+                )
+                test_df = pd.concat(
+                    (test_inputs, test_outputs), axis=1, keys=["formula", "target"]
+                )
 
-            predictions = np.nan_to_num(predictions)
+                # Predict on the testing data
+                # Your output should be a pandas series, numpy array, or python iterable
+                # where the array elements are floats or bools
+                predictions = cb.predict(test_df=test_df)
 
-            # Record your data!
-            task.record(fold, predictions)
+                predictions = np.nan_to_num(predictions)
 
-    model_size = count_parameters(cb.model)
+                # Record your data!
+                task.record(fold, predictions)
+            scores = task.scores
+            # `fit` needs to be called prior to `count_parameters`
+            # all 5 models should be same size, but we take the last for simplicity
+            model_size = count_parameters(cb.model)
 
-    return (
-        {
-            "average_mae": task.scores["mae"]["mean"],
-            "average_rmse": task.scores["rmse"]["mean"],
-            "model_size": model_size,
-            "runtime": time() - t0,
-        },
-        parameters,
-    )
+        # REVIEW: if using multiple tasks, return multiple `scores` dicts
+
+        return {"scores": scores, "model_size": model_size, "runtime": time() - t0}
+    except Exception as e:
+        return {"error": str(e), "runtime": time() - t0}
 
 
 #############
@@ -351,3 +357,32 @@ if __name__ == "__main__":
     #     python -m matsci_opt_benchmarks.crabnet_hyperparameter.skeleton 42
     #
     run()
+
+# %% Code Graveyard
+
+# crabnet_param_names = [
+#     "N",
+#     "alpha",
+#     "d_model",
+#     "dim_feedforward",
+#     "dropout",
+#     "emb_scaler",
+#     "epochs_step",
+#     "eps",
+#     "fudge",
+#     "heads",
+#     "k",
+#     "lr",
+#     "pe_resolution",
+#     "ple_resolution",
+#     "pos_scaler",
+#     "weight_decay",
+#     "batch_size",
+#     "out_hidden4",
+#     "betas1",
+#     "betas2",
+#     "bias",
+#     "criterion",
+#     "elem_prop",
+# ]
+# new_parameters = {p: parameters[p] for p in parameters if p in crabnet_param_names}

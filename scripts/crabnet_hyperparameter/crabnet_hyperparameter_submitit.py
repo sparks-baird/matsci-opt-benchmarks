@@ -17,6 +17,7 @@ import requests
 from ax.modelbridge.factory import get_sobol
 from ax.service.ax_client import AxClient
 from my_secrets import MONGODB_API_KEY
+from numpy.random import default_rng
 from submitit import AutoExecutor
 
 from matsci_opt_benchmarks.crabnet_hyperparameter.core import evaluate, get_parameters
@@ -27,17 +28,28 @@ from matsci_opt_benchmarks.crabnet_hyperparameter.core import evaluate, get_para
 # particle-packing/lib/python3.9/site-packages/joblib-1.2.0.dist-info/
 # INSTALLER2p04xuw3.tmp'
 
-
-dummy = True
+dummy = False
 SOBOL_SEED = 42
 if dummy:
-    num_samples = 2**3  # 2**3 == 8
+    num_sobol_samples = 2**3  # 2**3 == 8
     num_repeats = 2
+    batch_size = 2
+    walltime_min = 5
 else:
-    num_samples = 2**16  # 2**16 == 65536
-    num_repeats = 15
+    # RUNTIME CHECK PARAMETERS
+    # num_sobol_samples = 2**7  # 2**7 == 128
+    # num_repeats = 1
+    # batch_size = 3
+    # walltime_min = int(round((20 * batch_size) + 3))
 
-SAMPLE_SEEDS = list(range(10, 10 + num_repeats))
+    # PRODUCTION PARAMETERS
+    num_sobol_samples = 2**16  # 2**16 == 65536
+    num_repeats = 1
+    batch_size = 130
+    walltime_min = int(round((3 * batch_size) + 3))
+
+rng = default_rng()
+SAMPLE_SEEDS = list(rng.integers(0, 1000, num_repeats))
 
 slurm_savepath = path.join("data", "processed", "crabnet-hyperparameter-results.csv")
 job_pkl_path = path.join("data", "interim", "crabnet-hyperparameter-jobs.pkl")
@@ -59,7 +71,7 @@ ax_client.create_experiment(
 
 search_space = ax_client.experiment.search_space
 m = get_sobol(search_space, fallback_to_sample_polytope=True, seed=SOBOL_SEED)
-gr = m.gen(n=num_samples)
+gr = m.gen(n=num_sobol_samples)
 param_df = gr.param_df.copy()
 
 # UNCOMMENT FOR DEBUGGING
@@ -69,11 +81,37 @@ if dummy:
     # override to about 10 samples (assuming matbench_expt_gap)
     param_df.loc[:, "train_frac"] = 0.003
 
+# fix the hardware for fairer benchmark comparisons
+hardware = "2080ti"
+# hardware = "1080ti"  # use with notchpeak-shared-short
+
+# use `myallocation` command to see available account/partition combos
+# account = "sparks"
+# partition = "kingspeak"
+
+# account = "owner-guest"
+# partition = "kingspeak-guest"
+
+# partition = "notchpeak-gpu"
+# account = "notchpeak-gpu"
+
+# partition = "notchpeak-shared-short"
+# account = "notchpeak-shared-short"
+
+# Many more RTX 2080 Ti GPUs available on notchpeak-gpu-guest
+partition = "notchpeak-gpu-guest"
+account = "owner-gpu-guest"
+
+# request a single GPU to allow for node sharing
+# https://www.chpc.utah.edu/documentation/guides/gpus-accelerators.php#ns
+num_gpus = 1
+param_df["hardware"] = hardware
+
 # make repeats of dataframe with new rows except with different seed variables
 tmp_dfs = []
 for seed in SAMPLE_SEEDS:
     param_tmp_df = param_df.copy()
-    param_tmp_df["seed"] = seed
+    param_tmp_df["sample_seed"] = seed
     tmp_dfs.append(param_tmp_df)
 
 param_df = pd.concat(tmp_dfs, ignore_index=True)
@@ -84,9 +122,6 @@ shuffle(parameter_sets)
 
 if dummy:
     parameter_sets = parameter_sets[:10]
-    batch_size = 2
-else:
-    batch_size = 20
 
 app_name = "data-plyju"  # specific to matsci-opt-benchmarks MongoDB project
 url = f"https://data.mongodb-api.com/app/{app_name}/endpoint/data/v1/action/insertOne"  # noqa: E501
@@ -104,8 +139,7 @@ def mongodb_evaluate(parameters, verbose=False):
         "timestamp": utc.timestamp(),
         "date": str(utc),
         "sobol_seed": SOBOL_SEED,
-        "sample_seed": parameters["seed"],
-        "num_samples": num_samples,
+        "num_sobol_samples": num_sobol_samples,
         "num_repeats": num_repeats,
     }
 
@@ -146,45 +180,48 @@ parameter_batch_sets = list(chunks(parameter_sets, batch_size))
 
 # %% submission
 log_folder = "data/interim/crabnet_hyperparameter/%j"
-walltime_min = int(round((20 * batch_size) + 3))
-# use `myallocation` command to see available account/partition combos
-# account = "sparks"
-# partition = "kingspeak"
-
-# account = "owner-guest"
-# partition = "kingspeak-guest"
-
-# partition = "notchpeak-gpu"
-# account = "notchpeak-gpu"
-
-partition = "notchpeak-shared-short"
-account = "notchpeak-shared-short"
 
 executor = AutoExecutor(folder=log_folder)
 executor.update_parameters(
     timeout_min=walltime_min,
-    slurm_nodes=None,
     slurm_partition=partition,
-    slurm_gpus_per_task=1,
-    slurm_mem_per_gpu=6000,
-    slurm_cpus_per_gpu=4,
-    # slurm_cpus_per_task=1,
-    slurm_additional_parameters={"account": account},
+    slurm_mem_per_gpu=11000,  # 11 GB for RTX 2080 Ti, maybe unnecessary to specify
+    slurm_additional_parameters={
+        "account": account,
+        "gres": f"gpu:{hardware}:{num_gpus}",
+    },
 )
 
 
-# # UNCOMMENT FOR DEBUGGING
+# # UNCOMMENT FOR DEBUGGING on Windows
 # evaluate(parameter_batch_sets[0][0])
 
-# # UNCOMMENT FOR DEBUGGING
+# # UNCOMMENT FOR DEBUGGING on Windows
 # [
 #     mongodb_evaluate_batch(parameter_batch_set, verbose=True)
 #     for parameter_batch_set in parameter_batch_sets
 # ]
 
 jobs = executor.map_array(mongodb_evaluate_batch, parameter_batch_sets)
-# jobs = executor.map_array(mongodb_evaluate, parameter_sets)
 print("Submitted jobs")
+
+results = [job.result() for job in jobs]
+
+1 + 1
+
+# %% Code Graveyard
+# import pymongo
+# from urllib.parse import quote_plus
+# password needs to be URL encoded
+# client = pymongo.MongoClient(
+#     f"mongodb+srv://{USERNAME}:{quote_plus(PASSWORD)}@matsci-opt-benchmarks.ehu7qrh.mongodb.net/?retryWrites=true&w=majority"# noqa: E501
+# )
+# collection = client["particle-packing"]["sobol"]
+# collection.insert_one(result)
+
+# import cloudpickle as pickle
+
+
 # job_ids = [job.job_id for job in jobs]
 # # https://www.hpc2n.umu.se/documentation/batchsystem/job-dependencies
 # job_ids_str = ":".join(job_ids)  # e.g. "3937257_0:3937257_1:..."
@@ -212,18 +249,17 @@ print("Submitted jobs")
 #     collector job ({collector_job.job_id}). Pickled results file saved to
 # {slurm_savepath} after all jobs have run." )
 
-results = [job.result() for job in jobs]
+# jobs = executor.map_array(mongodb_evaluate, parameter_sets)
 
-1 + 1
-
-# %% Code Graveyard
-# import pymongo
-# from urllib.parse import quote_plus
-# password needs to be URL encoded
-# client = pymongo.MongoClient(
-#     f"mongodb+srv://{USERNAME}:{quote_plus(PASSWORD)}@matsci-opt-benchmarks.ehu7qrh.mongodb.net/?retryWrites=true&w=majority"# noqa: E501
+# executor.update_parameters(
+#     timeout_min=walltime_min,
+#     # slurm_nodes=None,
+#     slurm_partition=partition,
+#     # slurm_gpus_per_task=1,
+#     slurm_mem_per_gpu=11000,  # 11 GB for RTX 2080 Ti
+#     # slurm_cpus_per_gpu=4,
+#     slurm_additional_parameters={
+#         "account": account,
+#         "gres": f"gpu:{hardware}:{num_gpus}",
+#     },
 # )
-# collection = client["particle-packing"]["sobol"]
-# collection.insert_one(result)
-
-# import cloudpickle as pickle
