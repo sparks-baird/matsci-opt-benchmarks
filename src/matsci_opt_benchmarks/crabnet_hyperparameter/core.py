@@ -132,7 +132,8 @@ def correct_parameterization(parameters: dict, verbose=False):
         verbose (bool, optional): Print function progress. Defaults to False.
 
     Returns:
-        dict: Modified dictionary with the correct parameters for CrabNet compatibility.
+        dict: Modified dictionary with the correct parameters for CrabNet
+        compatibility.
     """
     # take dictionary of tunable hyperparameters and output hyperparameter
     # combinations compatible with CrabNet
