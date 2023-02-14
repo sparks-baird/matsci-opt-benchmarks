@@ -44,9 +44,9 @@ else:
 
     # PRODUCTION PARAMETERS
     num_sobol_samples = 2**16  # 2**16 == 65536
-    num_repeats = 1
-    batch_size = 130
-    walltime_min = int(round((3 * batch_size) + 3))
+    num_repeats = 2
+    batch_size = 200  # 260
+    walltime_min = int(round((3.2 * batch_size) + 3))
 
 rng = default_rng()
 SAMPLE_SEEDS = list(rng.integers(0, 1000, num_repeats))
