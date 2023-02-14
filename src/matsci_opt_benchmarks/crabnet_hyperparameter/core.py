@@ -70,6 +70,11 @@ def fib(n):
 
 
 def get_parameters():
+    """Get parameter set and parameter constraints for CrabNet.
+
+    Returns:
+        (list(dict), list): CrabNet parameters, CrabNet parameter contraints for Ax
+    """
     parameters = [
         {"name": "N", "type": "range", "bounds": [1, 10]},
         {"name": "alpha", "type": "range", "bounds": [0.0, 1.0]},
@@ -120,6 +125,15 @@ def get_parameters():
 
 
 def correct_parameterization(parameters: dict, verbose=False):
+    """Modify tunable hyperparameters for combatibility with CrabNet.
+
+    Args:
+        parameters (dict): Hyperparameter set used by Ax in optimization.
+        verbose (bool, optional): Print function progress. Defaults to False.
+
+    Returns:
+        dict: Modified dictionary with the correct parameters for CrabNet compatibility.
+    """
     # take dictionary of tunable hyperparameters and output hyperparameter
     # combinations compatible with CrabNet
 
@@ -164,6 +178,15 @@ def correct_parameterization(parameters: dict, verbose=False):
 
 
 def evaluate(parameters):
+    """Trains CrabNet using the inputted parameter set and records the results.
+
+    Args:
+        parameters (list(dict)): Hyperparameter set for CrabNet.
+
+    Returns:
+        dict: Results after CrabNet training. MAE, RMSE, Model Size, Runtime. If
+        there is an error, dict contains error at dict["error"]
+    """
     t0 = time()
 
     print("user parameters are:", parameters)
