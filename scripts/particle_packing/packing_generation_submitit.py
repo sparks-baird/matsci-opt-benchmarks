@@ -44,7 +44,7 @@ session_id = str(uuid4())
     std_names_out,
     orig_mean_names,
     orig_std_names,
-) = get_parameters(remove_composition_degeneracy=True, remove_scaling_degeneracy=True)
+) = get_parameters(remove_composition_degeneracy=False, remove_scaling_degeneracy=False)
 
 parameters.append({"name": "num_particles", "type": "range", "bounds": [100, 1000]})
 parameters.append({"name": "safety_factor", "type": "range", "bounds": [1.0, 2.5]})
@@ -54,7 +54,7 @@ ax_client.create_experiment(
     parameters=parameters,
     objective_name="packing_fraction",
     minimize=False,
-    parameter_constraints=["std1 <= std2", "comp1 + comp2 <= 1.0"],
+    parameter_constraints=["std1 <= std2", "std2 < std3"],
 )
 search_space = ax_client.experiment.search_space
 m = get_sobol(search_space, fallback_to_sample_polytope=True, seed=SEED)
