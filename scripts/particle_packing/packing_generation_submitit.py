@@ -101,7 +101,7 @@ def mongodb_evaluate(parameter_set, verbose=False):
         {
             "collection": "sobol",
             "database": "particle-packing",
-            "dataSource": "matsci-opt-benchmarks",
+            "dataSource": "Cluster0",
             "document": results,
         }
     )
@@ -138,14 +138,14 @@ walltime_min = int(round(((120 / 60) * batch_size) + 3))
 # use `myallocation` command to see available account/partition combos
 # account = "sparks"
 # partition = "kingspeak"
-account = "owner-guest"
-partition = "kingspeak-guest"
+# account = "owner-guest"
+# partition = "kingspeak-guest"
+account = "sparks"
+partition = "notchpeak-freecycle"  # to allow for node sharing
 executor = AutoExecutor(folder=log_folder)
 executor.update_parameters(
     timeout_min=walltime_min,
-    slurm_nodes=None,
     slurm_partition=partition,
-    # slurm_cpus_per_task=1,
     slurm_additional_parameters={"ntasks": 1, "account": account},
 )
 
