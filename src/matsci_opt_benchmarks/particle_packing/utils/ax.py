@@ -12,7 +12,7 @@ from ax.modelbridge.generation_strategy import GenerationStep, GenerationStrateg
 from ax.modelbridge.registry import Models
 from ax.service.ax_client import AxClient
 from ax.service.utils.instantiation import ObjectiveProperties
-from boppf.utils.data import (
+from matsci_opt_benchmarks.particle_packing.utils.data import (
     MU3,
     SPLIT,
     default_frac_bnd,
@@ -22,7 +22,9 @@ from boppf.utils.data import (
     get_parameters,
     target_name,
 )
-from boppf.utils.particle_packing import particle_packing_simulation
+from matsci_opt_benchmarks.particle_packing.utils.particle_packing import (
+    particle_packing_simulation,
+)
 from botorch.acquisition import qExpectedImprovement
 from psutil import cpu_count
 from ray import tune
