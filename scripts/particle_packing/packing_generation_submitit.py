@@ -5,11 +5,14 @@ from os import path
 from random import shuffle
 from time import time
 from uuid import uuid4
+import pandas as pd
+import pymongo
 
 import requests
 from ax.modelbridge.factory import get_sobol
 from ax.service.ax_client import AxClient
-from my_secrets import MONGODB_API_KEY
+from tqdm import tqdm
+from my_secrets import MONGODB_API_KEY, MONGODB_USERNAME, MONGODB_PASSWORD
 from submitit import AutoExecutor
 
 from matsci_opt_benchmarks.particle_packing.utils.data import get_parameters
@@ -54,12 +57,81 @@ ax_client.create_experiment(
     parameters=parameters,
     objective_name="packing_fraction",
     minimize=False,
-    parameter_constraints=["std1 <= std2", "std2 < std3"],
+    parameter_constraints=["std1 <= std2", "std2 <= std3"],
 )
 search_space = ax_client.experiment.search_space
 m = get_sobol(search_space, fallback_to_sample_polytope=True, seed=SEED)
 gr = m.gen(n=num_samples)
-param_df = gr.param_df.copy()
+# possible bug in Ax accessing param_df, missing rows
+# param_df = gr.param_df.copy()
+param_df = pd.DataFrame([arm.parameters for arm in gr.arms])
+
+
+app_name = "data-oeodi"
+url = f"https://us-east-1.aws.data.mongodb-api.com/app/{app_name}/endpoint/data/v1/action/insertOne"
+# noqa: E501
+collection_name = "sobol"
+database_name = "particle-packing"
+dataSource = "Cluster0"
+cluster_uri = "cluster0.n03mvdg"
+
+# to find this string, click connect to your MongoDB cluster on the website
+# also needed to go to "Network Access", click "Add IP address", click "Allow access
+# from anywhere", and add
+client = pymongo.MongoClient(
+    f"mongodb+srv://{MONGODB_USERNAME}:{MONGODB_PASSWORD}@{cluster_uri}.mongodb.net/?retryWrites=true&w=majority"  # noqa: E501
+)
+db = client[database_name]
+collection = db[collection_name]
+
+posts = collection.find({})
+results = [post for post in tqdm(posts)]
+
+mongo_df = pd.DataFrame(results)
+parameter_names = [
+    "mu1",
+    "mu2",
+    "mu3",
+    "std1",
+    "std2",
+    "std3",
+    "comp1",
+    "comp2",
+    "comp3",
+    "num_particles",
+    "safety_factor",
+]
+mongo_param_df = mongo_df[parameter_names]
+# df = df[~df.cif.isin(mongo_df)]
+
+# remove the entries that are already in the database, including repeats
+# the repeats are necessary for the variance calculation
+# this is sort of a setdiff
+
+mongo_param_df = mongo_param_df.groupby(
+    mongo_param_df.columns.tolist(), as_index=False
+).size()
+mongo_param_df["group_id"] = (
+    mongo_param_df[parameter_names]
+    .round(6)
+    .apply(lambda row: "_".join(row.values.astype(str)), axis=1)
+)
+param_df["group_id"] = (
+    param_df[parameter_names]
+    .round(6)
+    .apply(lambda row: "_".join(row.values.astype(str)), axis=1)
+)
+
+pd.concat((param_df["group_id"], mongo_param_df["group_id"])).drop_duplicates()
+
+param_df = param_df[~param_df["group_id"].isin(mongo_param_df["group_id"])]
+
+param_df = param_df[~param_df.isin(mongo_param_df[parameter_names]).all(1)]
+param_df = param_df[~param_df.isin(mongo_param_df).all(1)]
+
+# setdiff between two dataframes
+# https://stackoverflow.com/questions/17071871/select-rows-from-a-dataframe-
+
 # param_df["num_particles"] = 1000
 param_df["util_dir"] = path.join(
     "src", "matsci_opt_benchmarks", "particle_packing", "utils"
@@ -74,8 +146,6 @@ if dummy:
     batch_size = 5
 else:
     batch_size = 700
-
-url = "https://data.mongodb-api.com/app/data-plyju/endpoint/data/v1/action/insertOne"  # noqa: E501
 
 
 def mongodb_evaluate(parameter_set, verbose=False):
@@ -99,9 +169,9 @@ def mongodb_evaluate(parameter_set, verbose=False):
 
     payload = json.dumps(
         {
-            "collection": "sobol",
-            "database": "particle-packing",
-            "dataSource": "Cluster0",
+            "collection": collection_name,
+            "database": database_name,
+            "dataSource": dataSource,
             "document": results,
         }
     )
@@ -141,13 +211,15 @@ walltime_min = int(round(((120 / 60) * batch_size) + 3))
 # account = "owner-guest"
 # partition = "kingspeak-guest"
 account = "sparks"
-partition = "notchpeak-freecycle"  # to allow for node sharing
+partition = "notchpeak-shared-freecycle"  # to allow for node sharing
 executor = AutoExecutor(folder=log_folder)
 executor.update_parameters(
     timeout_min=walltime_min,
     slurm_partition=partition,
     slurm_additional_parameters={"ntasks": 1, "account": account},
 )
+
+# mongodb_evaluate(parameter_sets[0], verbose=True)
 
 # sbatch array
 jobs = executor.map_array(mongodb_evaluate_batch, parameter_batch_sets)
