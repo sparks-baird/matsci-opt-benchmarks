@@ -3,3 +3,4 @@
 # Except this file
 !.gitignore
 !particle_packing
+!crabnet_hyperparameter

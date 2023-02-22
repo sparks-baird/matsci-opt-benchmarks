@@ -44,9 +44,9 @@ else:
 
     # PRODUCTION PARAMETERS
     num_sobol_samples = 2**16  # 2**16 == 65536
-    num_repeats = 1
-    batch_size = 130
-    walltime_min = int(round((3 * batch_size) + 3))
+    num_repeats = 2
+    batch_size = 200  # 260
+    walltime_min = int(round((3.2 * batch_size) + 3))
 
 rng = default_rng()
 SAMPLE_SEEDS = list(rng.integers(0, 1000, num_repeats))
@@ -128,7 +128,17 @@ url = f"https://data.mongodb-api.com/app/{app_name}/endpoint/data/v1/action/inse
 
 
 def mongodb_evaluate(parameters, verbose=False):
-    """Evaluate a parameter set and save the results to MongoDB."""
+    """Evaluate a parameter set and save the results to MongoDB.
+
+    Args:
+        parameters (dict): Hyperparameter set for CrabNet. verbose (bool,
+        optional): Print function progress. Defaults to False.
+
+    Returns:
+        dict[str, Any]: Results of CrabNet training with the inputted
+        hyperparameter set. Contains MAE, RMSE, Model Size, and Runtime
+    """
+
     results = evaluate(parameters)
     print(results)
     utc = datetime.utcnow()
@@ -151,11 +161,13 @@ def mongodb_evaluate(parameters, verbose=False):
             "document": results,
         }
     )
+
     headers = {
         "Content-Type": "application/json",
         "Access-Control-Request-Headers": "*",
         "api-key": MONGODB_API_KEY,
     }
+
     if verbose:
         print(f"Submitting {payload} to {url}...")
 
@@ -167,11 +179,31 @@ def mongodb_evaluate(parameters, verbose=False):
 
 
 def mongodb_evaluate_batch(parameter_sets, verbose=False):
+    """Evaluates CrabNet using various hyperparameter sets for training.
+
+    Args:
+        parameter_sets (list[dict]): List of CrabNet hyperparameter sets to use
+        for training. verbose (bool, optional): Print function progress.
+        Defaults to False.
+
+    Returns:
+        list[dict]: List of results from CrabNet training. Each element in the
+        list contains a dict with MAE, RMSE, Model Size, and Runtime.
+    """
     return [mongodb_evaluate(p, verbose=verbose) for p in parameter_sets]
 
 
 def chunks(lst, n):
-    """Yield successive n-sized chunks from lst."""
+    """Yield successive n-sized chunks from lst.
+
+    Args:
+        lst (list): Iterative list.
+        n (int): Size of the chunks.
+
+    Yields:
+        list: n-sized chunk for each interation
+    """
+
     for i in range(0, len(lst), n):
         yield lst[i : i + n]
 
