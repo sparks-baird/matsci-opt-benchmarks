@@ -5,16 +5,16 @@ from os import path
 from random import shuffle
 from time import time
 from uuid import uuid4
+
 import pandas as pd
 import pymongo
-
 import requests
+import torch
 from ax.modelbridge.factory import get_sobol
 from ax.service.ax_client import AxClient
-import torch
-from tqdm import tqdm
-from my_secrets import MONGODB_API_KEY, MONGODB_USERNAME, MONGODB_PASSWORD
+from my_secrets import MONGODB_API_KEY, MONGODB_PASSWORD, MONGODB_USERNAME
 from submitit import AutoExecutor
+from tqdm import tqdm
 
 from matsci_opt_benchmarks.particle_packing.utils.data import get_parameters
 from matsci_opt_benchmarks.particle_packing.utils.packing_generation import evaluate
@@ -77,7 +77,7 @@ param_df = pd.DataFrame([arm.parameters for arm in gr.arms])
 
 
 app_name = "data-oeodi"
-url = f"https://us-east-1.aws.data.mongodb-api.com/app/{app_name}/endpoint/data/v1/action/insertOne"
+url = f"https://us-east-1.aws.data.mongodb-api.com/app/{app_name}/endpoint/data/v1/action/insertOne"  # noqa: E501
 # noqa: E501
 collection_name = "sobol"
 database_name = "particle-packing"
