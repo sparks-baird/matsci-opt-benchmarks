@@ -4,8 +4,9 @@ from pathlib import Path
 
 import ray
 import torch
-from boppf.utils.ax import optimize_ppf
 from psutil import cpu_count
+
+from matsci_opt_benchmarks.particle_packing.utils.ax import optimize_ppf
 
 
 class BOPPF:

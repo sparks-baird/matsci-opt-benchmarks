@@ -212,13 +212,14 @@ def read_packing_fraction(data_dir, uid, packing_xyzd_fpath, box_length, final=F
 
 
 def evaluate(parameters):
-    mu3 = 3.0
+    # mu3 = 3.0
     # print("current working directory: ", os.getcwd())
-    means = [parameters[name] * mu3 for name in ["mu1_div_mu3", "mu2_div_mu3"]]
-    means.append(mu3)
+    # means = [parameters[name] * mu3 for name in ["mu1_div_mu3", "mu2_div_mu3"]]
+    # means.append(mu3)
+    means = [parameters[name] for name in ["mu1", "mu2", "mu3"]]
     stds = [parameters[name] for name in ["std1", "std2", "std3"]]
-    comps = [parameters[name] for name in ["comp1", "comp2"]]
-    comps.append(1 - sum(comps))
+    comps = [parameters[name] for name in ["comp1", "comp2", "comp3"]]
+    # comps.append(1 - sum(comps))
     num_particles = parameters["num_particles"]
     safety_factor = parameters.get("safety_factor", 2.0)
     util_dir = parameters.get("util_dir", ".")
