@@ -1,11 +1,11 @@
 [![Project generated with PyScaffold](https://img.shields.io/badge/-PyScaffold-005CA0?logo=pyscaffold)](https://pyscaffold.org/)
+[![PyPI-Server](https://img.shields.io/pypi/v/matsci-opt-benchmarks.svg)](https://pypi.org/project/matsci-opt-benchmarks/)
+[![ReadTheDocs](https://readthedocs.org/projects/matsci-opt-benchmarks/badge/?version=latest)](https://matsci-opt-benchmarks.readthedocs.io/en/stable/)
+[![Coveralls](https://img.shields.io/coveralls/github/sparks-baird/matsci-opt-benchmarks/main.svg)](https://coveralls.io/r/sparks-baird/matsci-opt-benchmarks)
+[![Monthly Downloads](https://pepy.tech/badge/matsci-opt-benchmarks/month)](https://pepy.tech/project/matsci-opt-benchmarks)
 <!-- These are examples of badges you might also want to add to your README. Update the URLs accordingly.
 [![Built Status](https://api.cirrus-ci.com/github/<USER>/matsci-opt-benchmarks.svg?branch=main)](https://cirrus-ci.com/github/<USER>/matsci-opt-benchmarks)
-[![ReadTheDocs](https://readthedocs.org/projects/matsci-opt-benchmarks/badge/?version=latest)](https://matsci-opt-benchmarks.readthedocs.io/en/stable/)
-[![Coveralls](https://img.shields.io/coveralls/github/<USER>/matsci-opt-benchmarks/main.svg)](https://coveralls.io/r/<USER>/matsci-opt-benchmarks)
-[![PyPI-Server](https://img.shields.io/pypi/v/matsci-opt-benchmarks.svg)](https://pypi.org/project/matsci-opt-benchmarks/)
 [![Conda-Forge](https://img.shields.io/conda/vn/conda-forge/matsci-opt-benchmarks.svg)](https://anaconda.org/conda-forge/matsci-opt-benchmarks)
-[![Monthly Downloads](https://pepy.tech/badge/matsci-opt-benchmarks/month)](https://pepy.tech/project/matsci-opt-benchmarks)
 [![Twitter](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&label=Twitter)](https://twitter.com/matsci-opt-benchmarks)
 -->
 
