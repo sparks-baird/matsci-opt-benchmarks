@@ -17,7 +17,7 @@ def check_float_ranges(parameters, tol=1e-6):
         key = key_val[0]
         val = key_val[1]
 
-        if float(val) < 0 or float(val) > (1 + 1e-6):
+        if float(val) < -tol or float(val) > (1 + tol):
             passed = False
 
             if len(assert_message) == 0:
