@@ -30,7 +30,7 @@ import numpy as np
 from matsci_opt_benchmarks.crabnet_hyperparameter import __version__
 from matsci_opt_benchmarks.crabnet_hyperparameter.utils.parameters import (
     matbench_metric_calculator,
-    userparam_To_crabnetparam,
+    userparam_to_crabnetparam,
 )
 from matsci_opt_benchmarks.crabnet_hyperparameter.utils.validation import (
     check_float_ranges,
@@ -131,7 +131,7 @@ class PseudoCrab(object):
     def num_evaluations(self):
         return self.__num_evaluations
 
-    def evaluate(self, parameters):
+    def evaluate(self, parameters, dummy=False):
         constraint_satisfied = self.constraint_fn(parameters)
         if not constraint_satisfied:
             # REVIEW: whether to raise a ValueError or return NaN outputs?
@@ -160,9 +160,11 @@ class PseudoCrab(object):
         if err_msg != "":
             raise KeyError(err_msg)
 
-        crabnet_parameters = userparam_To_crabnetparam(parameters)
+        crabnet_parameters = userparam_to_crabnetparam(parameters)
 
-        results = matbench_metric_calculator(crabnet_parameters)  # add try except block
+        results = matbench_metric_calculator(
+            crabnet_parameters, dummy=dummy
+        )  # add try except block
 
         # # TODO: compute and return CrabNet objective(s) as dictionary
         # crabnet_mae = 0.123 # eV (dummy value)
@@ -170,21 +172,87 @@ class PseudoCrab(object):
         # runtime = 125 # seconds (dummy value)
         # model_size = 123456 # parameters (dummy value)
 
-        outputs = {"mae": results[0]["average_mae"], "rmse": results[0]["average_rmse"]}
+        # outputs = {"mae": results[0]["average_mae"], "rmse":
+        # results[0]["average_rmse"]}
 
-        # TODO: how to deal with runtime and memory? {"runtime": runtime, "model_size":
-        # model_size}
-
-        return {k: outputs[k] for k in outputs.keys() if k in self.objectives}
+        return {k: results[k] for k in results.keys() if k in self.objectives}
 
 
-class PseudoCrab1(PseudoCrab):
+# class PseudoCrab1(PseudoCrab):
+#     def __init__(self):
+#         PseudoCrab.__init__(
+#             self,
+#             objectives=["mae", "rmse"],
+#             iteration_budget=100,
+#             n_float_params=5,
+#             categorical_num_options=[2, 2, 3],
+#             constraint_fn=sum_constraint_fn,
+#         )
+
+
+# what about constraint function?
+default_benchmarks = dict(
+    dummy=dict(
+        objective_names=["mae", "rmse"],
+        iteration_budget=3,
+        n_float_params=5,
+        n_categorical_params=2,
+    ),
+    minimal=dict(
+        objective_names=["mae", "rmse"],
+        iteration_budget=100,
+        n_float_params=5,
+        n_categorical_params=0,
+    ),  # single-vs-multi objective?
+    benchmark2=dict(
+        objective_names=["mae", "rmse"],
+        iteration_budget=100,
+        n_float_params=5,
+        n_categorical_params=2,
+    ),
+    # benchmark3=dict(
+    #     objective_names=["mae", "rmse"],
+    #     iteration_budget=100,
+    #     n_float_params=5,
+    #     n_categorical_params=2,
+    # ),
+    # benchmark4=dict(
+    #     objective_names=["mae", "rmse"],
+    #     iteration_budget=100,
+    #     n_float_params=5,
+    #     n_categorical_params=2,
+    # ),
+    # base alloy optimization benchmark and constraint? base alloy at least X%,
+    # remainder goes to other parameters
+    performance=dict(
+        objective_names=["mae", "rmse", "model_size", "runtime"],
+        constraint_fn=sum_constraint_fn,
+        iteration_budget=100,
+        n_float_params=23,
+        n_categorical_params=3,
+    ),
+)
+
+
+class PseudoCrabMinimal(PseudoCrab):
     def __init__(self):
         PseudoCrab.__init__(
             self,
-            objectives=["mae", "rmse"],
+            objectives=["mae"],
             iteration_budget=100,
-            n_float_params=5,
+            n_float_params=3,
+            categorical_num_options=[],
+            constraint_fn=sum_constraint_fn,
+        )
+
+
+class PseudoCrabPerformance(PseudoCrab):
+    def __init__(self):
+        PseudoCrab.__init__(
+            self,
+            objectives=["mae", "rmse", "model_size", "runtime"],
+            iteration_budget=100,
+            n_float_params=20,
             categorical_num_options=[2, 2, 3],
             constraint_fn=sum_constraint_fn,
         )
