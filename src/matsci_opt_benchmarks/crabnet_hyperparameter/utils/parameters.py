@@ -71,6 +71,8 @@ def correct_parameterization(parameters: dict, verbose=False):
     # take dictionary of tunable hyperparameters and output hyperparameter
     # combinations compatible with CrabNet
 
+    parameters = copy(parameters)
+
     if verbose:
         pprint.pprint(parameters)
 
@@ -127,9 +129,10 @@ def validate_categorical_inputs(c_dict):
 
 
 # Helper Function to convert input parameters to CrabNet hyperparameters
-def userparam_To_crabnetparam(user_param, seed=50):
+def userparam_to_crabnetparam(user_param, seed=50):
     # set the seed
-    np.random.seed(seed)
+    # np.random.seed(seed)
+    rng = np.random.default_rng(seed)
 
     # separating the integer/float from categorical variable
     x_dict = slicedict(user_param, "x")
@@ -142,27 +145,27 @@ def userparam_To_crabnetparam(user_param, seed=50):
     crabnet_categorical = {
         "bias": ["False", "True"],
         "criterion": ["RobustL1", "RobustL2"],
-        "elem_prop": ["mat2vec", "magpie"],
+        "elem_prop": ["mat2vec", "magpie", "onehot"],
     }
 
     # Defining Crabnet all 20 hyperparameters (integer/float) and their ranges
     crabnet_hyperparam = {
         "N": [1, 10],
-        "alpha": [0, 1],
+        "alpha": [0.0, 1.0],
         "d_model": [100, 1024],
         "dim_feedforward": [1024, 4096],
-        "dropout": [0, 1],
-        "emb_scaler": [0, 1.0],
+        "dropout": [0.0, 1.0],
+        "emb_scaler": [0.0, 1.0],
         "epochs_step": [5, 20],
         "eps": [1e-7, 1e-4],
-        "fudge": [0, 1.0],
+        "fudge": [0.0, 1.0],
         "heads": [1, 10],
         "k": [2, 10],
         "lr": [1e-4, 6e-3],
         "pe_resolution": [2500, 10000],
         "ple_resolution": [2500, 10000],
-        "pos_scaler": [0, 1.0],
-        "weight_decay": [0, 1.0],
+        "pos_scaler": [0.0, 1.0],
+        "weight_decay": [0.0, 1.0],
         "batch_size": [32, 256],
         "out_hidden4": [32, 512],
         "betas1": [0.5, 0.9999],
@@ -173,7 +176,7 @@ def userparam_To_crabnetparam(user_param, seed=50):
     float_hyperparam = [
         "alpha",
         "dropout",
-        "emb_scalar",
+        "emb_scaler",
         "eps",
         "fudge",
         "lr",
@@ -184,14 +187,19 @@ def userparam_To_crabnetparam(user_param, seed=50):
     ]
 
     # randomly selecting the parameters depending on x_dict size
-    selected_param = np.random.choice(
+    selected_param = rng.choice(
         list(crabnet_hyperparam.keys()), size=len(x_dict), replace=False
     )
 
     # randomly selecting the categorical parameters depending on c_dict size
-    selected_catogorical = np.random.choice(
-        list(crabnet_categorical.keys()), size=len(c_dict), replace=False
-    )
+    # selected_categorical = rng.choice(
+    #     list(crabnet_categorical.keys()), size=len(c_dict), replace=False
+    # )
+    selected_categorical = [
+        key
+        for key, value in zip(crabnet_categorical.keys(), c_dict.values())
+        if value is not None
+    ]
 
     # Intializing actual param dict
     actual_param = {}
@@ -200,21 +208,18 @@ def userparam_To_crabnetparam(user_param, seed=50):
     for p, k in zip(selected_param, x_dict.keys()):
         # for handling hyperparameters having float values
         if p in float_hyperparam:
-            actual_param[p] = np.float64(
-                np.around(
-                    element_wise_scaler(
-                        x_dict[k],
-                        feature_range=crabnet_hyperparam[p],
-                        data_range=[0, 1],
-                    ),
-                    decimals=4,
-                    out=None,
-                )
+            # needs to be np.float32 to match data_type_torch in kingcrab.py
+            actual_param[p] = np.float32(
+                element_wise_scaler(
+                    x_dict[k],
+                    feature_range=crabnet_hyperparam[p],
+                    data_range=[0, 1],
+                ),
             )
 
         # for hyperparameters having integer values
         else:
-            actual_param[p] = np.int(
+            actual_param[p] = int(
                 np.round(
                     element_wise_scaler(
                         x_dict[k],
@@ -225,13 +230,14 @@ def userparam_To_crabnetparam(user_param, seed=50):
             )
 
     # converting categorical user param to Crabnet categorical hyperparam
-    for s, c in zip(selected_catogorical, c_dict.values()):
+    for s, c in zip(selected_categorical, c_dict.values()):
         actual_param[s] = crabnet_categorical[s][c]
 
     return actual_param
 
 
 def matbench_metric_calculator(crabnet_param, dummy=False):
+    t0 = time()
     print("user parameters are :", crabnet_param)
     # default hyperparameters
     parameterization = {
@@ -250,7 +256,7 @@ def matbench_metric_calculator(crabnet_param, dummy=False):
         "pe_resolution": 5000,
         "ple_resolution": 5000,
         "pos_scaler": 1.0,
-        "weight_decay": 0,
+        "weight_decay": 0.0,
         "batch_size": 32,
         "out_hidden4": 128,
         "betas1": 0.9,
@@ -269,6 +275,10 @@ def matbench_metric_calculator(crabnet_param, dummy=False):
 
     print(parameterization)
 
+    train_frac = parameterization.pop("train_frac", 1.0)
+    seed = parameterization.pop("sample_seed", 10)
+    rng = default_rng(seed)
+
     cb = CrabNet(**correct_parameterization(parameterization))
 
     mb = MatbenchBenchmark(autoload=False, subset=["matbench_expt_gap"])
@@ -286,6 +296,8 @@ def matbench_metric_calculator(crabnet_param, dummy=False):
             train_df = pd.concat(
                 (train_inputs, train_outputs), axis=1, keys=["formula", "target"]
             )
+
+            train_df = train_df.sample(frac=train_frac, random_state=rng)
 
             if dummy:
                 train_df = train_df.head(10)
@@ -310,14 +322,12 @@ def matbench_metric_calculator(crabnet_param, dummy=False):
             task.record(fold, predictions)
 
     model_size = count_parameters(cb.model)
-    return (
-        {
-            "average_mae": task.scores["mae"]["mean"],
-            "average_rmse": task.scores["rmse"]["mean"],
-            "model_size": model_size,
-        },
-        crabnet_param,
-    )
+    return {
+        "mae": task.scores["mae"]["mean"],
+        "rmse": task.scores["rmse"]["mean"],
+        "model_size": model_size,
+        "runtime": time() - t0,
+    }
     # return({'average_mae':task.scores['mae']['mean'],
     # 'average_rmse':task.scores['rmse']['mean']}, crabnet_param)
 
