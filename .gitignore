@@ -66,3 +66,5 @@ figures/lc_data/UnnamedModel_lc.csv
 reports/particle_packing/Datainbrief-backup.docx
 reports/crabnet_hyperparameter/Datainbrief-chemrxiv-rev1.docx
 reports/particle_packing/DIB-D-23-00033.pdf
+notebooks/crabnet_hyperparameter/figures/lc_data/UnnamedModel_lc.csv
+notebooks/crabnet_hyperparameter/models/trained_models/UnnamedModel.pth
