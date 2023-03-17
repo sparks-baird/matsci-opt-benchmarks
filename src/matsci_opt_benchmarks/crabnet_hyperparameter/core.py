@@ -22,19 +22,20 @@ References:
 
 import argparse
 import logging
-import pprint
 import sys
-from copy import copy
-from time import time
+from typing import List, Optional
 
 import numpy as np
-import pandas as pd
-from crabnet.crabnet_ import CrabNet
-from crabnet.utils.utils import count_parameters
-from matbench.bench import MatbenchBenchmark
-from numpy.random import default_rng
 
 from matsci_opt_benchmarks.crabnet_hyperparameter import __version__
+from matsci_opt_benchmarks.crabnet_hyperparameter.utils.parameters import (
+    matbench_metric_calculator,
+    userparam_to_crabnetparam,
+)
+from matsci_opt_benchmarks.crabnet_hyperparameter.utils.validation import (
+    check_float_ranges,
+    sum_constraint_fn,
+)
 
 __author__ = "sgbaird"
 __copyright__ = "sgbaird"
@@ -66,50 +67,9 @@ def fib(n):
     return a
 
 
-#############
-
-
-def get_parameters():
-    """Get parameter set and parameter constraints for CrabNet.
-
-    Returns:
-        (list(dict), list): CrabNet parameters, CrabNet parameter contraints for Ax
-    """
-    parameters = [
-        {"name": "N", "type": "range", "bounds": [1, 10]},
-        {"name": "alpha", "type": "range", "bounds": [0.0, 1.0]},
-        {"name": "d_model", "type": "range", "bounds": [100, 1024]},
-        {"name": "dim_feedforward", "type": "range", "bounds": [1024, 4096]},
-        {"name": "dropout", "type": "range", "bounds": [0.0, 1.0]},
-        {"name": "emb_scaler", "type": "range", "bounds": [0.0, 1.0]},
-        {"name": "eps", "type": "range", "bounds": [1e-7, 1e-4]},
-        {"name": "epochs_step", "type": "range", "bounds": [5, 20]},
-        {"name": "fudge", "type": "range", "bounds": [0.0, 0.1]},
-        {"name": "heads", "type": "range", "bounds": [1, 10]},
-        {"name": "k", "type": "range", "bounds": [2, 10]},
-        {"name": "lr", "type": "range", "bounds": [1e-4, 6e-3]},
-        {"name": "pe_resolution", "type": "range", "bounds": [2500, 10000]},
-        {"name": "ple_resolution", "type": "range", "bounds": [2500, 10000]},
-        {"name": "pos_scaler", "type": "range", "bounds": [0.0, 1.0]},
-        {"name": "weight_decay", "type": "range", "bounds": [0.0, 1.0]},
-        {"name": "batch_size", "type": "range", "bounds": [32, 256]},
-        {"name": "out_hidden4", "type": "range", "bounds": [32, 512]},
-        {"name": "betas1", "type": "range", "bounds": [0.5, 0.9999]},
-        {"name": "betas2", "type": "range", "bounds": [0.5, 0.9999]},
-        {"name": "bias", "type": "choice", "values": [False, True]},
-        {"name": "criterion", "type": "choice", "values": ["RobustL1", "RobustL2"]},
-        {
-            "name": "elem_prop",
-            "type": "choice",
-            "values": ["mat2vec", "magpie", "onehot"],
-        },
-        {"name": "train_frac", "type": "range", "bounds": [0.01, 1.0]},
-    ]
-
-    parameter_constraints = ["betas1 <= betas2", "emb_scaler + pos_scaler <= 1.0"]
-
-    return parameters, parameter_constraints
-
+SUPPORTED_OBJECTIVES = ["mae", "rmse", "runtime", "model_size"]
+FLOAT_LIMIT = 20
+CATEGORICAL_LIMIT = 3
 
 # def evaluate(parameters):
 #     results = matbench_metric_calculator(parameters)
@@ -124,170 +84,178 @@ def get_parameters():
 #     return outputs
 
 
-def correct_parameterization(parameters: dict, verbose=False):
-    """Modify tunable hyperparameters for combatibility with CrabNet.
+class PseudoCrab(object):
+    def __init__(
+        self,
+        objectives: List[str] = ["mae"],
+        iteration_budget: int = 100,
+        n_float_params: int = 3,
+        categorical_num_options: List[int] = [2, 2, 3],
+        constraint_fn: Optional[callable] = sum_constraint_fn,
+    ):
+        for obj in objectives:
+            assert (
+                obj in SUPPORTED_OBJECTIVES
+            ), f"Unsupported objective: {obj}. Must be in {SUPPORTED_OBJECTIVES}"
 
-    Args:
-        parameters (dict): Hyperparameter set used by Ax in optimization.
-        verbose (bool, optional): Print function progress. Defaults to False.
+        self.objectives = objectives
+        self.iteration_budget = iteration_budget
 
-    Returns:
-        dict: Modified dictionary with the correct parameters for CrabNet
-        compatibility.
-    """
-    # take dictionary of tunable hyperparameters and output hyperparameter
-    # combinations compatible with CrabNet
+        # TODO: consider distinguishing between float and int parameters
+        if n_float_params > FLOAT_LIMIT:
+            raise ValueError(
+                f"{n_float_params} float parameters requested. No more than {FLOAT_LIMIT} allowed."  # noqa: E501
+            )
+        self.n_float_params = n_float_params
+        self.n_categorical_params = len(categorical_num_options)
 
-    if verbose:
-        pprint.pprint(parameters)
+        if self.n_categorical_params > CATEGORICAL_LIMIT:
+            raise ValueError(
+                f"{self.n_categorical_params} categorical parameters requested. No more than {CATEGORICAL_LIMIT} allowed."  # noqa: E501
+            )
 
-    parameters["out_hidden"] = [
-        parameters.get("out_hidden4") * 8,
-        parameters.get("out_hidden4") * 4,
-        parameters.get("out_hidden4") * 2,
-        parameters.get("out_hidden4"),
-    ]
-    parameters.pop("out_hidden4")
+        self.constraint_fn = (
+            constraint_fn if constraint_fn is not None else lambda x: True
+        )
 
-    parameters["betas"] = (
-        parameters.get("betas1"),
-        parameters.get("betas2"),
-    )
-    parameters.pop("betas1")
-    parameters.pop("betas2")
+        self.n_objectives = len(objectives)
+        self.expected_float_keys = [f"x{i}" for i in range(1, self.n_float_params + 1)]
+        self.expected_categorical_keys = [
+            f"c{i}" for i in range(1, self.n_categorical_params + 1)
+        ]
+        self.expected_keys = self.expected_float_keys + self.expected_categorical_keys
 
-    d_model = parameters["d_model"]
+        self.__num_evaluations = 0
 
-    # make heads even (unless it's 1) (because d_model must be even)
-    heads = parameters["heads"]
-    if np.mod(heads, 2) != 0:
-        heads = heads + 1
-    parameters["heads"] = heads
+    @property
+    def num_evaluations(self):
+        return self.__num_evaluations
 
-    # NOTE: d_model must be divisible by heads
-    d_model = parameters["heads"] * round(d_model / parameters["heads"])
+    def evaluate(self, parameters, dummy=False):
+        constraint_satisfied = self.constraint_fn(parameters)
+        if not constraint_satisfied:
+            # REVIEW: whether to raise a ValueError or return NaN outputs?
+            raise ValueError(
+                f"constraint_fn ({getattr(self.constraint_fn, '__name__', 'Unknown')}) not satisfied. Evaluation not counted towards budget."  # noqa: E501
+            )
 
-    parameters["d_model"] = d_model
+        check_float_ranges(parameters)
 
-    parameters["pos_scaler_log"] = (
-        1 - parameters["emb_scaler"] - parameters["pos_scaler"]
-    )
+        self.__num_evaluations = self.num_evaluations + 1
 
-    parameters["epochs"] = parameters["epochs_step"] * 4
+        if self.num_evaluations > self.iteration_budget:
+            raise ValueError("maximum number of evaluations has been reached")
 
-    return parameters
+        keys = list(parameters.keys())
 
+        err_msg = ""
+        missing_keys = np.setdiff1d(keys, self.expected_keys)
+        if missing_keys:
+            err_msg = err_msg + f"missing keys in parameters: {missing_keys}. "
 
-def evaluate(parameters):
-    """Trains CrabNet using the inputted parameter set and records the results.
+        extra_keys = np.setdiff1d(self.expected_keys, keys)
+        if extra_keys:
+            err_msg = err_msg + f"extra keys in parameters: {extra_keys}. "
 
-    Args:
-        parameters (list(dict)): Hyperparameter set for CrabNet.
+        if err_msg != "":
+            raise KeyError(err_msg)
 
-    Returns:
-        dict: Results after CrabNet training. MAE, RMSE, Model Size, Runtime. If
-        there is an error, dict contains error at dict["error"]
-    """
-    t0 = time()
+        crabnet_parameters = userparam_to_crabnetparam(parameters)
 
-    print("user parameters are:", parameters)
+        results = matbench_metric_calculator(
+            crabnet_parameters, dummy=dummy
+        )  # add try except block
 
-    parameters = copy(parameters)
-    train_frac = parameters.pop("train_frac")
-    seed = parameters.pop("sample_seed")
-    if "hardware" in parameters:
-        parameters.pop("hardware")
-    rng = default_rng(seed)
+        # # TODO: compute and return CrabNet objective(s) as dictionary
+        # crabnet_mae = 0.123 # eV (dummy value)
+        # crabnet_rmse = 0.234 # eV (dummy value)
+        # runtime = 125 # seconds (dummy value)
+        # model_size = 123456 # parameters (dummy value)
 
-    # default hyperparameters
-    parameterization = {
-        "N": 3,
-        "alpha": 0.5,
-        "d_model": 512,
-        "dim_feedforward": 2048,
-        "dropout": 0.1,
-        "emb_scaler": 1.0,
-        "epochs_step": 10,
-        "eps": 0.000001,
-        "fudge": 0.02,
-        "heads": 4,
-        "k": 6,
-        "lr": 0.001,
-        "pe_resolution": 5000,
-        "ple_resolution": 5000,
-        "pos_scaler": 1.0,
-        "weight_decay": 0,
-        "batch_size": 32,
-        "out_hidden4": 128,
-        "betas1": 0.9,
-        "betas2": 0.999,
-        "losscurve": False,
-        "learningcurve": False,
-        "bias": False,
-        "criterion": "RobustL1",
-        "elem_prop": "mat2vec",
-    }
+        # outputs = {"mae": results[0]["average_mae"], "rmse":
+        # results[0]["average_rmse"]}
 
-    # update the values of the selected hyperparameters
-    parameterization.update(parameters)
-
-    print(parameterization)
-
-    cb = CrabNet(**correct_parameterization(parameterization))
-
-    mb = MatbenchBenchmark(autoload=False, subset=["matbench_expt_gap"])
-
-    # TODO: try-except with NaN output if failure
-
-    try:
-        for task in mb.tasks:
-            task.load()
-            for fold in task.folds:
-                # Inputs are either chemical compositions as strings or crystal
-                # structures as pymatgen.Structure objects. Outputs are either
-                # floats (regression tasks) or bools (classification tasks)
-                train_inputs, train_outputs = task.get_train_and_val_data(fold)
-
-                # prep input for CrabNet
-                train_df = pd.concat(
-                    (train_inputs, train_outputs), axis=1, keys=["formula", "target"]
-                )
-
-                train_df = train_df.sample(frac=train_frac, random_state=rng)
-
-                # train and validate your model
-                cb.fit(train_df=train_df)
-
-                # Get testing data
-                test_inputs, test_outputs = task.get_test_data(
-                    fold, include_target=True
-                )
-                test_df = pd.concat(
-                    (test_inputs, test_outputs), axis=1, keys=["formula", "target"]
-                )
-
-                # Predict on the testing data
-                # Your output should be a pandas series, numpy array, or python iterable
-                # where the array elements are floats or bools
-                predictions = cb.predict(test_df=test_df)
-
-                predictions = np.nan_to_num(predictions)
-
-                # Record your data!
-                task.record(fold, predictions)
-            scores = task.scores
-            # `fit` needs to be called prior to `count_parameters`
-            # all 5 models should be same size, but we take the last for simplicity
-            model_size = count_parameters(cb.model)
-
-        # REVIEW: if using multiple tasks, return multiple `scores` dicts
-
-        return {"scores": scores, "model_size": model_size, "runtime": time() - t0}
-    except Exception as e:
-        return {"error": str(e), "runtime": time() - t0}
+        return {k: results[k] for k in results.keys() if k in self.objectives}
 
 
-#############
+# class PseudoCrab1(PseudoCrab):
+#     def __init__(self):
+#         PseudoCrab.__init__(
+#             self,
+#             objectives=["mae", "rmse"],
+#             iteration_budget=100,
+#             n_float_params=5,
+#             categorical_num_options=[2, 2, 3],
+#             constraint_fn=sum_constraint_fn,
+#         )
+
+
+# what about constraint function?
+default_benchmarks = dict(
+    dummy=dict(
+        objective_names=["mae", "rmse"],
+        iteration_budget=3,
+        n_float_params=5,
+        n_categorical_params=2,
+    ),
+    minimal=dict(
+        objective_names=["mae", "rmse"],
+        iteration_budget=100,
+        n_float_params=5,
+        n_categorical_params=0,
+    ),  # single-vs-multi objective?
+    benchmark2=dict(
+        objective_names=["mae", "rmse"],
+        iteration_budget=100,
+        n_float_params=5,
+        n_categorical_params=2,
+    ),
+    # benchmark3=dict(
+    #     objective_names=["mae", "rmse"],
+    #     iteration_budget=100,
+    #     n_float_params=5,
+    #     n_categorical_params=2,
+    # ),
+    # benchmark4=dict(
+    #     objective_names=["mae", "rmse"],
+    #     iteration_budget=100,
+    #     n_float_params=5,
+    #     n_categorical_params=2,
+    # ),
+    # base alloy optimization benchmark and constraint? base alloy at least X%,
+    # remainder goes to other parameters
+    performance=dict(
+        objective_names=["mae", "rmse", "model_size", "runtime"],
+        constraint_fn=sum_constraint_fn,
+        iteration_budget=100,
+        n_float_params=23,
+        n_categorical_params=3,
+    ),
+)
+
+
+class PseudoCrabMinimal(PseudoCrab):
+    def __init__(self):
+        PseudoCrab.__init__(
+            self,
+            objectives=["mae"],
+            iteration_budget=100,
+            n_float_params=3,
+            categorical_num_options=[],
+            constraint_fn=sum_constraint_fn,
+        )
+
+
+class PseudoCrabPerformance(PseudoCrab):
+    def __init__(self):
+        PseudoCrab.__init__(
+            self,
+            objectives=["mae", "rmse", "model_size", "runtime"],
+            iteration_budget=100,
+            n_float_params=20,
+            categorical_num_options=[2, 2, 3],
+            constraint_fn=sum_constraint_fn,
+        )
 
 
 # ---- CLI ----
