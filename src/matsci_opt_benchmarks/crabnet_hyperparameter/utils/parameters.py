@@ -1,11 +1,14 @@
 import pprint
+import random
 from copy import copy
+from os import path
 from time import time
 
 import numpy as np
 import pandas as pd
 from crabnet.crabnet_ import CrabNet
 from crabnet.utils.utils import count_parameters
+from joblib import load
 from matbench.bench import MatbenchBenchmark
 from numpy.random import default_rng
 from xtal2png.utils.data import element_wise_scaler
@@ -148,7 +151,8 @@ def userparam_to_crabnetparam(user_param, seed=50):
         "elem_prop": ["mat2vec", "magpie", "onehot"],
     }
 
-    # Defining Crabnet all 20 hyperparameters (integer/float) and their ranges
+    # Defining Crabnet all 20 hyperparameters (integer/float) and their ranges, plus
+    # train_frac
     crabnet_hyperparam = {
         "N": [1, 10],
         "alpha": [0.0, 1.0],
@@ -170,6 +174,7 @@ def userparam_to_crabnetparam(user_param, seed=50):
         "out_hidden4": [32, 512],
         "betas1": [0.5, 0.9999],
         "betas2": [0.5, 0.9999],
+        "train_frac": [0.01, 1.0],
     }
 
     # List of parameters having floating point values (total 10 nos)
@@ -184,6 +189,7 @@ def userparam_to_crabnetparam(user_param, seed=50):
         "weight_decay",
         "betas1",
         "betas2",
+        "train_frac",
     ]
 
     # randomly selecting the parameters depending on x_dict size
@@ -236,7 +242,52 @@ def userparam_to_crabnetparam(user_param, seed=50):
     return actual_param
 
 
-def matbench_metric_calculator(crabnet_param, dummy=False):
+class CrabNetSurrogateModel(object):
+    def __init__(
+        self, model_dir=path.join("..", "..", "models", "crabnet_hyperparameter")
+    ):
+        self.model_dir = model_dir
+        self.models = load(path.join(model_dir, "surrogate_models.pkl"))
+
+    def prepare_params_for_eval(self, raw_params):
+        raw_params = raw_params.copy()
+        raw_params["bias"] = int(raw_params["bias"])
+        raw_params["use_RobustL1"] = raw_params["criterion"] == "RobustL1"
+        raw_params.pop("criterion")
+
+        # raw_params.pop("losscurve")
+        # raw_params.pop("learningcurve")
+
+        # raw_params["train_frac"] = random.uniform(0.01, 1)
+
+        elem_prop = raw_params["elem_prop"]
+        raw_params["elem_prop_magpie"] = 0
+        raw_params["elem_prop_mat2vec"] = 0
+        raw_params["elem_prop_onehot"] = 0
+        raw_params[f"elem_prop_{elem_prop}"] = 1
+        raw_params.pop("elem_prop")
+
+        return raw_params
+
+    def evaluate(self, params):
+        parameters = self.prepare_params_for_eval(params)
+        parameters = pd.DataFrame([parameters])
+
+        percentile = random.uniform(0, 1)  # generate random percentile
+
+        mae = self.models["mae"].predict(parameters.assign(mae_rank=[percentile]))[0]
+        rmse = self.models["rmse"].predict(parameters.assign(rmse_rank=[percentile]))[0]
+        runtime = self.models["runtime"].predict(
+            parameters.assign(runtime_rank=[percentile])
+        )[0]
+        model_size = self.models["model_size"].predict(parameters)[0]
+
+        return {"mae": mae, "rmse": rmse, "runtime": runtime, "model_size": model_size}
+
+
+def matbench_metric_calculator(
+    crabnet_param, surrogate: CrabNetSurrogateModel = None, dummy=False
+):
     t0 = time()
     print("user parameters are :", crabnet_param)
     # default hyperparameters
@@ -247,8 +298,8 @@ def matbench_metric_calculator(crabnet_param, dummy=False):
         "dim_feedforward": 2048,
         "dropout": 0.1,
         "emb_scaler": 1.0,
-        "epochs_step": 10,
         "eps": 0.000001,
+        "epochs_step": 10,
         "fudge": 0.02,
         "heads": 4,
         "k": 6,
@@ -261,8 +312,7 @@ def matbench_metric_calculator(crabnet_param, dummy=False):
         "out_hidden4": 128,
         "betas1": 0.9,
         "betas2": 0.999,
-        "losscurve": False,
-        "learningcurve": False,
+        "train_frac": 1.0,
         "bias": False,
         "criterion": "RobustL1",
         "elem_prop": "mat2vec",
@@ -275,59 +325,69 @@ def matbench_metric_calculator(crabnet_param, dummy=False):
 
     print(parameterization)
 
-    train_frac = parameterization.pop("train_frac", 1.0)
-    seed = parameterization.pop("sample_seed", 10)
-    rng = default_rng(seed)
+    if surrogate is None:
+        train_frac = parameterization.pop("train_frac", 1.0)
+        seed = parameterization.pop("sample_seed", 10)
+        rng = default_rng(seed)
 
-    cb = CrabNet(**correct_parameterization(parameterization))
+        cb = CrabNet(
+            **correct_parameterization(parameterization),
+            losscurve=False,
+            learningcurve=False,
+        )
 
-    mb = MatbenchBenchmark(autoload=False, subset=["matbench_expt_gap"])
+        mb = MatbenchBenchmark(autoload=False, subset=["matbench_expt_gap"])
 
-    for task in mb.tasks:
-        task.load()
-        for fold in task.folds:
-            # Inputs are either chemical compositions as strings
-            # or crystal structures as pymatgen.Structure objects.
-            # Outputs are either floats (regression tasks) or bools (classification
-            # tasks)
-            train_inputs, train_outputs = task.get_train_and_val_data(fold)
+        for task in mb.tasks:
+            task.load()
+            for fold in task.folds:
+                # Inputs are either chemical compositions as strings
+                # or crystal structures as pymatgen.Structure objects.
+                # Outputs are either floats (regression tasks) or bools (classification
+                # tasks)
+                train_inputs, train_outputs = task.get_train_and_val_data(fold)
 
-            # prep input for CrabNet
-            train_df = pd.concat(
-                (train_inputs, train_outputs), axis=1, keys=["formula", "target"]
-            )
+                # prep input for CrabNet
+                train_df = pd.concat(
+                    (train_inputs, train_outputs), axis=1, keys=["formula", "target"]
+                )
 
-            train_df = train_df.sample(frac=train_frac, random_state=rng)
+                train_df = train_df.sample(frac=train_frac, random_state=rng)
 
-            if dummy:
-                train_df = train_df.head(10)
+                if dummy:
+                    train_df = train_df.head(10)
 
-            # train and validate your model
-            cb.fit(train_df=train_df)
+                # train and validate your model
+                cb.fit(train_df=train_df)
 
-            # Get testing data
-            test_inputs, test_outputs = task.get_test_data(fold, include_target=True)
-            test_df = pd.concat(
-                (test_inputs, test_outputs), axis=1, keys=["formula", "target"]
-            )
+                # Get testing data
+                test_inputs, test_outputs = task.get_test_data(
+                    fold, include_target=True
+                )
+                test_df = pd.concat(
+                    (test_inputs, test_outputs), axis=1, keys=["formula", "target"]
+                )
 
-            # Predict on the testing data
-            # Your output should be a pandas series, numpy array, or python iterable
-            # where the array elements are floats or bools
-            predictions = cb.predict(test_df=test_df)
+                # Predict on the testing data
+                # Your output should be a pandas series, numpy array, or python iterable
+                # where the array elements are floats or bools
+                predictions = cb.predict(test_df=test_df)
 
-            predictions = np.nan_to_num(predictions)
+                predictions = np.nan_to_num(predictions)
 
-            # Record your data!
-            task.record(fold, predictions)
+                # Record your data!
+                task.record(fold, predictions)
 
-    model_size = count_parameters(cb.model)
-    return {
-        "mae": task.scores["mae"]["mean"],
-        "rmse": task.scores["rmse"]["mean"],
-        "model_size": model_size,
-        "runtime": time() - t0,
-    }
+        model_size = count_parameters(cb.model)
+        return {
+            "mae": task.scores["mae"]["mean"],
+            "rmse": task.scores["rmse"]["mean"],
+            "model_size": model_size,
+            "runtime": time() - t0,
+        }
+
+    return surrogate.evaluate(parameterization)
+
     # return({'average_mae':task.scores['mae']['mean'],
     # 'average_rmse':task.scores['rmse']['mean']}, crabnet_param)
 

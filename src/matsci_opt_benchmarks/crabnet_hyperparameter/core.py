@@ -23,12 +23,14 @@ References:
 import argparse
 import logging
 import sys
+from os import path
 from typing import List, Optional
 
 import numpy as np
 
 from matsci_opt_benchmarks.crabnet_hyperparameter import __version__
 from matsci_opt_benchmarks.crabnet_hyperparameter.utils.parameters import (
+    CrabNetSurrogateModel,
     matbench_metric_calculator,
     userparam_to_crabnetparam,
 )
@@ -92,7 +94,15 @@ class PseudoCrab(object):
         n_float_params: int = 3,
         categorical_num_options: List[int] = [2, 2, 3],
         constraint_fn: Optional[callable] = sum_constraint_fn,
+        surrogate=True,
+        model_dir=None,
+        dummy=False,
     ):
+        if model_dir is None:
+            model_dir = path.join("..", "..", "models", "crabnet_hyperparameter")
+            if dummy:
+                model_dir = path.join(model_dir, "dummy")
+
         for obj in objectives:
             assert (
                 obj in SUPPORTED_OBJECTIVES
@@ -126,6 +136,11 @@ class PseudoCrab(object):
         self.expected_keys = self.expected_float_keys + self.expected_categorical_keys
 
         self.__num_evaluations = 0
+
+        if surrogate:
+            self.crabnet_surrogate = CrabNetSurrogateModel(model_dir=model_dir)
+        else:
+            self.crabnet_surrogate = None
 
     @property
     def num_evaluations(self):
@@ -163,7 +178,7 @@ class PseudoCrab(object):
         crabnet_parameters = userparam_to_crabnetparam(parameters)
 
         results = matbench_metric_calculator(
-            crabnet_parameters, dummy=dummy
+            crabnet_parameters, surrogate=self.crabnet_surrogate, dummy=dummy
         )  # add try except block
 
         # # TODO: compute and return CrabNet objective(s) as dictionary
@@ -235,7 +250,7 @@ default_benchmarks = dict(
 
 
 class PseudoCrabMinimal(PseudoCrab):
-    def __init__(self):
+    def __init__(self, dummy=False):
         PseudoCrab.__init__(
             self,
             objectives=["mae"],
@@ -243,6 +258,7 @@ class PseudoCrabMinimal(PseudoCrab):
             n_float_params=3,
             categorical_num_options=[],
             constraint_fn=sum_constraint_fn,
+            dummy=dummy,
         )
 
 
