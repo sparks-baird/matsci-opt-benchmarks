@@ -249,7 +249,7 @@ default_benchmarks = dict(
 )
 
 
-class PseudoCrabMinimal(PseudoCrab):
+class PseudoCrabBasic(PseudoCrab):
     def __init__(self, dummy=False):
         PseudoCrab.__init__(
             self,
@@ -257,6 +257,36 @@ class PseudoCrabMinimal(PseudoCrab):
             iteration_budget=100,
             n_float_params=3,
             categorical_num_options=[],
+            constraint_fn=sum_constraint_fn,
+            dummy=dummy,
+        )
+
+
+class PseudoCrabModerate(PseudoCrab):
+    def __init__(self, dummy=False):
+        PseudoCrab.__init__(
+            self,
+            objectives=["mae"],
+            iteration_budget=100,
+            n_float_params=5,
+            categorical_num_options=[
+                2,
+            ],
+            constraint_fn=sum_constraint_fn,
+            dummy=dummy,
+        )
+
+
+class PseudoCrabAdvanced(PseudoCrab):
+    def __init__(self, dummy=False):
+        PseudoCrab.__init__(
+            self,
+            objectives=["mae"],
+            iteration_budget=100,
+            n_float_params=10,
+            categorical_num_options=[
+                2,
+            ],
             constraint_fn=sum_constraint_fn,
             dummy=dummy,
         )
