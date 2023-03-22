@@ -257,7 +257,7 @@ class PseudoCrabBasic(PseudoCrab):
             iteration_budget=100,
             n_float_params=3,
             categorical_num_options=[],
-            constraint_fn=sum_constraint_fn,
+            constraint_fn=None,
             dummy=dummy,
         )
 
