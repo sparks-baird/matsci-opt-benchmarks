@@ -88,6 +88,24 @@ My plans for implementation include:
   [[code](https://github.com/sparks-baird/crabnet-hyperparameter)]
   [[paper](https://doi.org/10.1016/j.commatsci.2022.111505)]
 
+## Quick start
+```python
+pip install matsci-opt-benchmarks
+```
+
+> Not implemented yet
+```python
+from matsci_opt_benchmarks.core import MatSciOpt
+
+mso = MatSciOpt(dataset="crabnet_hyperparameter")
+# mso = MatSciOpt(dataset="particle_packing")
+
+print(mso.features)
+# 
+
+results = mso.predict(parameterization)
+```
+
 
 ## Installation
 
