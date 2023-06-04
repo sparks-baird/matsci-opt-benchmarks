@@ -106,6 +106,36 @@ print(mso.features)
 results = mso.predict(parameterization)
 ```
 
+## Generate benchmark from existing dataset
+```python
+import pandas as pd
+from matsci_opt_benchmarks.core import Benchmark
+
+# load dataset
+dataset_name = "dummy"
+dataset_path = f"data/external/{dataset_name}.csv"
+dataset = pd.read_csv(...)
+
+# define inputs/outputs (and parameter types? if so, then Ax-like dict)
+parameter_names = [...]
+output_names = [...]
+
+X = dataset[parameters]
+y = dataset[outputs]
+
+bench = Benchmark()
+bench.fit(X=X, Y=y)
+y_pred = bench.predict(X.head(5))
+print(y_pred)
+# [[...], [...], ...]
+
+bench.save(fpath=f"models/{dataset_name}")
+bench.upload(zenodo_id=zenodo_id)
+
+# upload to HuggingFace
+...
+```
+
 
 ## Installation
 
