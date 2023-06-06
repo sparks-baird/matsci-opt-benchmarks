@@ -49,7 +49,7 @@ def test_PseudoCrab():
 
 def test_PseudoCrabBasic():
     pc = PseudoCrabBasic(surrogate=False, dummy=True)
-    results = pc.evaluate({"x1": 0.5, "x2": 0.2, "x3": 0.3}, dummy=True)
+    results = pc.evaluate({"x1": 0.5, "x2": 0.2, "x3": 0.3})
     mae = results["mae"]
     assert 0.8 < mae < 1.0
 
@@ -63,7 +63,7 @@ def test_PseudoCrabPerformance():
     parameters = {f"x{i+1}": x for i, x in enumerate(X)}
     C = {"c1": 1, "c2": 1, "c3": 2}
     parameters.update(C)
-    pc.evaluate(parameters, dummy=True)
+    pc.evaluate(parameters)
 
 
 def test_main(capsys):
