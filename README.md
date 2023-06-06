@@ -101,7 +101,7 @@ mso = MatSciOpt(dataset="crabnet_hyperparameter")
 # mso = MatSciOpt(dataset="particle_packing")
 
 print(mso.features)
-# 
+#
 
 results = mso.predict(parameterization)
 ```
