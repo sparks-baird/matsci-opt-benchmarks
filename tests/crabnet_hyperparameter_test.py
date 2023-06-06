@@ -3,7 +3,7 @@ import pytest
 
 from matsci_opt_benchmarks.crabnet_hyperparameter.core import (
     PseudoCrab,
-    PseudoCrabMinimal,
+    PseudoCrabBasic,
     PseudoCrabPerformance,
     fib,
     main,
@@ -47,8 +47,8 @@ def test_PseudoCrab():
     PseudoCrab()
 
 
-def test_PseudoCrabMinimal():
-    pc = PseudoCrabMinimal()
+def test_PseudoCrabBasic():
+    pc = PseudoCrabBasic()
     results = pc.evaluate({"x1": 0.5, "x2": 0.2, "x3": 0.3}, dummy=True)
     mae = results["mae"]
     assert 0.8 < mae < 1.0
