@@ -1,11 +1,11 @@
 [![Project generated with PyScaffold](https://img.shields.io/badge/-PyScaffold-005CA0?logo=pyscaffold)](https://pyscaffold.org/)
+[![PyPI-Server](https://img.shields.io/pypi/v/matsci-opt-benchmarks.svg)](https://pypi.org/project/matsci-opt-benchmarks/)
+[![ReadTheDocs](https://readthedocs.org/projects/matsci-opt-benchmarks/badge/?version=latest)](https://matsci-opt-benchmarks.readthedocs.io/en/stable/)
+[![Coveralls](https://img.shields.io/coveralls/github/sparks-baird/matsci-opt-benchmarks/main.svg)](https://coveralls.io/r/sparks-baird/matsci-opt-benchmarks)
+[![Monthly Downloads](https://pepy.tech/badge/matsci-opt-benchmarks/month)](https://pepy.tech/project/matsci-opt-benchmarks)
 <!-- These are examples of badges you might also want to add to your README. Update the URLs accordingly.
 [![Built Status](https://api.cirrus-ci.com/github/<USER>/matsci-opt-benchmarks.svg?branch=main)](https://cirrus-ci.com/github/<USER>/matsci-opt-benchmarks)
-[![ReadTheDocs](https://readthedocs.org/projects/matsci-opt-benchmarks/badge/?version=latest)](https://matsci-opt-benchmarks.readthedocs.io/en/stable/)
-[![Coveralls](https://img.shields.io/coveralls/github/<USER>/matsci-opt-benchmarks/main.svg)](https://coveralls.io/r/<USER>/matsci-opt-benchmarks)
-[![PyPI-Server](https://img.shields.io/pypi/v/matsci-opt-benchmarks.svg)](https://pypi.org/project/matsci-opt-benchmarks/)
 [![Conda-Forge](https://img.shields.io/conda/vn/conda-forge/matsci-opt-benchmarks.svg)](https://anaconda.org/conda-forge/matsci-opt-benchmarks)
-[![Monthly Downloads](https://pepy.tech/badge/matsci-opt-benchmarks/month)](https://pepy.tech/project/matsci-opt-benchmarks)
 [![Twitter](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&label=Twitter)](https://twitter.com/matsci-opt-benchmarks)
 -->
 
@@ -75,7 +75,7 @@ My plans for implementation include:
   spheres, 6 parameters that define three separate truncated log-normal
   distributions, and 3 parameters that define the weight fractions
   [[code](https://github.com/sparks-baird/bayes-opt-particle-packing)]
-  [[paper1](https://github.com/sparks-baird/bayes-opt-particle-packing/blob/main/paper/main.pdf)] [[paper2](https://doi.org/10.26434/chemrxiv-2023-fjjk7)] [[data ![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7513019.svg)](https://doi.org/10.5281/zenodo.7513019)]
+  [[paper1](https://github.com/sparks-baird/bayes-opt-particle-packing/blob/main/paper/main.pdf)] [[paper2](https://doi.org/10.26434/chemrxiv-2023-fjjk7)] [[data](https://doi.org/10.5281/zenodo.7513019)]
 - discrete intensity vs. wavelength spectra (measured experimentally via a
   spectrophotometer) as a function of red, green, and blue LED powers and three sensor
   settings: number of integration steps, integration time per step, and signal gain
@@ -87,6 +87,54 @@ My plans for implementation include:
   as a function of 23 CrabNet hyperparameters
   [[code](https://github.com/sparks-baird/crabnet-hyperparameter)]
   [[paper](https://doi.org/10.1016/j.commatsci.2022.111505)]
+
+## Quick start
+```python
+pip install matsci-opt-benchmarks
+```
+
+> Not implemented yet
+```python
+from matsci_opt_benchmarks.core import MatSciOpt
+
+mso = MatSciOpt(dataset="crabnet_hyperparameter")
+# mso = MatSciOpt(dataset="particle_packing")
+
+print(mso.features)
+# 
+
+results = mso.predict(parameterization)
+```
+
+## Generate benchmark from existing dataset
+```python
+import pandas as pd
+from matsci_opt_benchmarks.core import Benchmark
+
+# load dataset
+dataset_name = "dummy"
+dataset_path = f"data/external/{dataset_name}.csv"
+dataset = pd.read_csv(...)
+
+# define inputs/outputs (and parameter types? if so, then Ax-like dict)
+parameter_names = [...]
+output_names = [...]
+
+X = dataset[parameters]
+y = dataset[outputs]
+
+bench = Benchmark()
+bench.fit(X=X, Y=y)
+y_pred = bench.predict(X.head(5))
+print(y_pred)
+# [[...], [...], ...]
+
+bench.save(fpath=f"models/{dataset_name}")
+bench.upload(zenodo_id=zenodo_id)
+
+# upload to HuggingFace
+...
+```
 
 
 ## Installation
