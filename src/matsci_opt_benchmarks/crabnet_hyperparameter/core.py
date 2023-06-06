@@ -250,7 +250,7 @@ default_benchmarks = dict(
 
 
 class PseudoCrabBasic(PseudoCrab):
-    def __init__(self, dummy=False):
+    def __init__(self, dummy=False, **kwargs):
         PseudoCrab.__init__(
             self,
             objectives=["mae"],
@@ -259,6 +259,7 @@ class PseudoCrabBasic(PseudoCrab):
             categorical_num_options=[],
             constraint_fn=None,
             dummy=dummy,
+            **kwargs,
         )
 
 
