@@ -98,9 +98,10 @@ class PseudoCrab(object):
         model_dir=None,
         dummy=False,
     ):
+        self.dummy = dummy
         if model_dir is None:
             model_dir = path.join("..", "..", "models", "crabnet_hyperparameter")
-            if dummy:
+            if self.dummy:
                 model_dir = path.join(model_dir, "dummy")
 
         for obj in objectives:
@@ -146,7 +147,7 @@ class PseudoCrab(object):
     def num_evaluations(self):
         return self.__num_evaluations
 
-    def evaluate(self, parameters, dummy=False):
+    def evaluate(self, parameters):
         constraint_satisfied = self.constraint_fn(parameters)
         if not constraint_satisfied:
             # REVIEW: whether to raise a ValueError or return NaN outputs?
@@ -178,7 +179,7 @@ class PseudoCrab(object):
         crabnet_parameters = userparam_to_crabnetparam(parameters)
 
         results = matbench_metric_calculator(
-            crabnet_parameters, surrogate=self.crabnet_surrogate, dummy=dummy
+            crabnet_parameters, surrogate=self.crabnet_surrogate, dummy=self.dummy
         )  # add try except block
 
         # # TODO: compute and return CrabNet objective(s) as dictionary
