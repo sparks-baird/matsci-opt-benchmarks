@@ -44,18 +44,18 @@ def test_matbench_metric_calculator():
 
 
 def test_PseudoCrab():
-    PseudoCrab()
+    PseudoCrab(surrogate=False, dummy=True)
 
 
 def test_PseudoCrabBasic():
-    pc = PseudoCrabBasic()
+    pc = PseudoCrabBasic(surrogate=False, dummy=True)
     results = pc.evaluate({"x1": 0.5, "x2": 0.2, "x3": 0.3}, dummy=True)
     mae = results["mae"]
     assert 0.8 < mae < 1.0
 
 
 def test_PseudoCrabPerformance():
-    pc = PseudoCrabPerformance()
+    pc = PseudoCrabPerformance(surrogate=False, dummy=True)
     # create a vector of 23 random numbers
     X = np.random.rand(20)
     # perform l1 normalization
