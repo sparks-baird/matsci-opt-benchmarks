@@ -251,7 +251,7 @@ default_benchmarks = dict(
 
 
 class PseudoCrabBasic(PseudoCrab):
-    def __init__(self, dummy=False, **kwargs):
+    def __init__(self, **kwargs):
         PseudoCrab.__init__(
             self,
             objectives=["mae"],
@@ -259,13 +259,12 @@ class PseudoCrabBasic(PseudoCrab):
             n_float_params=3,
             categorical_num_options=[],
             constraint_fn=None,
-            dummy=dummy,
             **kwargs,
         )
 
 
 class PseudoCrabModerate(PseudoCrab):
-    def __init__(self, dummy=False):
+    def __init__(self, **kwargs):
         PseudoCrab.__init__(
             self,
             objectives=["mae"],
@@ -275,27 +274,25 @@ class PseudoCrabModerate(PseudoCrab):
                 2,
             ],
             constraint_fn=sum_constraint_fn,
-            dummy=dummy,
+            **kwargs,
         )
 
 
 class PseudoCrabAdvanced(PseudoCrab):
-    def __init__(self, dummy=False):
+    def __init__(self, **kwargs):
         PseudoCrab.__init__(
             self,
             objectives=["mae"],
             iteration_budget=100,
             n_float_params=10,
-            categorical_num_options=[
-                2,
-            ],
+            categorical_num_options=[2],
             constraint_fn=sum_constraint_fn,
-            dummy=dummy,
+            **kwargs,
         )
 
 
 class PseudoCrabPerformance(PseudoCrab):
-    def __init__(self):
+    def __init__(self, **kwargs):
         PseudoCrab.__init__(
             self,
             objectives=["mae", "rmse", "model_size", "runtime"],
@@ -303,6 +300,7 @@ class PseudoCrabPerformance(PseudoCrab):
             n_float_params=20,
             categorical_num_options=[2, 2, 3],
             constraint_fn=sum_constraint_fn,
+            **kwargs,
         )
 
 
