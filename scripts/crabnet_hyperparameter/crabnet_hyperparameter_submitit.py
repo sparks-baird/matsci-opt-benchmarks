@@ -20,7 +20,10 @@ from my_secrets import MONGODB_API_KEY
 from numpy.random import default_rng
 from submitit import AutoExecutor
 
-from matsci_opt_benchmarks.crabnet_hyperparameter.core import evaluate, get_parameters
+from matsci_opt_benchmarks.crabnet_hyperparameter.utils.parameters import (
+    get_parameters,
+    submitit_evaluate,
+)
 
 # https://www.chpc.utah.edu/documentation/software/modules-advanced.php
 # ERROR: Could not install packages due to an OSError: [Errno 122] Disk quota exceeded:
@@ -139,7 +142,7 @@ def mongodb_evaluate(parameters, verbose=False):
         hyperparameter set. Contains MAE, RMSE, Model Size, and Runtime
     """
 
-    results = evaluate(parameters)
+    results = submitit_evaluate(parameters)
     print(results)
     utc = datetime.utcnow()
     results = {
