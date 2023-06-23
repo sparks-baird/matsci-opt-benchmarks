@@ -52,9 +52,9 @@ or
 for the surrogate model.
 
 What will really differentiate the contribution of this
-repository is *the modeling of heteroskedastic noise*, where the noise variance
+repository is *the modeling of non-Gaussian, heteroskedastic noise*, where the noise
 can be a complex function of the input parameters. This is contrasted with
-homoskedasticity, where the noise variance for a given parameter is fixed
+Gaussian homoskedastic noise, where the noise for a given parameter is both Gaussian and fixed
 [[Wikipedia](https://en.wikipedia.org/wiki/Homoscedasticity_and_heteroscedasticity)].
 
 My goal is to win a ["Turing test"](https://en.wikipedia.org/wiki/Turing_test)
@@ -62,9 +62,9 @@ of sorts for the surrogate model, where the model is indistinguishable from the 
 underlying objective function.
 
 To accomplish this, I plan to:
-- run ~10 repeats for every set of parameters and fit separate models for quantiles
+- run repeats for every set of parameters and fit separate models for quantiles
   of the noise distribution
-- Get a large enough quasi-random sampling of the search space to accurately model intricate interactions between parameters (i.e. the response surface)
+- Get a large enough quasi-random sampling of the search space to accurately model intricate interactions between parameters (i.e., the response surface)
 - Train a classification model that short-circuits the regression model: return NaN
   values for inaccessible regions of objective functions and return the regression
   model values for accessible regions
