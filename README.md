@@ -84,7 +84,7 @@ My plans for implementation include:
 - Two error metrics (RMSE and MAE) and two hardware performance metrics (runtime and
   memory) of a [CrabNet](https://github.com/sparks-baird/CrabNet) regression model
   trained on [the Matbench experimental band gap dataset](https://matbench.materialsproject.org/Leaderboards%20Per-Task/matbench_v0.1_matbench_expt_gap/)
-  as a function of 23 CrabNet hyperparameters
+  as a function of 23 CrabNet hyperparameters reframed as a composition-based optimization task
   [[code](https://github.com/sparks-baird/crabnet-hyperparameter)]
   [[paper](https://doi.org/10.1016/j.commatsci.2022.111505)]
 
