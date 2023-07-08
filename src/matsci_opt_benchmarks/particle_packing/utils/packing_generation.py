@@ -73,6 +73,35 @@ def particle_packing_simulation(
     safety_factor=2.0,
     cleanup=True,
 ):
+    # X = np.repeat(1.0, num_particles)
+    X = get_diameters(means, stds, comps, num_particles=num_particles, seed=seed)
+
+    results = _particle_packing_simulation(
+        X,
+        num_particles=num_particles,
+        contraction_rate=contraction_rate,
+        seed=seed,
+        data_dir=data_dir,
+        util_dir=util_dir,
+        uid=uid,
+        safety_factor=safety_factor,
+        cleanup=cleanup,
+    )
+
+    return results
+
+
+def _particle_packing_simulation(
+    X: np.ndarray,
+    num_particles=100,
+    contraction_rate=1e-3,
+    seed=None,
+    data_dir=".",
+    util_dir=".",
+    uid=None,
+    safety_factor=2.0,
+    cleanup=True,
+):
     if seed is None:
         seed = randint(0, 100000)
     if uid is None:
@@ -84,9 +113,6 @@ def particle_packing_simulation(
     generation_conf_fpath = path.join(save_dir, "generation.conf")
     packing_nfo_fpath = path.join(save_dir, "packing.nfo")
     packing_xyzd_fpath = path.join(save_dir, "packing.xyzd")
-
-    # X = np.repeat(1.0, num_particles)
-    X = get_diameters(means, stds, comps, num_particles=num_particles, seed=seed)
 
     write_diameters(X, data_dir=data_dir, uid=uid)
     box_length = get_box_length(X, safety_factor=safety_factor)
@@ -159,6 +185,7 @@ def particle_packing_simulation(
     t2 = time()
     results["ls_time_s"] = t2 - t1
 
+    # LSGD, but can take a while
     # try:
     #     os.remove(packing_nfo_fpath)
     # except Exception as e:
