@@ -6,12 +6,17 @@ from pathlib import Path
 from subprocess import PIPE, STDOUT, run
 from typing import List, Optional
 
+from matsci_opt_benchmarks.particle_packing.proprietary import (
+    LINE_KEY,
+    SECTION_KEY,
+    write_proprietary_input_file,
+)
+
 # conda activate boppf
 # cd C:\Program Files\MATLAB\R2021a\extern\engines\python
 # python setup.py install
 # from matlab import engine, double
-from boppf.utils.data import prep_input_data
-from boppf.utils.proprietary import LINE_KEY, SECTION_KEY, write_proprietary_input_file
+from matsci_opt_benchmarks.particle_packing.utils.data import prep_input_data
 
 
 def particle_packing_simulation(
