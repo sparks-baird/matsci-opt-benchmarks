@@ -150,6 +150,8 @@ def _particle_packing_simulation(
         results["fba"] = read_packing_fraction(
             data_dir, uid, packing_xyzd_fpath, box_length
         )
+    except OSError as e:
+        raise e
     except Exception as e:
         print(e)
         results["fba"] = None
