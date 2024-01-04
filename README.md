@@ -26,19 +26,19 @@ generated via experimental self-driving laboratories
 structure using metrics inspired by [guacamol](https://www.benevolent.com/guacamol) and
 [CDVAE](https://github.com/txie-93/cdvae)
 
-<!---- In March 2021, [pymatgen](https://github.com/materialsproject/pymatgen) reorganized the
+In March 2021, [pymatgen](https://github.com/materialsproject/pymatgen) reorganized the
 code into [namespace
 packages](https://packaging.python.org/en/latest/guides/packaging-namespace-packages/),
 which makes it easier to distribute a collection of related subpackages and modules
 under an umbrella project. Tangent to that, [PyScaffold](https://pyscaffold.org/) is a project generator for high-quality Python
 packages, ready to be shared on PyPI and installable via pip; coincidentally,
-it also supports namespace package configurations. My plan for this
+it also supports namespace package configurations. Our plan for this
 repository is to host
 `pip`-installable packages that allow for loading datasets, surrogate
 models, and benchmarks for recent manuscripts from the Sparks group. We will look into hosting the datasets via Foundry and
 using the surrogate model API via Olympus. We will likely do logging to a
 [MongoDB](https://www.mongodb.com/)
-database via [Atlas](https://www.mongodb.com/cloud/atlas) and later take a snapshot of
+database via [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) and later take a snapshot of
 the dataset for Foundry. Initially, we plan to use a basic [scikit-learn](https://scikit-learn.org/) model, such
 as
 [RandomForestRegressor](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html)
@@ -47,7 +47,7 @@ along with cross-validated hyperparameter optimization via
 [RandomizedSearchCV](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RandomizedSearchCV.html)
 or
 [HalvingRandomSearchCV](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.HalvingRandomSearchCV.html)
-for the surrogate model. --->
+for the surrogate model.
 
 What will really differentiate the contribution of this
 repository is *the modeling of non-Gaussian, heteroskedastic noise*, where the noise
