@@ -99,6 +99,8 @@ myst_enable_extensions = [
     "tasklist",
 ]
 
+autodoc_mock_imports = ["sklearn", "ax", "torch", "crabnet"]
+
 # The suffix of source filenames.
 source_suffix = [".rst", ".md"]
 
