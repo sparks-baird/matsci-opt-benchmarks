@@ -8,3 +8,17 @@ sphinx_rtd_theme
 sphinx_copybutton
 nbsphinx
 nbsphinx-link
+numpy
+pandas
+scipy
+cloudpickle
+requests
+crabnet==2.0.8
+matbench
+torch<2.0
+zenodo-client
+ray[tune]
+kaleido
+xtal2png
+ax-platform
+scikit-learn # 1.2.1 (prior to 1.3.0 release on March 9, 2023, since Zenodo snapshot is March 2, 2023, though may have been earlier)
