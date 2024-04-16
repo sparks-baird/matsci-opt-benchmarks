@@ -6,7 +6,7 @@ channels:
   - nvidia
   # - fastai
 dependencies:
-  - python>=3.6
+  - python>=3.6,<3.12
   - pip
   # BASICS
   # - numpy
