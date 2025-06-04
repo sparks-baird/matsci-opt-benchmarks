@@ -84,7 +84,7 @@ Our plans for implementation include:
   trained on [the Matbench experimental band gap dataset](https://matbench.materialsproject.org/Leaderboards%20Per-Task/matbench_v0.1_matbench_expt_gap/)
   as a function of 23 CrabNet hyperparameters reframed as a composition-based optimization task
   [[code](https://github.com/sparks-baird/crabnet-hyperparameter)]
-  [[paper](https://doi.org/10.1016/j.commatsci.2022.111505)]
+  [[paper](https://doi.org/10.1016/j.commatsci.2022.111505)] [[data](https://doi.org/10.5281/zenodo.7693715)]
 
 ## Quick start
 ```python
