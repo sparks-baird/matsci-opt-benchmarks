@@ -117,16 +117,20 @@ realistically complex, real-world optimization scenarios.}
 
 Industry-relevant optimization tasks in the physical sciences are often
 ``hierarchical, noisy, multi-fidelity~\cite{Existing01_Ghoreishi2019,
-Existing02_Kandasamy2020_Dragonfly}, multi-objective~\cite{Existing03_Hanaoka2022,
-Existing04_Hase2018_Chimera}, high-dimensional~\cite{Existing05_Baird2022_CrabNet,
-Existing06_Eriksson2021_SAASBO}, and non-linearly correlated while
+Existing02_Kandasamy2020_Dragonfly, SabanzaGil2025_MFBO,
+Gantzler2023_MFBO_COF}, multi-objective~\cite{Existing03_Hanaoka2022,
+Existing04_Hase2018_Chimera, Ament2023_LogEI}, high-dimensional~\cite{Existing05_Baird2022_CrabNet,
+Existing06_Eriksson2021_SAASBO, Hvarfner2024_VanillaBO,
+Papenmeier2023_Bounce}, and non-linearly correlated while
 exhibiting mixed numerical and categorical variables subject to
 linear~\cite{Existing07_09_Baird2023_Compactness} and non-linear
 constraints.''~\cite{Existing08_Baird2023_HardSphere,
-Existing07_09_Baird2023_Compactness} Existing benchmark
-datasets~\cite{Existing10_Dunn2020_Matbench, Existing11_DeBreuck2021_MODNet,
+Existing07_09_Baird2023_Compactness, Hickman2025_Anubis} Existing benchmark
+datasets and platforms~\cite{Existing10_Dunn2020_Matbench,
+Existing11_DeBreuck2021_MODNet, Choudhary2024_JARVIS,
 Existing12_Wang2022_ActiveLearning, Existing13_Liang2021_BO_Benchmarks,
-Existing14_Henderson2021, Existing15_Hase2021_Olympus}, while very
+Existing14_Henderson2021, Existing15_Hase2021_Olympus,
+Hickman2025_Atlas}, while very
 useful, typically are single-objective, single-fidelity, low-dimensional,
 and ignore or simplify the influence of noise. The inclusion of
 heteroskedastic noise in a surrogate model enables us to establish a
@@ -136,6 +140,18 @@ between low-cost surrogate function evaluations using benchmark datasets
 and costly, real-world objective function evaluations by considering a
 multi-objective, multi-fidelity, and high-dimensional task while
 accounting for heteroskedastic noise.
+
+The broader context for this work is the rapid rise of self-driving
+laboratories (SDLs) for autonomous chemical and materials
+discovery~\cite{Tom2024_SDL_Review, Abolhasani2023_SDL}, where realistic
+benchmark surrogates are needed to develop, compare, and de-risk the
+adaptive-design algorithms that drive such platforms. CrabNet itself
+has continued to evolve, with recent attention-based composition models
+extending the original architecture with structural information from
+crystal graphs~\cite{Madani2025_TransformerGraph}; making the
+hyperparameter landscape of the original CrabNet model available as a
+cheap surrogate enables direct, repeatable comparison of optimization
+strategies that might otherwise be evaluated only on the latest model.
 
 \section{Value of the data}\label{sec:value}
 
@@ -275,6 +291,13 @@ in Jupyter notebooks. For implementation details, see
 \url{https://github.com/sparks-baird/matsci-opt-benchmarks/tree/main/scripts/crabnet_hyperparameter}
 and
 \url{https://github.com/sparks-baird/matsci-opt-benchmarks/tree/main/notebooks/crabnet_hyperparameter}.
+The trained surrogate has been deployed as an interactive
+HuggingFace Space\footnote{\url{https://huggingface.co/spaces/AccelerationConsortium/crabnet-hyperparameter}}
+and used downstream for benchmarking adaptive-design libraries such as
+BayBE~\cite{Fitzner2025_BayBE} and Ax against one
+another\footnote{\url{https://github.com/AccelerationConsortium/baybe-multi-task-bo}},
+as well as in an Acceleration Consortium Kaggle benchmarking
+competition\footnote{\url{https://www.kaggle.com/datasets/acceleration-consortium/crabnet-optimization-challenge-dataset}}.
 
 \section*{Ethics statements}
 
