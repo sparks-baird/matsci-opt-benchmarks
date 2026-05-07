@@ -1,0 +1,321 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% manuscript.tex                                                    %%
+%% IMMI Data Descriptor article (Springer Nature sn-jnl template)    %%
+%% Article title: Materials Science Optimization Benchmark Dataset   %%
+%%                for High-dimensional, Multi-objective,             %%
+%%                Multi-fidelity Optimization of CrabNet             %%
+%%                Hyperparameters                                    %%
+%%                                                                   %%
+%% Build with:                                                       %%
+%%   latexmk -pdf manuscript.tex                                     %%
+%% (or, equivalently, the sequence pdflatex / bibtex / pdflatex x2)  %%
+%%                                                                   %%
+%% Companion files in this folder:                                   %%
+%%   sn-jnl.cls           Springer Nature class file                 %%
+%%   sn-mathphys-num.bst  Numbered Math/Phys reference style         %%
+%%   references.bib       Bibliography (see references-              %%
+%%                        recommendations.md for insertion guidance) %%
+%%   figures/             Figure assets (PNG)                        %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% IMMI uses numbered, ascending in-text citations — sn-mathphys-num is
+% the closest match in the Springer Nature template family.
+\documentclass[pdflatex,sn-mathphys-num]{sn-jnl}
+
+%% Standard packages required by sn-jnl
+\usepackage{graphicx}%
+\usepackage{multirow}%
+\usepackage{amsmath,amssymb,amsfonts}%
+\usepackage{amsthm}%
+\usepackage{mathrsfs}%
+\usepackage[title]{appendix}%
+\usepackage{xcolor}%
+\usepackage{textcomp}%
+\usepackage{manyfoot}%
+\usepackage{booktabs}%
+\usepackage{algorithm}%
+\usepackage{algorithmicx}%
+\usepackage{algpseudocode}%
+\usepackage{listings}%
+
+\graphicspath{{figures/}}
+
+\raggedbottom
+
+\begin{document}
+
+\title[CrabNet Hyperparameter Benchmark Dataset]{Materials Science Optimization Benchmark Dataset for High-dimensional, Multi-objective, Multi-fidelity Optimization of CrabNet Hyperparameters}
+
+\author*[1]{\fnm{Sterling G.} \sur{Baird}}\email{sterling.baird@utah.edu}
+
+\author[2]{\fnm{Jeet N.} \sur{Parikh}}\email{jeetparikh1@gmail.com}
+
+\author[1,3]{\fnm{Taylor D.} \sur{Sparks}}\email{sparks@eng.utah.edu}
+
+\affil*[1]{\orgdiv{Department of Materials Science and Engineering},
+  \orgname{University of Utah},
+  \orgaddress{\street{122 S. Central Campus Drive, \#304},
+              \city{Salt Lake City}, \postcode{84112},
+              \state{Utah}, \country{USA}}}
+
+\affil[2]{\orgname{Northwood High School},
+  \orgaddress{\street{4515 Portola Pkwy},
+              \city{Irvine}, \postcode{92620},
+              \state{California}, \country{USA}}}
+
+\affil[3]{\orgdiv{Department of Chemistry},
+  \orgname{University of Liverpool},
+  \orgaddress{\city{Liverpool}, \postcode{L7 3NY}, \country{United Kingdom}}}
+
+%%==================================%%
+%% Abstract (150--250 words per IMMI author guide)
+%%==================================%%
+\abstract{Benchmarks are crucial for driving progress in scientific
+disciplines. To be effective, benchmarks should closely mimic real-world
+tasks while being computationally efficient, allowing for accessibility
+and repeatability. Developing surrogate models that can be
+indistinguishable from the ground-truth observation within the explored
+dataset bounds dramatically reduces the computational burden of running
+benchmarks without sacrificing quality, but this requires a large amount
+of initial data. In the fields of materials science and chemistry,
+relevant optimization tasks can be challenging due to their complexity,
+which includes hierarchical, noisy, multi-fidelity, multi-objective,
+high-dimensional, and non-linearly correlated variables. Additionally,
+they may include mixed numerical and categorical variables that are
+subject to linear and non-linear constraints. Simulating or
+experimentally verifying such tasks can be difficult, which is why
+benchmarks are essential. This study aimed to overcome these challenges
+by generating 173,219 quasi-random hyperparameter combinations across
+23 hyperparameters and using them to train CrabNet on the Matbench
+experimental band gap dataset (computational runtime: 387 RTX-2080-Ti
+GPU days). The results were stored in a free-tier shared MongoDB Atlas
+dataset, creating a regression dataset that maps hyperparameter
+combinations to metrics such as MAE, RMSE, computational runtime, and
+model size. Heteroskedastic noise was incorporated into the regression
+dataset, and bad hyperparameter combinations were excluded; percentile
+ranks were computed within each group of identical parameter sets to
+capture heteroskedastic noise rather than assuming Gaussian noise. This
+approach can be applied to other benchmark datasets, bridging the gap
+between optimization benchmarks with low computational overhead and
+realistically complex, real-world optimization scenarios.}
+
+\keywords{Bayesian optimization, benchmark dataset, CrabNet,
+  high-dimensional optimization, hyperparameter optimization,
+  multi-fidelity}
+
+\maketitle
+
+%%====================================================================
+%% IMMI Data Descriptor articles are encouraged to address: data
+%% provenance, verification, validation, uncertainty quantification,
+%% and the value of the data. Section ordering below mirrors the
+%% existing Data in Brief manuscript so that the prose port is 1:1
+%% and the scientific rewrite remains a manual editorial pass.
+%%====================================================================
+
+\section{Introduction}\label{sec:intro}
+
+Industry-relevant optimization tasks in the physical sciences are often
+``hierarchical, noisy, multi-fidelity~\cite{Existing01_Ghoreishi2019,
+Existing02_Kandasamy2020_Dragonfly}, multi-objective~\cite{Existing03_Hanaoka2022,
+Existing04_Hase2018_Chimera}, high-dimensional~\cite{Existing05_Baird2022_CrabNet,
+Existing06_Eriksson2021_SAASBO}, and non-linearly correlated while
+exhibiting mixed numerical and categorical variables subject to
+linear~\cite{Existing07_09_Baird2023_Compactness} and non-linear
+constraints.''~\cite{Existing08_Baird2023_HardSphere,
+Existing07_09_Baird2023_Compactness} Existing benchmark
+datasets~\cite{Existing10_Dunn2020_Matbench, Existing11_DeBreuck2021_MODNet,
+Existing12_Wang2022_ActiveLearning, Existing13_Liang2021_BO_Benchmarks,
+Existing14_Henderson2021, Existing15_Hase2021_Olympus}, while very
+useful, typically are single-objective, single-fidelity, low-dimensional,
+and ignore or simplify the influence of noise. The inclusion of
+heteroskedastic noise in a surrogate model enables us to establish a
+``Turing test'' scenario where the surrogate model is virtually
+identical to the actual simulation. This approach bridges the gap
+between low-cost surrogate function evaluations using benchmark datasets
+and costly, real-world objective function evaluations by considering a
+multi-objective, multi-fidelity, and high-dimensional task while
+accounting for heteroskedastic noise.
+
+\section{Value of the data}\label{sec:value}
+
+\begin{itemize}
+\item The dataset is valuable for benchmarking adaptive design methods
+  applied to high-dimensional, constrained, multi-fidelity optimization
+  tasks.
+\item Practitioners of optimization in the physical sciences can
+  leverage this dataset to simulate real-world materials optimization
+  tasks, such as alloy discovery, and achieve improved performance.
+\item The dataset is also useful in gaining insights into the
+  hyperparameter optimization strategies used for developing
+  compositionally restricted material property prediction models.
+\end{itemize}
+
+\section{Data description}\label{sec:data-description}
+
+The regression dataset contains hyperparameter sets (including repeats)
+spanning twenty-three hyperparameters and their corresponding MAE, RMSE,
+computational runtimes, and model size for training CrabNet.
+
+For histogram data for the number of successful repeats, see
+Figure~\ref{fig:repeats}. For histograms of the mean absolute error,
+root-mean-square error, runtime, and model size, see
+Figures~\ref{fig:mae}, \ref{fig:rmse}, \ref{fig:gpu}, and
+\ref{fig:size}, respectively.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\linewidth]{sobol_repeats_histogram.png}
+\caption{Histogram of number of parameter groups vs.\ number of
+  successful repeats within a given group. The lowest number of repeats
+  for a parameter set is 1, with approximately 2.6 repeats on average.}
+\label{fig:repeats}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\linewidth]{crabnet_mae_histogram.png}
+\caption{Histogram of number of training runs vs.\ mean absolute error
+  using CrabNet on the Matbench experimental band gap task.}
+\label{fig:mae}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\linewidth]{crabnet_rmse_histogram.png}
+\caption{Histogram of number of training runs vs.\ root-mean-square
+  error using CrabNet on the Matbench experimental band gap task.}
+\label{fig:rmse}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\linewidth]{crabnet_gpu_runtime_histogram.png}
+\caption{Histogram of number of training runs vs.\ GPU runtime on an
+  RTX 2080-Ti using CrabNet on the Matbench experimental band gap task.
+  The $y$-axis is log-scaled.}
+\label{fig:gpu}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\linewidth]{crabnet_model_size_histogram.png}
+\caption{Histogram of number of training runs vs.\ model size using
+  CrabNet on the Matbench experimental band gap task.}
+\label{fig:size}
+\end{figure}
+
+\section{Specifications table}\label{sec:specs}
+
+\begin{table}[h]
+\caption{Dataset specifications.}\label{tab:specs}
+\begin{tabular}{@{}p{0.27\linewidth}p{0.66\linewidth}@{}}
+\toprule
+\textbf{Subject} & Computational materials science \\
+\midrule
+\textbf{Specific subject area} & Composition-based experimental band gap
+  prediction \\
+\midrule
+\textbf{Type of data} & Table; Figure \\
+\midrule
+\textbf{How the data were acquired} & Executed CrabNet v2.0.8
+  (\url{https://github.com/sparks-baird/CrabNet}) for each of the five
+  folds of the Matbench experimental band gap task
+  (\url{https://matbench.materialsproject.org/}). Python orchestration
+  in
+  \texttt{scripts/crabnet\_hyperparameter/crabnet\_hyperparameter\_submitit.py}
+  was used to dispatch jobs to SLURM via Submitit on the University of
+  Utah's Center for High-performance Computing (CHPC); results were
+  logged in JSON via the MongoDB Data API. Source release at v0.2.1
+  (\url{https://doi.org/10.5281/zenodo.7694289}). \\
+\midrule
+\textbf{Data format} & Analyzed; Filtered; Raw \\
+\midrule
+\textbf{Description of data collection} & The Ax Platform was used to
+  perform a quasi-random Sobol sampling of 65,536 parameter combinations,
+  varying 23 hyperparameters within a constrained search space, with 5
+  repeats resulting in a total of 327,680 training runs. Of these,
+  173,219 completed successfully, consuming 387 RTX-2080-Ti GPU days
+  (\textasciitilde 4{,}614 CUDA core years), resulting in 41,550 unique
+  sets. To rank repeat simulations, the ``dense'' method with
+  \texttt{pct=True} was used in
+  \texttt{pandas.core.groupby.GroupBy.rank}. \\
+\midrule
+\textbf{Data source location} & Free-tier shared cluster MongoDB Atlas
+  database. \\
+\midrule
+\textbf{Data accessibility} & Repository: Zenodo. Identifier: 7694268.
+  Direct URL: \url{https://doi.org/10.5281/zenodo.7694268}. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Experimental design, materials and methods}\label{sec:methods}
+
+A vast number of CrabNet models, totaling 173,219, were trained with
+different hyperparameter combinations using the Ax platform's
+quasi-random Sobol sampling function to generate unique parameter
+combinations. While there can be other uses, this dataset is primarily
+intended as a multi-objective, multi-fidelity, high-dimensional
+benchmark dataset for formulation-based optimization scenarios by
+scaling each of the numerical parameters to the range of 0 to 1 and
+applying a contrived constraint that the sum of all parameters must
+equal one. To realistically capture noise in the benchmark dataset,
+simulations were repeated for each quasi-random parameter combination.
+To improve efficiency and reduce latency, hyperparameter sets (including
+repeats) were shuffled and divided into batches, then sent to a
+high-performance computing environment for asynchronous evaluation.
+Despite some results not being completed due to either timeout or
+preemption, this trade-off was deemed reasonable for the efficiency and
+completion gains.
+
+Results were logged to a free-tier MongoDB Atlas database and then
+aggregated and prepared as machine-learning-ready datasets via Python
+in Jupyter notebooks. For implementation details, see
+\url{https://github.com/sparks-baird/matsci-opt-benchmarks/tree/main/scripts/crabnet_hyperparameter}
+and
+\url{https://github.com/sparks-baird/matsci-opt-benchmarks/tree/main/notebooks/crabnet_hyperparameter}.
+
+\section*{Ethics statements}
+
+There are no statements to declare.
+
+\section*{CRediT author statement}
+
+\textbf{Sterling G.~Baird}: Project administration, Conceptualization,
+Methodology, Software, Validation, Formal analysis, Investigation, Data
+Curation, Writing -- Original Draft, Writing -- Review \& Editing,
+Visualization. \textbf{Jeet N.~Parikh}: Methodology, Software, Formal
+Analysis, Data Curation, Writing -- Original Draft, Writing -- Review \&
+Editing. \textbf{Taylor D.~Sparks}: Supervision, Funding acquisition.
+
+\section*{Acknowledgments}
+
+\textbf{Funding:} This work was supported by the National Science
+Foundation, Division of Materials Research [Grant number DMR-1651668].
+
+We thank Trupti Mohanty for work and discussion related to the future
+use-case of this dataset as a pseudo-materials benchmark. We acknowledge
+the University of Utah's Center for High Performance Computing (CHPC)
+for providing computational resources. The code and manuscript
+associated with a benchmark dataset for particle packing
+simulations~\cite{Existing08_Baird2023_HardSphere} served as a starting
+point for the code and manuscript for this work, for which there is
+shared language and document structure. We acknowledge OpenAI for
+providing free usage of their research tool, ChatGPT, which was used
+during the review and editing process.
+
+\section*{Declaration of interests}
+
+The authors declare that they have no known competing financial
+interests or personal relationships that could have appeared to
+influence the work reported in this paper.
+
+%%====================================================================
+%% Bibliography
+%%====================================================================
+% \bibliographystyle is set automatically by sn-jnl based on the
+% sn-mathphys-num documentclass option above.
+\bibliography{references}
+
+\end{document}
