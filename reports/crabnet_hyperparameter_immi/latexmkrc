@@ -1,0 +1,8 @@
+# latexmkrc - reproducible build config for the IMMI manuscript.
+# (latexmkrc is a Perl init file; '#' begins comments, not '%'.)
+# Usage: `latexmk` (build) or `latexmk -c` (clean) from this directory.
+$pdf_mode      = 1;       # build PDF directly via pdflatex
+$bibtex_use    = 2;       # always run bibtex when needed
+$pdflatex      = 'pdflatex -interaction=nonstopmode -file-line-error %O %S';
+$max_repeat    = 5;
+@default_files = ('manuscript.tex');

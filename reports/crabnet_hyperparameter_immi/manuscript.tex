@@ -1,0 +1,441 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% manuscript.tex                                                    %%
+%% IMMI Data Descriptor article (Springer Nature sn-jnl template)    %%
+%% Article title: Materials Science Optimization Benchmark Dataset   %%
+%%                for High-dimensional, Multi-objective,             %%
+%%                Multi-fidelity Optimization of CrabNet             %%
+%%                Hyperparameters                                    %%
+%%                                                                   %%
+%% Build with:                                                       %%
+%%   latexmk -pdf manuscript.tex                                     %%
+%% (or, equivalently, the sequence pdflatex / bibtex / pdflatex x2)  %%
+%%                                                                   %%
+%% Companion files in this folder:                                   %%
+%%   sn-jnl.cls           Springer Nature class file                 %%
+%%   sn-mathphys-num.bst  Numbered Math/Phys reference style         %%
+%%   references.bib       Bibliography (see references-              %%
+%%                        recommendations.md for insertion guidance) %%
+%%   figures/             Figure assets (PNG)                        %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% IMMI uses numbered, ascending in-text citations — sn-mathphys-num is
+% the closest match in the Springer Nature template family.
+\documentclass[pdflatex,sn-mathphys-num]{sn-jnl}
+
+%% Standard packages required by sn-jnl
+\usepackage{graphicx}%
+\usepackage{multirow}%
+\usepackage{amsmath,amssymb,amsfonts}%
+\usepackage{amsthm}%
+\usepackage{mathrsfs}%
+\usepackage[title]{appendix}%
+\usepackage{xcolor}%
+\usepackage{textcomp}%
+\usepackage{manyfoot}%
+\usepackage{booktabs}%
+\usepackage{algorithm}%
+\usepackage{algorithmicx}%
+\usepackage{algpseudocode}%
+\usepackage{listings}%
+
+\graphicspath{{figures/}}
+
+\raggedbottom
+
+\begin{document}
+
+\title[CrabNet Hyperparameter Benchmark Dataset]{Materials Science Optimization Benchmark Dataset for High-dimensional, Multi-objective, Multi-fidelity Optimization of CrabNet Hyperparameters}
+
+\author*[1]{\fnm{Sterling G.} \sur{Baird}}\email{sterling.baird@utah.edu}
+
+\author[2]{\fnm{Jeet N.} \sur{Parikh}}\email{jeetparikh1@gmail.com}
+
+\author[1,3]{\fnm{Taylor D.} \sur{Sparks}}\email{sparks@eng.utah.edu}
+
+\affil*[1]{\orgdiv{Department of Materials Science and Engineering},
+  \orgname{University of Utah},
+  \orgaddress{\street{122 S. Central Campus Drive, \#304},
+              \city{Salt Lake City}, \postcode{84112},
+              \state{Utah}, \country{USA}}}
+
+\affil[2]{\orgname{Northwood High School},
+  \orgaddress{\street{4515 Portola Pkwy},
+              \city{Irvine}, \postcode{92620},
+              \state{California}, \country{USA}}}
+
+\affil[3]{\orgdiv{Department of Chemistry},
+  \orgname{University of Liverpool},
+  \orgaddress{\city{Liverpool}, \postcode{L7 3NY}, \country{United Kingdom}}}
+
+%%==================================%%
+%% Abstract (150--250 words per IMMI author guide)
+%%==================================%%
+\abstract{Benchmarks are crucial for driving progress in scientific
+disciplines. To be effective, benchmarks should closely mimic real-world
+tasks while being computationally efficient, allowing for accessibility
+and repeatability. Developing surrogate models that can be
+indistinguishable from the ground-truth observation within the explored
+dataset bounds dramatically reduces the computational burden of running
+benchmarks without sacrificing quality, but this requires a large amount
+of initial data. In the fields of materials science and chemistry,
+relevant optimization tasks can be challenging due to their complexity,
+which includes hierarchical, noisy, multi-fidelity, multi-objective,
+high-dimensional, and non-linearly correlated variables. Additionally,
+they may include mixed numerical and categorical variables that are
+subject to linear and non-linear constraints. Simulating or
+experimentally verifying such tasks can be difficult, which is why
+benchmarks are essential. This study aimed to overcome these challenges
+by generating 173,219 quasi-random hyperparameter combinations across
+23 hyperparameters and using them to train CrabNet on the Matbench
+experimental band gap dataset (computational runtime: 387 RTX-2080-Ti
+GPU days). The results were stored in a free-tier shared MongoDB Atlas
+dataset, creating a regression dataset that maps hyperparameter
+combinations to metrics such as MAE, RMSE, computational runtime, and
+model size. Heteroskedastic noise was incorporated into the regression
+dataset, and bad hyperparameter combinations were excluded; percentile
+ranks were computed within each group of identical parameter sets to
+capture heteroskedastic noise rather than assuming Gaussian noise. This
+approach can be applied to other benchmark datasets, bridging the gap
+between optimization benchmarks with low computational overhead and
+realistically complex, real-world optimization scenarios.}
+
+\keywords{Bayesian optimization, benchmark dataset, CrabNet,
+  high-dimensional optimization, hyperparameter optimization,
+  multi-fidelity}
+
+\maketitle
+
+%%====================================================================
+%% Springer Nature Data Descriptor section ordering:
+%%   Background & Summary --> Methods --> Data Records -->
+%%   Technical Validation --> Usage Notes --> Code availability
+%% (followed by CRediT, Acknowledgments, Declarations, Bibliography).
+%%====================================================================
+
+\section{Background \& Summary}\label{sec:background}
+
+Industry-relevant optimization tasks in the physical sciences are often
+``hierarchical, noisy, multi-fidelity~\cite{Existing01_Ghoreishi2019,
+Existing02_Kandasamy2020_Dragonfly, SabanzaGil2025_MFBO,
+Gantzler2023_MFBO_COF}, multi-objective~\cite{Existing03_Hanaoka2022,
+Existing04_Hase2018_Chimera, Ament2023_LogEI}, high-dimensional~\cite{Existing05_Baird2022_CrabNet,
+Existing06_Eriksson2021_SAASBO, Hvarfner2024_VanillaBO,
+Papenmeier2023_Bounce}, and non-linearly correlated while
+exhibiting mixed numerical and categorical variables subject to
+linear~\cite{Existing07_09_Baird2023_Compactness} and non-linear
+constraints.''~\cite{Existing08_Baird2023_HardSphere,
+Existing07_09_Baird2023_Compactness, Hickman2025_Anubis} Existing
+benchmark datasets and platforms for materials and molecular
+optimization~\cite{Existing10_Dunn2020_Matbench,
+Existing11_DeBreuck2021_MODNet, Choudhary2024_JARVIS,
+Existing12_Wang2022_ActiveLearning, Existing13_Liang2021_BO_Benchmarks,
+Existing14_Henderson2021, Existing15_Hase2021_Olympus,
+Hickman2025_Atlas}, while very useful, typically are single-objective,
+single-fidelity, low-dimensional, and ignore or simplify the influence
+of noise. The growing population of self-driving
+laboratories~\cite{Tom2024_SDL_Review, Abolhasani2023_SDL} and
+attention-based composition models that succeed
+CrabNet~\cite{Madani2025_TransformerGraph} therefore have few publicly
+available surrogates against which their adaptive-design components
+can be exercised under realistic, hierarchical, noisy conditions.
+
+To address this gap, we generated a large hyperparameter response
+surface for the original CrabNet composition-only band gap regression
+model. A quasi-random Sobol design~\cite{Existing02_Kandasamy2020_Dragonfly}
+of 65{,}536 hyperparameter combinations was specified over a
+constrained search space spanning 23 numerical and categorical
+hyperparameters; each combination was repeated up to five times,
+yielding 327{,}680 scheduled training runs. Of these, 173{,}219
+completed successfully on RTX-2080-Ti GPUs (387 GPU-days,
+$\sim$4{,}614 CUDA-core years), producing 41{,}550 unique parameter
+sets with 1--5 successful repeats each. The resulting regression
+dataset records four observed outputs --- mean absolute error (MAE),
+root-mean-square error (RMSE), GPU runtime, and on-disk model size ---
+for every successful run, and is released together with a trained
+surrogate so that downstream users can evaluate optimization
+strategies without re-running the underlying CrabNet training.
+
+The dataset and surrogate have already been re-used to benchmark
+algorithms in the BayBE library~\cite{Fitzner2025_BayBE} and the Ax
+platform via an interactive HuggingFace
+Space\footnote{\url{https://huggingface.co/spaces/AccelerationConsortium/crabnet-hyperparameter}}
+and in an Acceleration Consortium Kaggle
+competition\footnote{\url{https://www.kaggle.com/datasets/acceleration-consortium/crabnet-optimization-challenge-dataset}},
+demonstrating that the dataset described here can serve as a realistic
+yet computationally cheap testbed for the broader BO and SDL community.
+
+\section{Methods}\label{sec:methods}
+
+\subsection{Hyperparameter search space and sampling design}
+\label{sec:methods-search-space}
+
+The 23 hyperparameters span CrabNet's encoder configuration (e.g.,
+\texttt{N}, \texttt{d\_model}, \texttt{heads}, \texttt{dim\_feedforward},
+\texttt{dropout}), training schedule (\texttt{epochs\_step}, \texttt{lr},
+\texttt{weight\_decay}, \texttt{batch\_size}, optimizer betas), data
+augmentation / scaling switches (\texttt{emb\_scaler}, \texttt{pos\_scaler},
+\texttt{eps}, \texttt{fudge}, \texttt{alpha}), and categorical choices
+(\texttt{criterion}, \texttt{elem\_prop}, \texttt{bias},
+\texttt{out\_hidden4}). Continuous parameters were given physically
+meaningful upper and lower bounds, with mutually-incompatible
+configurations excluded a priori so that all sampled combinations are
+admissible. Quasi-random samples were drawn using the Ax platform's
+Sobol generator, which provides low-discrepancy coverage of the joint
+search space and avoids the structured artefacts of pure random
+sampling.
+
+\subsection{CrabNet training and execution environment}
+\label{sec:methods-execution}
+
+For each sampled combination, CrabNet v2.0.8
+(\url{https://github.com/sparks-baird/CrabNet}) was trained on each of
+the five Matbench~\cite{Existing10_Dunn2020_Matbench} folds of the
+\texttt{matbench\_expt\_gap} composition-only experimental band gap task
+(\url{https://matbench.materialsproject.org/}). Python orchestration in
+\texttt{scripts/crabnet\_hyperparameter/crabnet\_hyperparameter\_submitit.py}
+dispatched jobs to SLURM via Submitit on the University of Utah's
+Center for High-performance Computing (CHPC). To improve cluster
+utilisation and reduce latency, hyperparameter sets (including
+repeats) were shuffled and divided into batches, then submitted for
+asynchronous evaluation. Per-run results --- the four observed metrics
+plus the full input hyperparameter vector and provenance information
+--- were streamed to a free-tier shared MongoDB Atlas collection via
+the MongoDB Data API. Walltime and pre-emption limits caused
+$\approx$47\% of scheduled runs not to complete; the trade-off was
+considered acceptable for the throughput gains and is reflected in the
+distribution of successful repeats per parameter set
+(Section~\ref{sec:tech-validation}).
+
+\subsection{Aggregation and percentile ranking}
+\label{sec:methods-aggregation}
+
+Successful runs were exported from MongoDB and aggregated to the
+machine-learning-ready table described in Section~\ref{sec:data-records}.
+For each repeated parameter set we additionally computed within-group
+percentile ranks of MAE, RMSE, and runtime using the ``dense''
+ranking method with \texttt{pct=True} in
+\texttt{pandas.core.groupby.GroupBy.rank}. These percentile ranks
+provide a non-parametric handle on heteroskedastic noise: rather than
+imposing an a-priori Gaussian noise model parameterised by mean and
+standard deviation, downstream surrogate models can sample from the
+empirical rank distribution within a parameter cell, faithfully
+reproducing the true (often heavy-tailed) noise structure of the
+underlying training process. The rank-augmented table is the canonical
+input for the surrogate models distributed alongside the dataset.
+
+\section{Data Records}\label{sec:data-records}
+
+The dataset and accompanying trained surrogates are deposited on
+Zenodo with persistent identifier
+\texttt{10.5281/zenodo.7694268}\footnote{\url{https://doi.org/10.5281/zenodo.7694268}}.
+The deposition contains the files listed in Table~\ref{tab:records}.
+The primary data record is \texttt{sobol\_regression.csv}; the
+remaining files are derived artefacts retained for reproducibility of
+the trained surrogate.
+
+\begin{table}[h]
+\caption{Files included in the Zenodo deposition (DOI
+\texttt{10.5281/zenodo.7694268}).}\label{tab:records}
+\begin{tabular}{@{}p{0.32\linewidth}p{0.62\linewidth}@{}}
+\toprule
+\textbf{File} & \textbf{Description} \\
+\midrule
+\texttt{sobol\_regression.csv} &
+  Primary data table. One row per successful CrabNet training run
+  (173{,}219 rows, 35 columns): a unique \texttt{\_id}, batch
+  \texttt{session\_id}, \texttt{timestamp}, the 23 input
+  hyperparameters, the executing GPU \texttt{hardware} string, and
+  the four observed outputs \texttt{model\_size}, \texttt{runtime},
+  \texttt{mae}, \texttt{rmse} together with their within-group
+  percentile-rank columns \texttt{runtime\_rank}, \texttt{mae\_rank},
+  \texttt{rmse\_rank}. Column ordering and units are documented in
+  the data-preparation notebook (see Section~\ref{sec:code}). \\
+\midrule
+\texttt{model\_metadata.json} &
+  Surrogate-model metadata: feature schema, target list, train/test
+  fold definitions, and library/version information used to fit the
+  surrogate from \texttt{sobol\_regression.csv}. \\
+\midrule
+\texttt{surrogate\_models.pkl} &
+  Pickled scikit-learn surrogate ensemble fit on the full table; the
+  artefact backing the HuggingFace Space deployment. \\
+\midrule
+\texttt{cross\_validation\_models\_\{0--4\}.pkl} &
+  Five pickled surrogate models fit on the corresponding Matbench
+  fold splits, used in the technical validation
+  (Section~\ref{sec:tech-validation}). \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Technical Validation}\label{sec:tech-validation}
+
+The dataset's suitability as a noisy, multi-fidelity, multi-objective
+benchmark rests on three properties of the raw runs: a meaningful
+number of within-cell repeats, broad coverage of each output metric,
+and an empirical (rather than imposed) noise distribution that varies
+with the operating point. The histograms in
+Figures~\ref{fig:repeats}--\ref{fig:size} demonstrate each property
+in turn.
+
+Figure~\ref{fig:repeats} shows that, although the cap was five repeats
+per parameter set, the realised distribution of successful repeats is
+broad and right-skewed, with a mean of $\approx$2.6 successful repeats
+per set and 1--5 repeats observed across the 41{,}550 unique sets.
+This is the empirical signature of cluster pre-emption rather than a
+modelling assumption, and is precisely what makes the dataset a
+faithful multi-fidelity testbed: the same input can be queried at
+different effective fidelities (number of repeats), and the
+realised-fidelity distribution itself is heterogeneous across the
+search space.
+
+Figures~\ref{fig:mae} and~\ref{fig:rmse} show that MAE and RMSE both
+span more than two orders of magnitude across the explored search
+space, with long upper tails dominated by configurations that train
+unstable or under-parameterised models. This breadth ensures that
+optimization algorithms have to discriminate between qualitatively
+different regimes (well-trained, under-trained, divergent), not only
+between marginally different ``good'' configurations.
+Figure~\ref{fig:gpu} (log-scaled) shows a similarly wide GPU-runtime
+distribution spanning roughly three orders of magnitude, which
+underpins the dataset's multi-fidelity character: cheap configurations
+can be used as low-fidelity proxies for expensive ones in
+multi-fidelity acquisition functions
+(refs~\cite{Existing01_Ghoreishi2019, SabanzaGil2025_MFBO,
+Gantzler2023_MFBO_COF}). Figure~\ref{fig:size} confirms that on-disk
+model size, the secondary objective, is also broadly distributed and
+non-trivially correlated with accuracy, providing a meaningful Pareto
+trade-off for multi-objective evaluation.
+
+The five-fold cross-validation surrogate models distributed with the
+dataset (\texttt{cross\_validation\_models\_\{0--4\}.pkl}, see
+Section~\ref{sec:data-records}) provide a held-out estimate of how
+faithfully the surrogate reproduces the underlying CrabNet response
+surface. Together, the repeat structure and the percentile-rank
+augmentation (Section~\ref{sec:methods-aggregation}) allow downstream
+users to draw heteroskedastic noise samples that match the empirical
+distribution within a parameter cell, rather than imposing an
+a-priori Gaussian noise model.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\linewidth]{sobol_repeats_histogram.png}
+\caption{Histogram of number of parameter groups vs.\ number of
+  successful repeats within a given group. The lowest number of
+  successful repeats per parameter set is 1, with approximately 2.6
+  successful repeats on average.}
+\label{fig:repeats}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\linewidth]{crabnet_mae_histogram.png}
+\caption{Histogram of number of training runs vs.\ mean absolute
+  error using CrabNet on the Matbench experimental band gap task.}
+\label{fig:mae}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\linewidth]{crabnet_rmse_histogram.png}
+\caption{Histogram of number of training runs vs.\ root-mean-square
+  error using CrabNet on the Matbench experimental band gap task.}
+\label{fig:rmse}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\linewidth]{crabnet_gpu_runtime_histogram.png}
+\caption{Histogram of number of training runs vs.\ GPU runtime on an
+  RTX-2080-Ti using CrabNet on the Matbench experimental band gap
+  task. The $y$-axis is log-scaled.}
+\label{fig:gpu}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\linewidth]{crabnet_model_size_histogram.png}
+\caption{Histogram of number of training runs vs.\ model size using
+  CrabNet on the Matbench experimental band gap task.}
+\label{fig:size}
+\end{figure}
+
+\section{Usage Notes}\label{sec:usage}
+
+The primary table \texttt{sobol\_regression.csv} can be loaded
+directly with \texttt{pandas.read\_csv} for exploratory analysis. To
+use the dataset as a benchmark for adaptive design, we recommend the
+trained surrogate (\texttt{surrogate\_models.pkl}) instead: it
+exposes a callable that maps any in-bounds 23-dimensional
+hyperparameter vector to predicted MAE, RMSE, runtime and model size,
+together with an empirical noise sample drawn from the within-cell
+percentile-rank distribution. This avoids the cost of re-training
+CrabNet (387 GPU-days for the full table) while preserving the
+realistic, heteroskedastic noise structure that motivates the
+benchmark.
+
+The same surrogate is also exposed as an interactive HuggingFace
+Space (see footnote in Section~\ref{sec:background}) and as a
+REST-callable model that has been used as the objective in BayBE and
+Ax benchmarking notebooks at
+\url{https://github.com/AccelerationConsortium/baybe-multi-task-bo}
+and as the objective for an Acceleration Consortium Kaggle
+competition. These deployments are not part of the formal data record
+but are useful starting templates for downstream users wishing to
+benchmark a new acquisition function or optimisation library against
+the dataset.
+
+\section{Code availability}\label{sec:code}
+
+All code used to generate, aggregate, and surrogate-fit the dataset
+is openly available. The dispatch and aggregation pipeline lives in
+the \texttt{matsci-opt-benchmarks} repository under
+\url{https://github.com/sparks-baird/matsci-opt-benchmarks/tree/main/scripts/crabnet_hyperparameter}
+and the data-preparation, surrogate-fitting and Zenodo-upload
+notebooks under
+\url{https://github.com/sparks-baird/matsci-opt-benchmarks/tree/main/notebooks/crabnet_hyperparameter}.
+The exact source state used for the dataset is archived at Zenodo as
+release v0.2.1 with DOI
+\texttt{10.5281/zenodo.7694289}\footnote{\url{https://doi.org/10.5281/zenodo.7694289}}.
+The forked CrabNet implementation actually executed at training time
+is at \url{https://github.com/sparks-baird/CrabNet} (version 2.0.8).
+
+\section*{CRediT author statement}
+
+\textbf{Sterling G.~Baird}: Project administration, Conceptualization,
+Methodology, Software, Validation, Formal analysis, Investigation, Data
+Curation, Writing -- Original Draft, Writing -- Review \& Editing,
+Visualization. \textbf{Jeet N.~Parikh}: Methodology, Software, Formal
+Analysis, Data Curation, Writing -- Original Draft, Writing -- Review \&
+Editing. \textbf{Taylor D.~Sparks}: Supervision, Funding acquisition.
+
+\section*{Acknowledgments}
+
+\textbf{Funding:} This work was supported by the National Science
+Foundation, Division of Materials Research [Grant number DMR-1651668].
+
+We thank Trupti Mohanty for work and discussion related to the future
+use-case of this dataset as a pseudo-materials benchmark. We acknowledge
+the University of Utah's Center for High Performance Computing (CHPC)
+for providing computational resources. The code and manuscript
+associated with a benchmark dataset for particle packing
+simulations~\cite{Existing08_Baird2023_HardSphere} served as a starting
+point for the code and manuscript for this work, for which there is
+shared language and document structure. We acknowledge OpenAI for
+providing free usage of their research tool, ChatGPT, which was used
+during the review and editing process.
+
+\section*{Declaration of interests}
+
+The authors declare that they have no known competing financial
+interests or personal relationships that could have appeared to
+influence the work reported in this paper.
+
+%%====================================================================
+%% Bibliography
+%%====================================================================
+% \bibliographystyle is set automatically by sn-jnl based on the
+% sn-mathphys-num documentclass option above.
+\bibliography{references}
+
+\end{document}
