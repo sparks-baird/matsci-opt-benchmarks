@@ -298,3 +298,268 @@
   pages   = {483--492},
   doi     = {10.1038/s44160-022-00231-0}
 }
+
+% Added for the IMMI revision (verified entries, see revision/new_refs_staging.bib)
+% new_refs_staging.bib: candidate references for the CrabNet hyperparameter
+% benchmark revision. Metadata checked on 2026-09-25 against Crossref
+% (api.crossref.org/works/<DOI>), arXiv abstract pages, PMLR proceedings pages,
+% and NeurIPS proceedings pages (official BibTeX). None of these keys exist in
+% reports/crabnet_hyperparameter_immi/references.bib.
+
+% ---------------------------------------------------------------------------
+% Models and data
+% ---------------------------------------------------------------------------
+
+% verified: crossref (10.1038/s41524-021-00545-1)
+@article{Wang2021_CrabNet,
+  author  = {Wang, Anthony Yu-Tung and Kauwe, Steven K. and Murdock, Ryan J. and Sparks, Taylor D.},
+  title   = {Compositionally Restricted Attention-Based Network for Materials Property Predictions},
+  journal = {npj Computational Materials},
+  year    = {2021},
+  volume  = {7},
+  number  = {1},
+  pages   = {77},
+  doi     = {10.1038/s41524-021-00545-1}
+}
+
+% verified: crossref (10.1038/s41467-020-19964-7)
+@article{Goodall2020_Roost,
+  author  = {Goodall, Rhys E. A. and Lee, Alpha A.},
+  title   = {Predicting Materials Properties without Crystal Structure: Deep Representation Learning from Stoichiometry},
+  journal = {Nature Communications},
+  year    = {2020},
+  volume  = {11},
+  number  = {1},
+  pages   = {6280},
+  doi     = {10.1038/s41467-020-19964-7}
+}
+
+% verified: crossref (10.1038/s41598-018-35934-y)
+@article{Jha2018_ElemNet,
+  author  = {Jha, Dipendra and Ward, Logan and Paul, Arindam and Liao, Wei-keng and Choudhary, Alok and Wolverton, Chris and Agrawal, Ankit},
+  title   = {{ElemNet}: Deep Learning the Chemistry of Materials From Only Elemental Composition},
+  journal = {Scientific Reports},
+  year    = {2018},
+  volume  = {8},
+  number  = {1},
+  pages   = {17593},
+  doi     = {10.1038/s41598-018-35934-y}
+}
+
+% verified: crossref (10.1021/acs.jpclett.8b00124); source of the matbench_expt_gap data
+@article{Zhuo2018_BandGapML,
+  author  = {Zhuo, Ya and Mansouri Tehrani, Aria and Brgoch, Jakoah},
+  title   = {Predicting the Band Gaps of Inorganic Solids by Machine Learning},
+  journal = {The Journal of Physical Chemistry Letters},
+  year    = {2018},
+  volume  = {9},
+  number  = {7},
+  pages   = {1668--1673},
+  doi     = {10.1021/acs.jpclett.8b00124}
+}
+
+% verified: crossref (10.1063/1.4812323)
+@article{Jain2013_MaterialsProject,
+  author  = {Jain, Anubhav and Ong, Shyue Ping and Hautier, Geoffroy and Chen, Wei and Richards, William Davidson and Dacek, Stephen and Cholia, Shreyas and Gunter, Dan and Skinner, David and Ceder, Gerbrand and Persson, Kristin A.},
+  title   = {Commentary: {T}he {M}aterials {P}roject: A Materials Genome Approach to Accelerating Materials Innovation},
+  journal = {APL Materials},
+  year    = {2013},
+  volume  = {1},
+  number  = {1},
+  pages   = {011002},
+  doi     = {10.1063/1.4812323}
+}
+
+% ---------------------------------------------------------------------------
+% Optimization software
+% ---------------------------------------------------------------------------
+
+% verified: PMLR proceedings page and official BibTeX (proceedings.mlr.press/v293/olson25a.html).
+% This is the current citable Ax paper (AutoML 2025, ABCD track). It supersedes the
+% Bakshy et al. 2018 NeurIPS Systems for ML workshop paper ("AE: A domain-agnostic
+% platform for adaptive experimentation"), which has no DOI or archival proceedings.
+@inproceedings{Olson2025_Ax,
+  author    = {Olson, Miles and Santorella, Elizabeth and Tiao, Louis C. and Cakmak, Sait and Garrard, Mia and Daulton, Samuel and Lin, Zhiyuan Jerry and Ament, Sebastian and Beckerman, Bernard and Onofrey, Eric and Igusti, Paschal and Lara, Cristian and Letham, Benjamin and Cardoso, Cesar and Shen, Shiyun Sunny and Lin, Andy Chenyuan and Grange, Matthew and Kashtelyan, Elena and Eriksson, David and Balandat, Maximilian and Bakshy, Eytan},
+  title     = {{Ax}: A Platform for Adaptive Experimentation},
+  booktitle = {Proceedings of the Fourth International Conference on Automated Machine Learning},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {293},
+  pages     = {21/1--25},
+  publisher = {PMLR},
+  year      = {2025},
+  url       = {https://proceedings.mlr.press/v293/olson25a.html}
+}
+
+% verified: NeurIPS proceedings official BibTeX (vol. 33, pp. 21524-21538) and arxiv (1910.06403)
+@inproceedings{Balandat2020_BoTorch,
+  author        = {Balandat, Maximilian and Karrer, Brian and Jiang, Daniel R. and Daulton, Samuel and Letham, Benjamin and Wilson, Andrew Gordon and Bakshy, Eytan},
+  title         = {{BoTorch}: A Framework for Efficient {M}onte-{C}arlo {B}ayesian Optimization},
+  booktitle     = {Advances in Neural Information Processing Systems},
+  volume        = {33},
+  pages         = {21524--21538},
+  publisher     = {Curran Associates, Inc.},
+  year          = {2020},
+  eprint        = {1910.06403},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.LG},
+  url           = {https://proceedings.neurips.cc/paper/2020/hash/f5b1b89d98b7286673128a5fb112cb9a-Abstract.html}
+}
+
+% verified: arxiv (2408.05040; v1, 2024-08-09, no journal reference). Paper preprint exists,
+% so no separate software citation is needed. Cite the BoFire version used alongside it
+% (GitHub: https://github.com/experimental-design/bofire).
+@misc{Durholt2024_BoFire,
+  author        = {D{\"u}rholt, Johannes P. and Asche, Thomas S. and Kleinekorte, Johanna and Mancino-Ball, Gabriel and Schiller, Benjamin and Sung, Simon and Keupp, Julian and Osburg, Aaron and Boyne, Toby and Misener, Ruth and Eldred, Rosona and Costa, Wagner Steuer and Kappatou, Chrysoula and Lee, Robert M. and Linzner, Dominik and Walz, David and Wulkow, Niklas and Shafei, Behrang},
+  title         = {{BoFire}: {B}ayesian Optimization Framework Intended for Real Experiments},
+  year          = {2024},
+  eprint        = {2408.05040},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.LG},
+  doi           = {10.48550/arXiv.2408.05040},
+  url           = {https://arxiv.org/abs/2408.05040}
+}
+
+% verified: crossref (10.1109/ACCESS.2020.2990567)
+@article{Blank2020_Pymoo,
+  author  = {Blank, Julian and Deb, Kalyanmoy},
+  title   = {{pymoo}: Multi-Objective Optimization in {P}ython},
+  journal = {IEEE Access},
+  year    = {2020},
+  volume  = {8},
+  pages   = {89497--89509},
+  doi     = {10.1109/ACCESS.2020.2990567}
+}
+
+% ---------------------------------------------------------------------------
+% Space-filling designs
+% ---------------------------------------------------------------------------
+
+% verified: crossref (10.1016/0041-5553(67)90144-9)
+@article{Sobol1967_Sobol,
+  author  = {Sobol', I. M.},
+  title   = {On the Distribution of Points in a Cube and the Approximate Evaluation of Integrals},
+  journal = {USSR Computational Mathematics and Mathematical Physics},
+  year    = {1967},
+  volume  = {7},
+  number  = {4},
+  pages   = {86--112},
+  doi     = {10.1016/0041-5553(67)90144-9}
+}
+
+% verified: crossref (10.1080/00401706.1979.10489755; the JSTOR record 10.2307/1268522
+% carries the full title with the leading "A", which is the title as printed)
+@article{McKay1979_LHS,
+  author  = {McKay, M. D. and Beckman, R. J. and Conover, W. J.},
+  title   = {A Comparison of Three Methods for Selecting Values of Input Variables in the Analysis of Output from a Computer Code},
+  journal = {Technometrics},
+  year    = {1979},
+  volume  = {21},
+  number  = {2},
+  pages   = {239--245},
+  doi     = {10.1080/00401706.1979.10489755}
+}
+
+% ---------------------------------------------------------------------------
+% Data stewardship and evaluation metrics
+% ---------------------------------------------------------------------------
+
+% verified: crossref (10.1038/sdata.2016.18)
+@article{Wilkinson2016_FAIR,
+  author  = {Wilkinson, Mark D. and Dumontier, Michel and Aalbersberg, IJsbrand Jan and Appleton, Gabrielle and Axton, Myles and Baak, Arie and Blomberg, Niklas and Boiten, Jan-Willem and da Silva Santos, Luiz Bonino and Bourne, Philip E. and Bouwman, Jildau and Brookes, Anthony J. and Clark, Tim and Crosas, Merc{\`e} and Dillo, Ingrid and Dumon, Olivier and Edmunds, Scott and Evelo, Chris T. and Finkers, Richard and Gonzalez-Beltran, Alejandra and Gray, Alasdair J. G. and Groth, Paul and Goble, Carole and Grethe, Jeffrey S. and Heringa, Jaap and {'t Hoen}, Peter A. C. and Hooft, Rob and Kuhn, Tobias and Kok, Ruben and Kok, Joost and Lusher, Scott J. and Martone, Maryann E. and Mons, Albert and Packer, Abel L. and Persson, Bengt and Rocca-Serra, Philippe and Roos, Marco and van Schaik, Rene and Sansone, Susanna-Assunta and Schultes, Erik and Sengstag, Thierry and Slater, Ted and Strawn, George and Swertz, Morris A. and Thompson, Mark and van der Lei, Johan and van Mulligen, Erik and Velterop, Jan and Waagmeester, Andra and Wittenburg, Peter and Wolstencroft, Katherine and Zhao, Jun and Mons, Barend},
+  title   = {The {FAIR} Guiding Principles for Scientific Data Management and Stewardship},
+  journal = {Scientific Data},
+  year    = {2016},
+  volume  = {3},
+  number  = {1},
+  pages   = {160018},
+  doi     = {10.1038/sdata.2016.18}
+}
+
+% verified: crossref (10.1198/016214506000001437)
+@article{Gneiting2007_ScoringRules,
+  author  = {Gneiting, Tilmann and Raftery, Adrian E.},
+  title   = {Strictly Proper Scoring Rules, Prediction, and Estimation},
+  journal = {Journal of the American Statistical Association},
+  year    = {2007},
+  volume  = {102},
+  number  = {477},
+  pages   = {359--378},
+  doi     = {10.1198/016214506000001437}
+}
+
+% ---------------------------------------------------------------------------
+% Multi-fidelity hyperparameter optimization and hyperparameter transfer
+% ---------------------------------------------------------------------------
+
+% verified: PMLR proceedings page and official BibTeX (proceedings.mlr.press/v54/klein17a.html)
+% and arxiv (1605.07079). Uses training-set size as the fidelity parameter.
+% Edison runner-up (task 3a490c3c-5c23-4448-80a0-ca4c85e3787c) for training-set fraction as fidelity.
+@inproceedings{Klein2017_FABOLAS,
+  author        = {Klein, Aaron and Falkner, Stefan and Bartels, Simon and Hennig, Philipp and Hutter, Frank},
+  title         = {Fast {B}ayesian Optimization of Machine Learning Hyperparameters on Large Datasets},
+  booktitle     = {Proceedings of the 20th International Conference on Artificial Intelligence and Statistics},
+  series        = {Proceedings of Machine Learning Research},
+  volume        = {54},
+  pages         = {528--536},
+  publisher     = {PMLR},
+  year          = {2017},
+  eprint        = {1605.07079},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.LG},
+  url           = {https://proceedings.mlr.press/v54/klein17a.html}
+}
+
+% verified: NeurIPS proceedings official BibTeX (vol. 34, pp. 17084-17097) and arxiv (2203.03466).
+% The NeurIPS 2021 proceedings list the first author as "Ge Yang"; the arXiv version
+% (extended, titled "Tensor Programs V: Tuning Large Neural Networks via Zero-Shot
+% Hyperparameter Transfer", March 2022) lists "Greg Yang". Same person, same author order.
+% Edison best match (task 3a490c3c-5c23-4448-80a0-ca4c85e3787c) for "tune a small model,
+% transfer the hyperparameters to the large model" (13M to 350M BERT; 40M to 6.7B GPT-3).
+@inproceedings{Yang2021_muP,
+  author        = {Yang, Ge and Hu, Edward J. and Babuschkin, Igor and Sidor, Szymon and Liu, Xiaodong and Farhi, David and Ryder, Nick and Pachocki, Jakub and Chen, Weizhu and Gao, Jianfeng},
+  title         = {Tuning Large Neural Networks via Zero-Shot Hyperparameter Transfer},
+  booktitle     = {Advances in Neural Information Processing Systems},
+  volume        = {34},
+  pages         = {17084--17097},
+  publisher     = {Curran Associates, Inc.},
+  year          = {2021},
+  eprint        = {2203.03466},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.LG},
+  url           = {https://proceedings.neurips.cc/paper/2021/hash/8df7c2e3c3c3be098ef7b382bd2c37ba-Abstract.html}
+}
+
+% ---------------------------------------------------------------------------
+% HPO benchmark suites
+% ---------------------------------------------------------------------------
+
+% verified: PMLR proceedings page and official BibTeX (proceedings.mlr.press/v188/pfisterer22a.html)
+% and arxiv (2109.03670)
+@inproceedings{Pfisterer2022_YAHPOGym,
+  author        = {Pfisterer, Florian and Schneider, Lennart and Moosbauer, Julia and Binder, Martin and Bischl, Bernd},
+  title         = {{YAHPO Gym}: An Efficient Multi-Objective Multi-Fidelity Benchmark for Hyperparameter Optimization},
+  booktitle     = {Proceedings of the First International Conference on Automated Machine Learning},
+  series        = {Proceedings of Machine Learning Research},
+  volume        = {188},
+  pages         = {3/1--39},
+  publisher     = {PMLR},
+  year          = {2022},
+  eprint        = {2109.03670},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.LG},
+  url           = {https://proceedings.mlr.press/v188/pfisterer22a.html}
+}
+
+% verified: NeurIPS Datasets and Benchmarks proceedings official BibTeX (vol. 1, no page numbers)
+% and arxiv (2109.06716)
+@inproceedings{Eggensperger2021_HPOBench,
+  author        = {Eggensperger, Katharina and M{\"u}ller, Philipp and Mallik, Neeratyoy and Feurer, Matthias and Sass, Ren{\'e} and Klein, Aaron and Awad, Noor and Lindauer, Marius and Hutter, Frank},
+  title         = {{HPOBench}: A Collection of Reproducible Multi-Fidelity Benchmark Problems for {HPO}},
+  booktitle     = {Proceedings of the Neural Information Processing Systems Track on Datasets and Benchmarks},
+  volume        = {1},
+  year          = {2021},
+  eprint        = {2109.06716},
+  archiveprefix = {arXiv},
+  primaryclass  = {cs.LG},
+  url           = {https://datasets-benchmarks-proceedings.neurips.cc/paper/2021/hash/93db85ed909c13838ff95ccfa94cebd9-Abstract-round2.html}
+}

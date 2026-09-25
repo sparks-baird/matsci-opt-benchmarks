@@ -1,0 +1,226 @@
+{
+  "task": "minimize surrogate MAE (eV), train_frac = 1.0, noise via random mae_rank",
+  "budget": 50,
+  "initial_points_model_based": 10,
+  "reference": {
+    "n_unique_deposited_sets": 41550,
+    "best_surrogate_mae_rank05_train_frac_as_recorded": 0.17374287103148878,
+    "best_surrogate_mae_rank05_train_frac_1": 0.17386530136799982,
+    "best_repeat_averaged_raw_mae_any_train_frac": 0.17456793500095127,
+    "best_repeat_averaged_raw_mae_train_frac_ge_0.9": 0.17456793500095127
+  },
+  "methods": {
+    "random": {
+      "label": "Random",
+      "n_seeds": 5,
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "evaluations_reached_by_all_seeds": 50,
+      "complete_budget": true,
+      "final_best_mean": 0.23620610117141116,
+      "final_best_se": 0.008063890851124769,
+      "final_best_median": 0.2402035593876206,
+      "final_best_min": 0.2094008587417197,
+      "final_best_max": 0.2591546582467966,
+      "best_at_common_budget_mean": 0.30628551502490653,
+      "best_at_common_budget_se": 0.01799114048614921,
+      "best_at_eval_10_mean": 0.30628551502490653,
+      "mean_wall_time_to_last_eval_s": 3.0546433436000826
+    },
+    "grid": {
+      "label": "Grid (3 levels)",
+      "n_seeds": 5,
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "evaluations_reached_by_all_seeds": 50,
+      "complete_budget": true,
+      "final_best_mean": 0.28211536534417453,
+      "final_best_se": 0.00752965848439303,
+      "final_best_median": 0.2787722859064703,
+      "final_best_min": 0.2600098610654806,
+      "final_best_max": 0.3056978834659641,
+      "best_at_common_budget_mean": 0.3055178773247127,
+      "best_at_common_budget_se": 0.01811148520534676,
+      "best_at_eval_10_mean": 0.3055178773247127,
+      "mean_wall_time_to_last_eval_s": 2.445424762999983
+    },
+    "sobol": {
+      "label": "Sobol",
+      "n_seeds": 5,
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "evaluations_reached_by_all_seeds": 50,
+      "complete_budget": true,
+      "final_best_mean": 0.2451707971119142,
+      "final_best_se": 0.011801177910150926,
+      "final_best_median": 0.2376155353843772,
+      "final_best_min": 0.2131922643798419,
+      "final_best_max": 0.2842822218444819,
+      "best_at_common_budget_mean": 0.2675248655994524,
+      "best_at_common_budget_se": 0.013933440359494733,
+      "best_at_eval_10_mean": 0.2799456594137354,
+      "mean_wall_time_to_last_eval_s": 2.385704660200008
+    },
+    "lhs": {
+      "label": "LHS",
+      "n_seeds": 5,
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "evaluations_reached_by_all_seeds": 50,
+      "complete_budget": true,
+      "final_best_mean": 0.2491806782038848,
+      "final_best_se": 0.00861664318030901,
+      "final_best_median": 0.2449616565013891,
+      "final_best_min": 0.2312038520812516,
+      "final_best_max": 0.2813885028576011,
+      "best_at_common_budget_mean": 0.29816755862764044,
+      "best_at_common_budget_se": 0.0071721742314750795,
+      "best_at_eval_10_mean": 0.29816755862764044,
+      "mean_wall_time_to_last_eval_s": 2.5087002352000582
+    },
+    "ga": {
+      "label": "GA (pymoo)",
+      "n_seeds": 5,
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "evaluations_reached_by_all_seeds": 50,
+      "complete_budget": true,
+      "final_best_mean": 0.25210300107275263,
+      "final_best_se": 0.014895182109024753,
+      "final_best_median": 0.2543763671365077,
+      "final_best_min": 0.2102077589549619,
+      "final_best_max": 0.299104198768509,
+      "best_at_common_budget_mean": 0.28550290846718884,
+      "best_at_common_budget_se": 0.008380464044876431,
+      "best_at_eval_10_mean": 0.2937698403909221,
+      "mean_wall_time_to_last_eval_s": 1.2242315193999729
+    },
+    "ax": {
+      "label": "Ax (GP, qLogNEI)",
+      "n_seeds": 3,
+      "seeds": [
+        0,
+        1,
+        2
+      ],
+      "evaluations_reached_by_all_seeds": 11,
+      "complete_budget": false,
+      "final_best_mean": 0.2738487579451349,
+      "final_best_se": 0.022165985484383675,
+      "final_best_median": 0.2933253712507405,
+      "final_best_min": 0.2296214836636881,
+      "final_best_max": 0.2985994189209761,
+      "best_at_common_budget_mean": 0.2738487579451349,
+      "best_at_common_budget_se": 0.022165985484383675,
+      "best_at_eval_10_mean": 0.27843665379760996,
+      "mean_wall_time_to_last_eval_s": 79.62945921899988
+    },
+    "ax_saasbo": {
+      "label": "Ax + SAASBO",
+      "n_seeds": 2,
+      "seeds": [
+        0,
+        1
+      ],
+      "evaluations_reached_by_all_seeds": 11,
+      "complete_budget": false,
+      "final_best_mean": 0.3028442388645709,
+      "final_best_se": 0.004244819943594852,
+      "final_best_median": 0.3028442388645709,
+      "final_best_min": 0.2985994189209761,
+      "final_best_max": 0.3070890588081658,
+      "best_at_common_budget_mean": 0.3028442388645709,
+      "best_at_common_budget_se": 0.004244819943594852,
+      "best_at_eval_10_mean": 0.3028442388645709,
+      "mean_wall_time_to_last_eval_s": 101.50712806349998
+    },
+    "bofire": {
+      "label": "BoFire (GP, qLogEI)",
+      "n_seeds": 3,
+      "seeds": [
+        0,
+        1,
+        2
+      ],
+      "evaluations_reached_by_all_seeds": 11,
+      "complete_budget": false,
+      "final_best_mean": 0.2951784224845731,
+      "final_best_se": 0.02512530575241531,
+      "final_best_median": 0.2974673168663669,
+      "final_best_min": 0.2505608377333527,
+      "final_best_max": 0.3375071128539996,
+      "best_at_common_budget_mean": 0.2951784224845731,
+      "best_at_common_budget_se": 0.02512530575241531,
+      "best_at_eval_10_mean": 0.2951784224845731,
+      "mean_wall_time_to_last_eval_s": 75.06973557966664
+    }
+  },
+  "common_budget_all_methods": 11,
+  "incomplete_campaigns_evaluations_reached": {
+    "ax_seed0": 13,
+    "ax_seed1": 12,
+    "ax_seed2": 11,
+    "ax_saasbo_seed0": 12,
+    "ax_saasbo_seed1": 11,
+    "bofire_seed0": 15,
+    "bofire_seed1": 12,
+    "bofire_seed2": 11
+  },
+  "settings_and_versions": {
+    "surrogate": "mae RandomForestRegressor (100 trees) from surrogate_models.pkl (Zenodo 10.5281/zenodo.7694268), exported with scikit-learn 1.0.2 / Python 3.10 and evaluated with a numpy traversal (max abs difference to model.predict = 0.0 on 600 test inputs)",
+    "integer_handling": "all 20 numeric hyperparameters searched as continuous, the 10 integer ones rounded before evaluation, for every method",
+    "noise": "each observed value uses mae_rank ~ U(0, 1); reported value uses mae_rank = 0.5",
+    "random": "uniform in the box, rejection of infeasible points (numpy 2.5.3)",
+    "sobol": "scipy.stats.qmc.Sobol(d=23, scramble=True, seed), 512 points, infeasible points rejected, first 50 feasible kept (scipy 1.18.1); categoricals by binning the unit interval",
+    "lhs": "scipy.stats.qmc.LatinHypercube(d=23, seed), 256 points, infeasible points rejected, first 50 feasible kept (scipy 1.18.1)",
+    "grid": "full-factorial grid with 3 levels (lower bound, midpoint, upper bound) per numeric hyperparameter times all 12 categorical combinations (about 4.2e10 points); 50 distinct feasible grid points drawn uniformly at random, i.e. a random order of the constraint-filtered grid",
+    "ga": "pymoo 0.6.2 GA, pop_size 10, 10 offspring per generation (5 generations = 50 evaluations), default tournament selection, SBX crossover, polynomial mutation, duplicate elimination; constraints enforced by a repair operator (sort betas1/betas2, rescale emb_scaler and pos_scaler to sum to 1 when above 1); categoricals encoded as binned continuous genes",
+    "ax": "ax-platform 1.3.1 Client API, 10 Sobol points then the default BoTorch modular generator (SingleTaskGP, qLogNEI), native linear constraints, categoricals as Ax choice parameters; acquisition optimizer reduced to num_restarts 4, raw_samples 256 (Ax default 20 and 1024) for compute time",
+    "ax_saasbo": "ax-platform 1.3.1, 10 Sobol points then BoTorch modular generator with SaasFullyBayesianSingleTaskGP (NUTS via NumPyro: warmup_steps 128, num_samples 64, thinning 16, so 4 posterior samples), qLogNEI, num_restarts 4, raw_samples 256",
+    "bofire": "bofire 0.5.0, 10 points from RandomStrategy (polytope sampling respecting the linear constraints), then SoboStrategy with qLogEI, BotorchOptimizer n_restarts 4, n_raw_samples 256 (defaults 20 and 1024), native LinearInequalityConstraint",
+    "package_versions": {
+      "ax-platform": "1.3.1",
+      "botorch": "0.18.1",
+      "gpytorch": "1.15.2",
+      "torch": "2.14.0+cpu",
+      "jax": "0.9.2",
+      "numpyro": "0.22.0",
+      "pymoo": "0.6.2",
+      "bofire": "0.5.0",
+      "scipy": "1.18.1",
+      "numpy_ax_env": "2.5.3",
+      "numpy_bofire_env": "2.4.6",
+      "pandas": "3.0.6",
+      "matplotlib": "3.11.2",
+      "scikit-learn_export": "1.0.2",
+      "python": "3.12.3 (optimizers), 3.10 (export)"
+    },
+    "hardware": "4 shared CPU cores, no GPU, one thread per campaign"
+  },
+  "random_search_median_at_budget": 0.2402035593876206
+}
