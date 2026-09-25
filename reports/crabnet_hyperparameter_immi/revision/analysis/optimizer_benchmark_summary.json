@@ -27,8 +27,8 @@
       "final_best_median": 0.2402035593876206,
       "final_best_min": 0.2094008587417197,
       "final_best_max": 0.2591546582467966,
-      "best_at_common_budget_mean": 0.30628551502490653,
-      "best_at_common_budget_se": 0.01799114048614921,
+      "best_at_common_budget_mean": 0.2601451678103797,
+      "best_at_common_budget_se": 0.015742605865280226,
       "best_at_eval_10_mean": 0.30628551502490653,
       "mean_wall_time_to_last_eval_s": 3.0546433436000826
     },
@@ -49,8 +49,8 @@
       "final_best_median": 0.2787722859064703,
       "final_best_min": 0.2600098610654806,
       "final_best_max": 0.3056978834659641,
-      "best_at_common_budget_mean": 0.3055178773247127,
-      "best_at_common_budget_se": 0.01811148520534676,
+      "best_at_common_budget_mean": 0.3001916153039182,
+      "best_at_common_budget_se": 0.013102185011640859,
       "best_at_eval_10_mean": 0.3055178773247127,
       "mean_wall_time_to_last_eval_s": 2.445424762999983
     },
@@ -71,8 +71,8 @@
       "final_best_median": 0.2376155353843772,
       "final_best_min": 0.2131922643798419,
       "final_best_max": 0.2842822218444819,
-      "best_at_common_budget_mean": 0.2675248655994524,
-      "best_at_common_budget_se": 0.013933440359494733,
+      "best_at_common_budget_mean": 0.26327597120611046,
+      "best_at_common_budget_se": 0.013681657391544227,
       "best_at_eval_10_mean": 0.2799456594137354,
       "mean_wall_time_to_last_eval_s": 2.385704660200008
     },
@@ -93,8 +93,8 @@
       "final_best_median": 0.2449616565013891,
       "final_best_min": 0.2312038520812516,
       "final_best_max": 0.2813885028576011,
-      "best_at_common_budget_mean": 0.29816755862764044,
-      "best_at_common_budget_se": 0.0071721742314750795,
+      "best_at_common_budget_mean": 0.27750804224242964,
+      "best_at_common_budget_se": 0.005343950929627112,
       "best_at_eval_10_mean": 0.29816755862764044,
       "mean_wall_time_to_last_eval_s": 2.5087002352000582
     },
@@ -115,8 +115,8 @@
       "final_best_median": 0.2543763671365077,
       "final_best_min": 0.2102077589549619,
       "final_best_max": 0.299104198768509,
-      "best_at_common_budget_mean": 0.28550290846718884,
-      "best_at_common_budget_se": 0.008380464044876431,
+      "best_at_common_budget_mean": 0.27163612467501164,
+      "best_at_common_budget_se": 0.011759880916912517,
       "best_at_eval_10_mean": 0.2937698403909221,
       "mean_wall_time_to_last_eval_s": 1.2242315193999729
     },
@@ -128,17 +128,17 @@
         1,
         2
       ],
-      "evaluations_reached_by_all_seeds": 11,
+      "evaluations_reached_by_all_seeds": 24,
       "complete_budget": false,
-      "final_best_mean": 0.2738487579451349,
-      "final_best_se": 0.022165985484383675,
-      "final_best_median": 0.2933253712507405,
-      "final_best_min": 0.2296214836636881,
-      "final_best_max": 0.2985994189209761,
-      "best_at_common_budget_mean": 0.2738487579451349,
-      "best_at_common_budget_se": 0.022165985484383675,
+      "final_best_mean": 0.2388200360343957,
+      "final_best_se": 0.026171606012671517,
+      "final_best_median": 0.2475661501175667,
+      "final_best_min": 0.1897537132788278,
+      "final_best_max": 0.2791402447067925,
+      "best_at_common_budget_mean": 0.24094679351665652,
+      "best_at_common_budget_se": 0.024189334212074257,
       "best_at_eval_10_mean": 0.27843665379760996,
-      "mean_wall_time_to_last_eval_s": 79.62945921899988
+      "mean_wall_time_to_last_eval_s": 633.5298231749999
     },
     "ax_saasbo": {
       "label": "Ax + SAASBO",
@@ -147,49 +147,47 @@
         0,
         1
       ],
-      "evaluations_reached_by_all_seeds": 11,
+      "evaluations_reached_by_all_seeds": 22,
       "complete_budget": false,
-      "final_best_mean": 0.3028442388645709,
-      "final_best_se": 0.004244819943594852,
-      "final_best_median": 0.3028442388645709,
-      "final_best_min": 0.2985994189209761,
-      "final_best_max": 0.3070890588081658,
-      "best_at_common_budget_mean": 0.3028442388645709,
-      "best_at_common_budget_se": 0.004244819943594852,
+      "final_best_mean": 0.2495672116568569,
+      "final_best_se": 0.01642293819384821,
+      "final_best_median": 0.2495672116568569,
+      "final_best_min": 0.2331442734630087,
+      "final_best_max": 0.2659901498507051,
+      "best_at_common_budget_mean": 0.2495672116568569,
+      "best_at_common_budget_se": 0.01642293819384821,
       "best_at_eval_10_mean": 0.3028442388645709,
-      "mean_wall_time_to_last_eval_s": 101.50712806349998
+      "mean_wall_time_to_last_eval_s": 849.1072501265
     },
     "bofire": {
       "label": "BoFire (GP, qLogEI)",
-      "n_seeds": 3,
+      "n_seeds": 2,
       "seeds": [
-        0,
         1,
         2
       ],
-      "evaluations_reached_by_all_seeds": 11,
+      "evaluations_reached_by_all_seeds": 38,
       "complete_budget": false,
-      "final_best_mean": 0.2951784224845731,
-      "final_best_se": 0.02512530575241531,
-      "final_best_median": 0.2974673168663669,
-      "final_best_min": 0.2505608377333527,
-      "final_best_max": 0.3375071128539996,
-      "best_at_common_budget_mean": 0.2951784224845731,
-      "best_at_common_budget_se": 0.02512530575241531,
-      "best_at_eval_10_mean": 0.2951784224845731,
-      "mean_wall_time_to_last_eval_s": 75.06973557966664
+      "final_best_mean": 0.23658060554116028,
+      "final_best_se": 0.0036107008513878015,
+      "final_best_median": 0.23658060554116028,
+      "final_best_min": 0.2329699046897725,
+      "final_best_max": 0.2401913063925481,
+      "best_at_common_budget_mean": 0.23983865187042458,
+      "best_at_common_budget_se": 0.005602488647850304,
+      "best_at_eval_10_mean": 0.29403397529367614,
+      "mean_wall_time_to_last_eval_s": 886.1019074184999
     }
   },
-  "common_budget_all_methods": 11,
+  "common_budget_all_methods": 22,
   "incomplete_campaigns_evaluations_reached": {
-    "ax_seed0": 13,
-    "ax_seed1": 12,
-    "ax_seed2": 11,
-    "ax_saasbo_seed0": 12,
-    "ax_saasbo_seed1": 11,
-    "bofire_seed0": 15,
-    "bofire_seed1": 12,
-    "bofire_seed2": 11
+    "ax_seed0": 27,
+    "ax_seed1": 35,
+    "ax_seed2": 24,
+    "ax_saasbo_seed0": 27,
+    "ax_saasbo_seed1": 22,
+    "bofire_seed1": 46,
+    "bofire_seed2": 38
   },
   "settings_and_versions": {
     "surrogate": "mae RandomForestRegressor (100 trees) from surrogate_models.pkl (Zenodo 10.5281/zenodo.7694268), exported with scikit-learn 1.0.2 / Python 3.10 and evaluated with a numpy traversal (max abs difference to model.predict = 0.0 on 600 test inputs)",
@@ -220,7 +218,13 @@
       "scikit-learn_export": "1.0.2",
       "python": "3.12.3 (optimizers), 3.10 (export)"
     },
-    "hardware": "4 shared CPU cores, no GPU, one thread per campaign"
+    "hardware": "4 shared CPU cores, no GPU, one thread per campaign",
+    "notes": {
+      "stopping": "Ax, Ax + SAASBO and BoFire campaigns were stopped at 21:20 UTC (compute deadline, 4 shared CPUs) before reaching 50 evaluations; curves are truncated at the evaluation count reached by all included seeds of that method, and panel (b) compares all methods at the largest budget every method reached",
+      "constraint_tolerance_stops": "three campaigns ended early because an SLSQP proposal violated a linear constraint by 1e-9 to 8e-9, which tripped a 1e-9 feasibility assertion in the script (tolerance since relaxed to 1e-6): ax seed 0 after 27 evaluations, ax seed 2 after 24, bofire seed 0 after 17",
+      "inclusion_rule": "seeds with fewer than 20 evaluations were excluded (bofire seed 0, 17 evaluations)",
+      "wall_time": "wall times include heavy CPU contention (8 campaigns plus other jobs on 4 cores) and are not a fair speed comparison"
+    }
   },
   "random_search_median_at_budget": 0.2402035593876206
 }
