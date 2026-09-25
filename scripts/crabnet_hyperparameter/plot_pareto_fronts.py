@@ -46,6 +46,7 @@ import numpy as np
 import pandas as pd
 
 plt.switch_backend("Agg")  # non-interactive backend for headless figure export
+plt.rcParams.update({"font.size": 7, "axes.titlesize": 7, "axes.labelsize": 7})
 
 # --------------------------------------------------------------------------- #
 # Paths / constants
@@ -108,7 +109,7 @@ OBJ_LABELS = {
     "mae": "MAE [eV]",
     "rmse": "RMSE [eV]",
     "runtime": "GPU runtime [s]",
-    "model_size": "model size [MB]",
+    "model_size": "model size [$10^6$ parameters]",
 }
 RANK_COL = {"mae": "mae_rank", "rmse": "rmse_rank", "runtime": "runtime_rank"}
 
@@ -230,7 +231,7 @@ def _use_log(values: np.ndarray) -> bool:
 def plot_panels(data: pd.DataFrame, title: str, out_stem: Path) -> None:
     """Draw a 2x3 grid of pairwise objective scatters with Pareto fronts."""
     pairs = list(combinations(OBJECTIVES, 2))
-    fig, axes = plt.subplots(2, 3, figsize=(14, 9))
+    fig, axes = plt.subplots(2, 3, figsize=(7.1, 4.7))
     axes = axes.ravel()
     for ax, (ox, oy) in zip(axes, pairs):
         x = data[ox].to_numpy(dtype=float)
@@ -245,7 +246,7 @@ def plot_panels(data: pd.DataFrame, title: str, out_stem: Path) -> None:
         ax.scatter(
             x,
             y,
-            s=4,
+            s=1.5,
             c="#9ecae1",
             alpha=0.35,
             edgecolors="none",
@@ -255,11 +256,11 @@ def plot_panels(data: pd.DataFrame, title: str, out_stem: Path) -> None:
         mask = pareto_mask(x, y)
         fx, fy = x[mask], y[mask]
         line_order = np.argsort(fx)
-        ax.plot(fx[line_order], fy[line_order], "-", color="#d62728", lw=1.4, zorder=5)
+        ax.plot(fx[line_order], fy[line_order], "-", color="#d62728", lw=0.9, zorder=5)
         ax.scatter(
             fx,
             fy,
-            s=18,
+            s=7,
             c="#d62728",
             edgecolors="k",
             linewidths=0.3,
@@ -278,17 +279,16 @@ def plot_panels(data: pd.DataFrame, title: str, out_stem: Path) -> None:
             f"{OBJ_LABELS[ox].split(' [')[0]} vs "
             f"{OBJ_LABELS[oy].split(' [')[0]}  (Spearman "
             f"$\\rho$={rho:.2f})",
-            fontsize=10,
         )
-        ax.legend(fontsize=7, loc="upper right", framealpha=0.9)
+        ax.legend(fontsize=6, loc="upper right", framealpha=0.9, markerscale=1.5)
         ax.grid(True, which="both", ls=":", lw=0.4, alpha=0.5)
 
-    fig.suptitle(title, fontsize=13, y=0.995)
+    fig.suptitle(title, fontsize=8, y=0.995)
     fig.tight_layout(rect=(0, 0, 1, 0.98))
     out_stem.parent.mkdir(parents=True, exist_ok=True)
     png = out_stem.with_suffix(".png")
     pdf = out_stem.with_suffix(".pdf")
-    fig.savefig(png, dpi=200)
+    fig.savefig(png, dpi=300)
     fig.savefig(pdf)  # vector version for print-quality submission
     plt.close(fig)
     print(f"  wrote {png}")
@@ -336,15 +336,13 @@ def main(argv: list[str] | None = None) -> int:
     print("Plotting raw-data Pareto fronts ...")
     plot_panels(
         raw,
-        "CrabNet hyperparameter benchmark: Pareto fronts from raw data "
-        "(repeat-averaged objectives)",
+        "Raw data (objectives averaged over repeats)",
         args.out_dir / "pareto_rawdata",
     )
     print("Plotting surrogate-model Pareto fronts ...")
     plot_panels(
         surrogate,
-        "CrabNet hyperparameter benchmark: Pareto fronts from the surrogate "
-        "model (median percentile)",
+        "Surrogate model (median noise percentile, rank = 0.5)",
         args.out_dir / "pareto_surrogate",
     )
     print("Done.")
