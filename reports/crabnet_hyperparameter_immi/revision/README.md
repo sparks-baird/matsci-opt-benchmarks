@@ -21,36 +21,29 @@ answering [`author-questions.md`](./author-questions.md).
    referenced reading list). Verbatim transcript in
    [`edison-rubber-duck-transcript.md`](./edison-rubber-duck-transcript.md).
 
-## Provenance caveat (important)
+## Versions
 
-Three manuscript versions exist and they differ:
-
-| Version | Where | Distinguishing content |
-|---------|-------|------------------------|
-| Original Data in Brief | `../../crabnet_hyperparameter/Datainbrief.{docx,pdf}` → frozen here as `manuscript_original_dib.tex` | Has the "contrived constraint" prose; Figs 1–5; no SHAP. |
-| Repo Data Descriptor | `../manuscript.tex` → frozen here as `manuscript_v0_submitted.tex` | Springer Nature DD structure; dropped the constraint sentence; added "orders of magnitude" claims; no SHAP. |
-| Authors' submitted PDF | **not in the repo** | Reviewers quote *both* the constraint prose *and* a SHAP "Figure 6". |
-
-Because the literal submitted source is not in the repo, `latexdiff` here compares
-against the **pre-revision repo snapshot**, not the true submission. If the authors
-have the real submitted `.tex`, drop it in as `manuscript_v0_submitted.tex` before
-running the tracked-changes script (see **Q1**).
+| Version | Where | Notes |
+|---------|-------|-------|
+| Submitted to IMMI (IMMJ-S-26-00176) | `original_submission/CrabNet_Hyperparameters_IMMI_submission.docx`, transcribed to `manuscript_v0_submitted.tex` (+ `.pdf`) | The version the reviewers read: "contrived constraint" text and the SHAP Figure 6 (`../figures/submitted/`). This is the latexdiff baseline. |
+| Xavier's edits (commit 79e44be) | `../../../CrabNet_Hyperparameters.docx`, text snapshot in `original_submission/xavier_edits_79e44be.md` | CrabNet / Matbench / Ax primers and constraint justification; merged into `../manuscript.tex` with his wording kept. Diff his next version against this snapshot. |
+| Revision | `../manuscript.tex` (+ `.pdf`) | Current revised manuscript. |
+| Original Data in Brief | `manuscript_original_dib.tex` | Earlier venue, kept for reference. |
 
 ## File index
 
 | File | Purpose |
 |------|---------|
-| `author-questions.md` | Decisions needed from the authors. **Answer first.** |
-| `review-response-plan.md` | Master plan / point-by-point matrix / analysis. |
-| `edison-rubber-duck.md` | Independent literature critique (synthesis). |
-| `edison-rubber-duck-transcript.md` | Verbatim Edison transcript (provenance). |
-| `response-to-reviewers.tex` | Placeholder point-by-point response; reviewer text quoted verbatim, author responses stubbed with `\todo`. Compiles standalone. |
-| `manuscript_v0_submitted.tex` | Frozen pre-revision `../manuscript.tex` (latexdiff baseline). |
-| `manuscript_original_dib.tex` | Pandoc conversion of the original DIB `.docx` (worst-case reference baseline). |
-| `make-tracked-changes.sh` | `latexdiff(baseline, ../manuscript.tex)` → `manuscript_diff.pdf`. |
-
-`manuscript_diff.tex` / `manuscript_diff.pdf` are build products and are
-git-ignored.
+| `author-questions.md` | Author decisions (answered). |
+| `review-response-plan.md` | Master plan / point-by-point matrix. |
+| `edison-rubber-duck.md`, `edison-rubber-duck-transcript.md` | Independent literature critique of the plan. |
+| `edison/` | Edison query for the small-proxy to full-scale tuning reference (muP; FABOLAS). |
+| `new_refs_staging.bib` | Verified BibTeX entries merged into `../references.bib`. |
+| `analysis/` | JSON/CSV numbers behind the new figures (data checks, fidelity, noise ablation, marginals, optimizer comparison). |
+| `response-to-reviewers.tex` (+ `.pdf`) | Point-by-point response; open items marked [TODO]. |
+| `manuscript_v0_submitted.tex` (+ `.pdf`) | Submitted version, latexdiff baseline. |
+| `manuscript_diff.pdf` | Tracked changes, submitted vs revision. |
+| `make-tracked-changes.sh` | Rebuilds `manuscript_diff.pdf`. |
 
 ## Toolchain
 
@@ -58,7 +51,7 @@ The LaTeX + conversion tooling (Debian/Ubuntu):
 
 ```
 sudo apt-get update
-sudo apt-get install -y latexmk latexdiff pandoc \
+sudo apt-get install -y latexmk latexdiff pandoc libalgorithm-diff-perl \
   texlive-latex-base texlive-latex-recommended texlive-latex-extra \
   texlive-fonts-recommended texlive-science
 ```
