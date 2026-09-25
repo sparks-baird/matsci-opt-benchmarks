@@ -1,0 +1,261 @@
+%% response-to-reviewers.tex
+%%
+%% PLACEHOLDER point-by-point response to the IMMI reviews of
+%% "Materials Science Optimization Benchmark Dataset for High-dimensional,
+%%  Multi-objective, Multi-fidelity Optimization of CrabNet Hyperparameters".
+%%
+%% The reviewer/editor comments are transcribed verbatim; every author
+%% response is an intentional [TODO] stub to be filled in after the questions
+%% in author-questions.md are answered. Bracketed [Tn]/[Qn]/[En]/[Rx.y] tags
+%% cross-reference review-response-plan.md.
+%%
+%% Self-contained: compiles with a basic TeX Live (article class + geometry,
+%% xcolor, enumitem, hyperref). No sn-jnl required.
+%%
+%%   latexmk -pdf response-to-reviewers.tex
+%%   # or: pdflatex response-to-reviewers.tex
+
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=RoyalBlue, urlcolor=RoyalBlue,
+  citecolor=RoyalBlue}
+
+% --- markup helpers -------------------------------------------------------- %
+\definecolor{revrule}{RGB}{150,150,150}
+\definecolor{respblue}{RGB}{0,80,160}
+
+% Reviewer / editor comment: indented italic block with a grey left rule.
+\newenvironment{comment}
+  {\par\medskip\noindent
+   \begingroup\color{revrule}\leaders\vrule width 2pt\hfill\kern0pt\par\nobreak
+   \endgroup
+   \begin{list}{}{\setlength{\leftmargin}{1.5em}\setlength{\rightmargin}{0.5em}}%
+   \item\itshape\ignorespaces}
+  {\end{list}\par}
+
+% Author response marker.
+\newcommand{\response}{\par\noindent\textbf{\color{respblue}Author response.}\ }
+\newcommand{\todo}{\textbf{\color{red}[TODO]}\ }
+
+% Cross-reference tag to the plan (e.g. \tag{T1, Q2}).
+\newcommand{\tag}[1]{{\small\textcolor{respblue}{[\,#1\,]}}}
+
+\newcommand{\reviewer}[1]{\bigskip\noindent{\large\bfseries #1}\par
+  \rule{\linewidth}{0.8pt}\par}
+
+\title{Response to Reviewers\\[-0.2em]
+  \large IMMI --- CrabNet Hyperparameter Benchmark Data Descriptor}
+\author{S.\,G.~Baird, J.\,N.~Parikh, T.\,D.~Sparks \\ \emph{(author list pending --- see Q11)}}
+\date{\today\quad\textcolor{red}{[DRAFT --- placeholder responses]}}
+
+\begin{document}
+\maketitle
+
+\noindent Dear Editor,\\[0.5em]
+\todo Cover letter. Thank the editor and reviewers; state that the manuscript
+has been revised as a Data Descriptor; summarise the headline changes in
+2--4 sentences. \tag{see review-response-plan.md \S E}
+
+\bigskip
+\noindent\textbf{Summary of major changes} (placeholder --- confirm after Q1--Q14):
+\begin{itemize}[nosep]
+  \item \todo Scope stated explicitly as a hyperparameter-optimization benchmark. \tag{T2, Q2}
+  \item \todo Sum-to-one constraint reframed and precisely defined; alloy-physics claim removed. \tag{T1, Q3}
+  \item \todo Primers on CrabNet, Matbench and Ax + a researcher-workflow paragraph added. \tag{T3, Q7}
+  \item \todo Data dictionary + FAIR statement added. \tag{T7, E1}
+  \item \todo Objective trade-off / Pareto analysis added. \tag{T8, R1.2}
+  \item \todo Figures consolidated; resolution/tick fixes; Pareto figure added. \tag{T6, Q8}
+  \item \todo Multi-fidelity axes defined (and/or claim softened). \tag{T4, Q9}
+  \item \todo Noise-model justification / ablation. \tag{T9, Q4}
+  \item \todo Optimizer demonstration or documented downstream uses. \tag{T10, Q5}
+  \item \todo Limitations paragraph + expanded related work. \tag{T11, Q10}
+  \item \todo Data-accuracy corrections (repeat count; order-of-magnitude claim). \tag{T13, Q12}
+  \item \todo Funding Information field completed (NSF DMR-1651668). \tag{T12, E6}
+\end{itemize}
+
+% ========================================================================= %
+\reviewer{Editor}
+
+\begin{comment}
+Provide a data dictionary and demonstrate FAIR compliance: IMMI asks that data
+supporting published articles meet FAIR principles and carry sufficient
+metadata to describe provenance and enable reuse.
+\end{comment}
+\response\todo \tag{T7, E1} Point to the new data-dictionary table and FAIR
+paragraph in \emph{Data Records}; give the location.
+
+\begin{comment}
+Resolve the ambiguity in the sum-to-one constraint (R1 \#1, R1 \#3, R2 \#3).
+\end{comment}
+\response\todo \tag{T1, E2, Q3} Summarise the reframe and the new
+marginal-distribution figure; give the location.
+
+\begin{comment}
+Establish materials-community value, and make the scope explicit.
+\end{comment}
+\response\todo \tag{T2, E3, Q2}
+
+\begin{comment}
+Add context for the tools used: a short paragraph each on CrabNet, Matbench
+(the experimental band gap task and why it was chosen), and the Ax platform;
+and sketch how a typical researcher currently uses these tools, and what this
+benchmark lets them do better.
+\end{comment}
+\response\todo \tag{T3, E4, Q7}
+
+\begin{comment}
+Figure 6 is supplied at a resolution that makes several labels and values
+illegible; please supply it as vector art or at print resolution. The
+logarithmic y-axis tick labelling in Figure 4 is difficult to read. Figures
+1--5 are five separate single-panel histograms of similar type and could be
+consolidated into one multi-panel figure.
+\end{comment}
+\response\todo \tag{T6, E5, Q8} Note the consolidation of Figs 1--5, the
+vector Fig 6, the Fig 4 tick fix, and the added Pareto figure.
+
+\begin{comment}
+NSF DMR-1651668 is acknowledged in the text but the Funding Information field
+in the submission record is blank. Please complete it.
+\end{comment}
+\response\todo \tag{T12, E6, Q11} Confirm the field has been completed.
+
+% ========================================================================= %
+\reviewer{Reviewer 1}
+
+\begin{comment}
+The manuscript states ``applying a contrived constraint that the sum of all
+parameters must equal one'' and argues that this mimics metal-alloy composition
+constraints. This requires proper justification, as the constraint is
+artificial, and its physical motivation is possibly overstated.
+\end{comment}
+\response\todo \tag{T1, R1.1, Q3}
+
+\begin{comment}
+The dataset contains: MAE, RMSE, runtime, model size as outputs. But it is not
+clear whether these exhibit meaningful trade-offs. Are there genuine Pareto
+fronts, and are some objectives strongly correlated?
+\end{comment}
+\response\todo \tag{T8, R1.2} Report the Spearman table and Pareto fronts
+(MAE\,$\leftrightarrow$\,RMSE $\rho\approx0.97$; accuracy\,$\leftrightarrow$\,runtime
+$\rho\approx-0.6$; model size $\approx$ independent) and reference the new
+figure.
+
+\begin{comment}
+Is Sobol sampling equivalent to conventional statistical uniform random
+sampling? The authors should show whether the final 23-dimensional dataset
+actually has approximately uniform marginal distributions and how the imposed
+constraint affects them.
+\end{comment}
+\response\todo \tag{T1, R1.3, Q3} Reference the new marginal-distribution
+figure (raw Sobol vs post-constraint).
+
+\begin{comment}
+To my best understanding the paper is about ML hyperparameter optimization
+benchmark based on a materials dataset, rather than a materials-design
+benchmark in the usual sense. This distinction should be made very clear.
+\end{comment}
+\response\todo \tag{T2, R1.4, Q2}
+
+\begin{comment}
+Authors should justify ``SHAP analysis as shown in Figure 6 analyzes the
+difference between the true experimental output and the expected output of the
+model''. SHAP values quantify the contribution of features to a model
+prediction relative to a reference/expected prediction. They do not directly
+measure the difference between ``true experimental output'' and expected output.
+\end{comment}
+\response\todo \tag{T5, R1.5, Q6} Correct the wording (attribution vs error);
+confirm the fix or the figure's removal.
+
+% ========================================================================= %
+\reviewer{Reviewer 2}
+
+\noindent\emph{Reviewer 2's assessment is a single paragraph; it is split below
+into its distinct points for a structured response.}
+
+\begin{comment}
+[Novelty] The novelty and scientific depth of the contribution are limited; the
+work is essentially a data generation and storage exercise, and the manuscript
+reads more as a technical report describing a computational pipeline than a
+research article.
+\end{comment}
+\response\todo \tag{T11, R2.a, Q2, Q10} Note the Data Descriptor article type
+and the sharpened contribution framing.
+
+\begin{comment}
+[SHAP] The SHAP analysis in Figure 6 remains superficial and does not provide
+substantial new understanding beyond what is intuitively expected (e.g., more
+epochs and larger batches increase runtime).
+\end{comment}
+\response\todo \tag{T5, R2.b, Q6}
+
+\begin{comment}
+[Multi-fidelity] The claim of ``multi-fidelity'' is not convincingly
+substantiated; the multi-fidelity dimension is not clearly defined,
+demonstrated, or exploited in a manner that would distinguish this work from a
+standard hyperparameter sweep.
+\end{comment}
+\response\todo \tag{T4, R2.c, Q9}
+
+\begin{comment}
+[Constraint] The authors themselves describe the summation-to-one constraint as
+``contrived''; it does not reproduce the physics, chemistry, or thermodynamic
+realities of actual compositional optimization, so the claimed bridge to
+real-world materials optimization remains aspirational.
+\end{comment}
+\response\todo \tag{T1, R2.d, Q3}
+
+\begin{comment}
+[Noise model] The treatment of heteroskedastic noise through percentile ranks
+lacks rigorous validation that it meaningfully improves surrogate fidelity
+compared to simpler noise models; no quantitative comparison or ablation is
+provided.
+\end{comment}
+\response\todo \tag{T9, R2.e, Q4}
+
+\begin{comment}
+[Optimizer demo] The practical utility of the benchmark is not convincingly
+established; no demonstration is provided showing that existing adaptive design
+or Bayesian optimization algorithms perform differently or more informatively
+on this dataset compared to established benchmarks such as Olympus or the
+particle packing benchmark previously published by the same group.
+\end{comment}
+\response\todo \tag{T10, R2.f, Q5}
+
+\begin{comment}
+[Scope] The scope is quite narrow, being tied exclusively to one neural network
+architecture and one materials property prediction task.
+\end{comment}
+\response\todo \tag{T2, T11, R2.g, Q10}
+
+\begin{comment}
+[Self-assessment] The writing would benefit from more critical self-assessment
+of limitations, a more thorough discussion of related work, and a clearer
+articulation of what specific optimization challenges this dataset enables that
+cannot already be addressed by existing resources.
+\end{comment}
+\response\todo \tag{T11, R2.h, Q10}
+
+% ========================================================================= %
+\reviewer{Reviewer 3}
+
+\begin{comment}
+This was a fine effort at a data-descriptor type article. A bit more context
+would have been appreciated: (1) what CrabNet is, and why anyone would care
+about it; (2) what Matbench is; (3) the Ax platform.
+\end{comment}
+\response\todo \tag{T3, R3.1--R3.3, Q7}
+
+\begin{comment}
+The readers would really benefit from getting an idea how a typical researcher
+might use these tools, and how the development of this new benchmark would
+improve the quality of that work (beyond what is offered in the concluding
+bulleted list).
+\end{comment}
+\response\todo \tag{T3, T2, R3.4, Q7} Add the status-quo\,$\to$\,with-benchmark
+workflow paragraph.
+
+\end{document}
