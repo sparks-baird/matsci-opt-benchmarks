@@ -16,6 +16,11 @@ correlation between the two objectives (this addresses reviewer questions
 about whether the objectives exhibit genuine trade-offs or are simply
 correlated).
 
+A third figure, ``pareto_mae_rmse_zoom``, zooms into the low-error corner of
+MAE vs RMSE for the repeat-averaged sets, the individual runs, and the
+surrogate, with points colored by loss function (``criterion``) and the
+region dominated by the Pareto front shaded.
+
 The dataset and surrogate are the public Zenodo deposition
 ``10.5281/zenodo.7694268``. If the files are not found locally they are
 downloaded from Zenodo into a cache directory.
@@ -112,6 +117,12 @@ OBJ_LABELS = {
     "model_size": "model size [$10^6$ parameters]",
 }
 RANK_COL = {"mae": "mae_rank", "rmse": "rmse_rank", "runtime": "runtime_rank"}
+
+# Low-error corner shown in the MAE vs RMSE zoom figure [eV].
+ZOOM_MAE = (0.165, 0.235)
+ZOOM_RMSE = (0.43, 0.60)
+LOSS_COLORS = {"RobustL1": "#2a78d6", "RobustL2": "#eb6834"}
+INK = "#0b0b0b"
 
 
 # --------------------------------------------------------------------------- #
@@ -295,6 +306,121 @@ def plot_panels(data: pd.DataFrame, title: str, out_stem: Path) -> None:
     print(f"  wrote {pdf}")
 
 
+def plot_mae_rmse_zoom(
+    raw: pd.DataFrame, runs: pd.DataFrame, surrogate: pd.DataFrame, out_stem: Path
+) -> None:
+    """Zoom into the low-error corner of MAE vs RMSE, colored by loss function.
+
+    Panel (a) is the full repeat-averaged scatter with the zoom window drawn on
+    it; panels (b) to (d) show the window for the repeat-averaged sets, the
+    individual runs and the surrogate. The Pareto front is computed over all
+    points, and in the zoomed panels the region it dominates is shaded. The
+    Spearman correlation is computed over the points shown in each panel.
+    """
+    panels = [
+        ("(a) All sets, repeat-averaged", raw, False),
+        ("(b) Zoom: repeat-averaged sets", raw, True),
+        ("(c) Zoom: individual runs", runs, True),
+        ("(d) Zoom: surrogate (median percentile)", surrogate, True),
+    ]
+    rng = np.random.default_rng(0)
+    fig, axes = plt.subplots(2, 2, figsize=(7.1, 6.8))
+    for ax, (title, data, zoom) in zip(axes.ravel(), panels):
+        x = data["mae"].to_numpy(dtype=float)
+        y = data["rmse"].to_numpy(dtype=float)
+        loss = data["criterion"].to_numpy()
+        front = pareto_mask(x, y)
+        shown = np.ones(len(x), dtype=bool)
+        if zoom:
+            shown = (
+                (x >= ZOOM_MAE[0])
+                & (x <= ZOOM_MAE[1])
+                & (y >= ZOOM_RMSE[0])
+                & (y <= ZOOM_RMSE[1])
+            )
+        # shuffle so neither loss function is always drawn on top
+        idx = rng.permutation(np.flatnonzero(shown))
+        ax.scatter(
+            x[idx],
+            y[idx],
+            s=6 if zoom else 1.5,
+            c=[LOSS_COLORS[c] for c in loss[idx]],
+            alpha=0.6 if zoom else 0.3,
+            edgecolors="none",
+            rasterized=not zoom,
+            zorder=2,
+        )
+        if zoom:
+            ax.set_xlim(ZOOM_MAE)
+            ax.set_ylim(ZOOM_RMSE)
+        else:
+            ax.add_patch(
+                plt.Rectangle(
+                    (ZOOM_MAE[0], ZOOM_RMSE[0]),
+                    ZOOM_MAE[1] - ZOOM_MAE[0],
+                    ZOOM_RMSE[1] - ZOOM_RMSE[0],
+                    fill=False,
+                    ec=INK,
+                    lw=0.8,
+                    zorder=6,
+                )
+            )
+        xlim, ylim = ax.get_xlim(), ax.get_ylim()
+
+        order = np.argsort(x[front])
+        fx, fy = x[front][order], y[front][order]
+        if zoom:
+            # staircase boundary of the region dominated by the front
+            sx = np.concatenate([[fx[0]], np.repeat(fx, 2)[1:], [xlim[1]]])
+            sy = np.concatenate([[ylim[1]], np.repeat(fy, 2)])
+            ax.fill(
+                np.append(sx, xlim[1]),
+                np.append(sy, ylim[1]),
+                color="#ebeae5",
+                lw=0,
+                zorder=0.5,
+            )
+            ax.plot(sx, sy, color=INK, lw=0.8, zorder=1.8)
+        ax.scatter(
+            fx, fy, s=16, c=INK, edgecolors="white", linewidths=0.6, zorder=5
+        )
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+
+        rho = _spearman(x[shown], y[shown])
+        ax.set_title(
+            f"{title}\nPareto front n = {front.sum()}, Spearman $\\rho$ = {rho:.2f}"
+        )
+        ax.set_xlabel(OBJ_LABELS["mae"])
+        ax.set_ylabel(OBJ_LABELS["rmse"])
+        ax.grid(True, color="#e1e0d9", lw=0.4)
+
+    handles = [
+        plt.Line2D(
+            [], [], ls="", marker="o", ms=4, mfc=color, mec="none",
+            label=f"{name} loss",
+        )
+        for name, color in LOSS_COLORS.items()
+    ] + [
+        plt.Line2D(
+            [], [], color=INK, lw=0.8, marker="o", ms=4, mec="white",
+            label="Pareto front",
+        ),
+        plt.Rectangle((0, 0), 1, 1, fc="#ebeae5", ec="none", label="dominated region"),
+        plt.Rectangle((0, 0), 1, 1, fill=False, ec=INK, lw=0.8, label="zoom window"),
+    ]
+    fig.legend(handles=handles, loc="lower center", ncol=5, frameon=False)
+    fig.tight_layout(rect=(0, 0.035, 1, 1))
+    out_stem.parent.mkdir(parents=True, exist_ok=True)
+    png = out_stem.with_suffix(".png")
+    pdf = out_stem.with_suffix(".pdf")
+    fig.savefig(png, dpi=300)
+    fig.savefig(pdf)
+    plt.close(fig)
+    print(f"  wrote {png}")
+    print(f"  wrote {pdf}")
+
+
 # --------------------------------------------------------------------------- #
 # Main
 # --------------------------------------------------------------------------- #
@@ -345,6 +471,8 @@ def main(argv: list[str] | None = None) -> int:
         "Surrogate model (median noise percentile, rank = 0.5)",
         args.out_dir / "pareto_surrogate",
     )
+    print("Plotting MAE vs RMSE low-error zoom ...")
+    plot_mae_rmse_zoom(raw, df, surrogate, args.out_dir / "pareto_mae_rmse_zoom")
     print("Done.")
     return 0
 
