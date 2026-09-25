@@ -13,13 +13,13 @@ on:
 # Model policy lives here, in one place.
 env:
   # Model a bare @claude runs on. Change this one line to make Opus the default.
-  PRIMARY_MODEL: claude-fable-5
+  PRIMARY_MODEL: claude-opus-5-5
   # Model to retry with when the first attempt dies on an exhausted allowance
   # (an expired usage limit or a spent credit balance). Set to "" to switch the
   # retry off. If it names the same model as the primary, for example
   # "@claude+opus-5" with a claude-opus-5 fallback, the retry is skipped: that
   # allowance is already spent, so a second attempt on it would just fail again.
-  FALLBACK_MODEL: claude-opus-5
+  FALLBACK_MODEL: claude-opus-5-5
   # Effort used when the tag carries no :effort suffix.
   DEFAULT_EFFORT: max
   # "true" retries on ANY first-attempt failure, not only an exhausted
