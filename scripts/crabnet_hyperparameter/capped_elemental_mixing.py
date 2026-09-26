@@ -22,9 +22,11 @@ Optimizers, 100 evaluations each:
 - random search in the box: w = u / sum(u) with u uniform on [0, 1]^20, which is the
   space Ax searches
 - the random-forest search of capped_walk_test.py
-- Ax 1.3 with its default generation strategy (center point, Sobol, then BoTorch) and
-  the outcome constraint runtime <= 157, searching u in [0, 1]^20 with w = u / sum(u).
-  A point with fewer than 3 nonzero u is marked failed and still uses up an evaluation.
+- Ax 1.3 with the outcome constraint runtime <= 157, searching u in [0, 1]^20 with
+  w = u / sum(u). "Default start" uses Ax's generation strategy as is (center point,
+  Sobol, then BoTorch). "Sparse start" first attaches the forest search's 10 starting
+  compositions, then continues with BoTorch. A point with fewer than 3 nonzero u is
+  marked failed and still uses up an evaluation.
 
 Scores follow capped_walk_test.py: the share of the gap closed between the median random
 composition that meets the cap and the best known one (0 and 1).
@@ -56,7 +58,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 warnings.filterwarnings("ignore")
 fig_dir = Path("reports/crabnet_hyperparameter_immi/figures")
-cap, budget, n_init, n_forest, n_ax, n_random = 157.0, 100, 10, 8, 8, 50
+cap, budget, n_init, n_forest, n_ax, n_random = 157.0, 100, 10, 8, 4, 50
 
 # %% Space surrogate and E (as in capped_walk_test.py)
 bounds = {
@@ -195,7 +197,7 @@ def forest_search(seed):
     return best_so_far(y, z)
 
 
-def ax_search(seed):
+def ax_search(seed, sparse_start):
     set_ax_logger_levels(logging.WARNING)
     torch.set_num_threads(1)
     client = Client(random_seed=seed)
@@ -207,8 +209,13 @@ def ax_search(seed):
     )
     client.configure_optimization(objective="-mae", outcome_constraints=[f"runtime <= {cap}"])
     y, z = np.full(budget, np.inf), np.full(budget, np.inf)
+    start = draw(n_init, np.random.default_rng(seed)) if sparse_start else []
     for n in range(budget):
-        ((trial, p),) = client.get_next_trials(max_trials=1).items()
+        if n < len(start):
+            p = {f"u{i}": float(v) for i, v in enumerate(start[n], 1)}
+            trial = client.attach_trial(parameters=p)
+        else:
+            ((trial, p),) = client.get_next_trials(max_trials=1).items()
         u = np.array([p[f"u{i}"] for i in range(1, 21)])
         if (u > 0).sum() < 3:
             client.mark_trial_failed(trial_index=trial)
@@ -220,13 +227,20 @@ def ax_search(seed):
 
 
 # %% run
-optimizers = ["random search", "random search in the box", "random-forest search", "Ax (BoTorch)"]
+optimizers = [
+    "random search",
+    "random search in the box",
+    "random-forest search",
+    "Ax, default start",
+    "Ax, sparse start",
+]
 runs = {
     "random search": [random_search(s, draw) for s in range(n_random)],
     "random search in the box": [random_search(s, draw_box) for s in range(n_random)],
     "random-forest search": Parallel(n_jobs=4)(delayed(forest_search)(s) for s in range(n_forest)),
-    "Ax (BoTorch)": Parallel(n_jobs=4)(delayed(ax_search)(s) for s in range(n_ax)),
 }
+ax_runs = Parallel(n_jobs=4)(delayed(ax_search)(s, sp) for sp in (False, True) for s in range(n_ax))
+runs["Ax, default start"], runs["Ax, sparse start"] = ax_runs[:n_ax], ax_runs[n_ax:]
 traces = {m: np.array([t for t, _ in v]) for m, v in runs.items()}
 share_ok = {m: np.median([f for _, f in v]) for m, v in runs.items()}
 
@@ -264,7 +278,7 @@ print(summary.query("evaluations in [10, 25, 50, 100]").round(3).to_string(index
 
 # %% figure
 ink, muted, band = "#0b0b0b", "#898781", "#f0efec"
-colors = dict(zip(optimizers, ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"]))
+colors = dict(zip(optimizers, ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"]))
 plt.rcParams.update(
     {
         "font.size": 9.5,
@@ -279,33 +293,44 @@ plt.rcParams.update(
         "ytick.labelcolor": ink,
     }
 )
-fig, (a, b) = plt.subplots(1, 2, figsize=(11, 4.2), layout="constrained", width_ratios=[1.4, 1])
+fig, (a, b) = plt.subplots(1, 2, figsize=(12, 4.4), layout="constrained", width_ratios=[1.4, 1])
 for m in optimizers:
     s = summary[summary["optimizer"] == m].replace(np.inf, np.nan)
     a.fill_between(s["evaluations"], s["best_mae_q25"], s["best_mae_q75"], color=colors[m], alpha=0.15, lw=0)
     a.plot(s["evaluations"], s["best_mae_median"], color=colors[m], lw=2, label=m)
 a.axhline(best_known, color=muted, lw=1, ls=":")
 a.text(budget, best_known, "best known", color=ink, fontsize=8.5, ha="right", va="bottom")
-a.set_ylim(best_known - 0.01, median_ok + 0.02)
+a.set_ylim(best_known - 0.03, median_ok + 0.02)
 a.set_xlabel("evaluations")
 a.set_ylabel("best MAE meeting the cap [eV]")
 a.set_title("(a) Best MAE with runtime <= 157 s (median, 25th to 75th percentile)", loc="left")
 a.legend(frameon=False, loc="upper right")
 a.grid(axis="y", color=band, lw=0.8)
+a.text(
+    0.02, 0.02,
+    "A line starts once the median run has a composition under the cap.\n"
+    "Random search in the box and Ax with the default start never get there.",
+    transform=a.transAxes, fontsize=8.5, color=ink, va="bottom",
+)  # fmt: skip
 s100 = summary[summary["evaluations"] == budget].set_index("optimizer").loc[optimizers]
 yy = np.arange(len(optimizers))
-b.hlines(yy, s100["gap_closed_q25"], s100["gap_closed_q75"], color=[colors[m] for m in optimizers], lw=2, alpha=0.5)
-b.scatter(s100["gap_closed"], yy, c=[colors[m] for m in optimizers], s=60, edgecolors="white", linewidths=1, zorder=3)
 for y_, (m, r) in zip(yy, s100.iterrows()):
-    b.text(r["gap_closed_q75"] + 0.03, y_, f"{r['gap_closed']:.2f} ({int(r['runs'])} runs)", va="center", fontsize=8.5, color=ink)
+    if r["gap_closed_q75"] > -0.05:
+        b.hlines(y_, max(r["gap_closed_q25"], -0.05), r["gap_closed_q75"], color=colors[m], lw=2, alpha=0.5)
+    if r["gap_closed"] >= -0.05:
+        b.scatter(r["gap_closed"], y_, color=colors[m], s=60, edgecolors="white", linewidths=1, zorder=3)
+        label = f"{r['gap_closed']:.2f} ({int(r['runs'])} runs)"
+    else:
+        label = f"median run: none under the cap ({int(r['runs'])} runs)"
+    b.text(max(r["gap_closed_q75"], 0) + 0.03, y_, label, va="center", fontsize=8.5, color=ink)
 b.set_yticks(yy, optimizers)
 b.set_ylim(len(optimizers) - 0.5, -0.5)
-b.set_xlim(-0.05, 1.3)
+b.set_xlim(-0.05, 1.45)
 b.set_xticks([0, 0.25, 0.5, 0.75, 1])
 b.tick_params(axis="y", length=0)
 b.spines["left"].set_visible(False)
 b.grid(axis="x", color=band, lw=0.8)
 b.set_axisbelow(True)
-b.set_xlabel("share of the gap closed after 100 evaluations")
-b.set_title("(b) 0 = median random composition meeting the cap, 1 = best known", loc="left")
+b.set_xlabel("0 = median random point under the cap, 1 = best known")
+b.set_title("(b) Share of the gap closed after 100 evaluations", loc="left")
 fig.savefig(fig_dir / "capped_elemental_mixing.png", dpi=200, facecolor="white")
