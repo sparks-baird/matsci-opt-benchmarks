@@ -1,0 +1,49 @@
+problem,optimizer,evaluations,gap_closed
+"CrabNet MAE, identity",random,10,0.43518986070945026
+"CrabNet MAE, identity",random,25,0.44838909729763876
+"CrabNet MAE, identity",random,50,0.7696665522001942
+"CrabNet MAE, identity",random,100,0.842103877840991
+"CrabNet MAE, identity",forest,10,0.44741744414106177
+"CrabNet MAE, identity",forest,25,0.7162539857335337
+"CrabNet MAE, identity",forest,50,0.8827994929322075
+"CrabNet MAE, identity",forest,100,0.9426974053759107
+"CrabNet MAE, inverted",random,10,0.3311946693657265
+"CrabNet MAE, inverted",random,25,0.5111888425309455
+"CrabNet MAE, inverted",random,50,0.5299977819865026
+"CrabNet MAE, inverted",random,100,0.5986967280128141
+"CrabNet MAE, inverted",forest,10,0.389596860933498
+"CrabNet MAE, inverted",forest,25,0.4192668021884158
+"CrabNet MAE, inverted",forest,50,0.545538566748121
+"CrabNet MAE, inverted",forest,100,0.6699638218033739
+"CrabNet MAE, random mixing",random,10,0.5307303142439608
+"CrabNet MAE, random mixing",random,25,0.6104071424869257
+"CrabNet MAE, random mixing",random,50,0.7014576573948261
+"CrabNet MAE, random mixing",random,100,0.7415118724289683
+"CrabNet MAE, random mixing",forest,10,0.5186674592248943
+"CrabNet MAE, random mixing",forest,25,0.6496253836848056
+"CrabNet MAE, random mixing",forest,50,0.6623237859773616
+"CrabNet MAE, random mixing",forest,100,0.6877841028985272
+"CrabNet MAE, elemental mixing",random,10,0.3666903136914284
+"CrabNet MAE, elemental mixing",random,25,0.48864136213503795
+"CrabNet MAE, elemental mixing",random,50,0.6472193234834718
+"CrabNet MAE, elemental mixing",random,100,0.7347857137184657
+"CrabNet MAE, elemental mixing",forest,10,0.411882786202733
+"CrabNet MAE, elemental mixing",forest,25,0.7101142499220537
+"CrabNet MAE, elemental mixing",forest,50,0.8093052516384717
+"CrabNet MAE, elemental mixing",forest,100,0.828917761283162
+"MP alloys, formation energy",random,10,0.16277280109778353
+"MP alloys, formation energy",random,25,0.22441463369578918
+"MP alloys, formation energy",random,50,0.2491858632529462
+"MP alloys, formation energy",random,100,0.2872594997748982
+"MP alloys, formation energy",forest,10,0.13292994408549164
+"MP alloys, formation energy",forest,25,0.30922578270971957
+"MP alloys, formation energy",forest,50,0.39577161757629775
+"MP alloys, formation energy",forest,100,0.5769256943611698
+"MP alloys, energy above hull",random,10,0.17225164208771648
+"MP alloys, energy above hull",random,25,0.2642210080972175
+"MP alloys, energy above hull",random,50,0.294663977432881
+"MP alloys, energy above hull",random,100,0.3502526755819895
+"MP alloys, energy above hull",forest,10,0.1530043442565625
+"MP alloys, energy above hull",forest,25,0.3395269241888521
+"MP alloys, energy above hull",forest,50,0.47937924209826444
+"MP alloys, energy above hull",forest,100,0.5519345936391578
