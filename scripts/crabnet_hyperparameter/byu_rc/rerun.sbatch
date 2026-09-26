@@ -29,8 +29,9 @@ module load miniforge3
 eval "$(conda shell.bash hook)"
 conda activate "$ENV_NAME"
 
-# CrabNet saves each fitted network under ./models/trained_models, so run from
-# node-local scratch; it is removed when the job ends
+# CrabNet writes each fitted network (models/trained_models) and learning-curve data
+# (figures/lc_data) to the working directory, so run from node-local scratch, which
+# is removed when the job ends
 WORKDIR="/tmp/$SLURM_JOB_ID"
 mkdir -p "$WORKDIR"
 trap 'rm -rf "$WORKDIR"' EXIT
