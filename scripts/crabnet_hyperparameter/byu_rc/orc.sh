@@ -1,8 +1,9 @@
 #!/bin/bash
-# Login-node entry point for the v2 rerun. .github/workflows/byu-rc.yml calls it over
-# SSH; it also works by hand or from a login-node crontab.
+# Login-node entry point for the v2 rerun. A @claude-orc session calls it over SSH;
+# it also works by hand or from a login-node crontab.
 #   bash orc.sh setup                  # conda environment, v1 CSV, Matbench data (once)
 #   bash orc.sh manifest decision      # pick the runs and split them into array tasks
+#   bash orc.sh manifest dummy --sobol 100 --simplex 100   # extra options go to rerun.py
 #   bash orc.sh smoke                  # smoke manifest plus one task on the test QOS
 #   bash orc.sh submit decision        # submit every task with runs to do that is not queued
 #   bash orc.sh status decision        # queue, GPU types and collect
@@ -33,12 +34,16 @@ if [ "$ACTION" = setup ]; then
     exit
 fi
 
-module load miniforge3
-eval "$(conda shell.bash hook)"
-conda activate "$ENV_NAME"
 mkdir -p "$RERUN_DIR/logs"
 cd "$RERUN_DIR"  # sbatch writes logs/ relative to here
-rerun() { python "$HERE/rerun.py" "$1" --design "$DESIGN" "${@:2}"; }
+rerun() {  # the conda environment is only needed here, so status works before setup
+    if [ "$CONDA_DEFAULT_ENV" != "$ENV_NAME" ]; then
+        module load miniforge3
+        eval "$(conda shell.bash hook)"
+        conda activate "$ENV_NAME"
+    fi
+    python "$HERE/rerun.py" "$1" --design "$DESIGN" "${@:2}"
+}
 JOB="crabnet-v2-$DESIGN"
 
 submit() {  # submit the tasks in $1 with any extra sbatch flags
@@ -48,7 +53,7 @@ submit() {  # submit the tasks in $1 with any extra sbatch flags
 
 case "$ACTION" in
 manifest)
-    rerun manifest
+    rerun manifest "${@:3}"
     ;;
 smoke)
     DESIGN=smoke JOB=crabnet-v2-smoke
@@ -73,7 +78,7 @@ submit)
 status)
     squeue --me -o "%.18i %.20j %.8T %.10M %.12l %.10q %R"
     echo "GPU types (for GPUS=<type>:1):"
-    sinfo -h -o "%G" | tr ',' '\n' | grep -o 'gpu:[a-z0-9_]*' | sort -u | sed 's/^gpu:/  /'
+    sinfo -h -o "%G" | tr ',' '\n' | grep -oE 'gpu:[a-z][a-z0-9_]*' | sort -u | sed 's/^gpu:/  /'
     echo "orcquota:"; orcquota || true
     [ -f "$DESIGN/manifest.csv" ] && rerun collect || echo "no results for $DESIGN yet"
     ;;

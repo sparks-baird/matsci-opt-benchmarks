@@ -22,6 +22,16 @@ with train_frac = 0.003, are left out):
 - full: one run per v1 run (173,203 runs), so v2 keeps the v1 repeat structure
   (387 GPU-days)
 
+One design draws new points instead, the way v1 was generated, as a small end-to-end
+test of a fresh dataset:
+
+- dummy: --sobol Sobol points (default 100) over the v1 search space (get_parameters,
+  with its two constraints), plus --simplex points (default 100) on the simplex where
+  the 20 min-max scaled numeric hyperparameters sum to 1, which no v1 run comes near.
+  The simplex block holds every vertex (one hyperparameter at its top, the rest at
+  their bottom), points on faces with 2 to 4 active hyperparameters, and interior
+  points. Each point runs --repeats times (default 2) with different sample seeds.
+
 Runs are assigned to array tasks, longest first, so that each task holds about --hours
 of v1 (RTX 2080 Ti) runtime. Each finished run is appended to results/task_<id>.jsonl,
 and a task skips runs already there, so a preempted, requeued or resubmitted task
@@ -47,9 +57,15 @@ import pandas as pd
 parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
 parser.add_argument("mode", choices=["manifest", "run", "collect", "todo"])
 parser.add_argument(
-    "--design", default="decision", choices=["smoke", "decision", "one-per-set", "full"]
+    "--design",
+    default="decision",
+    choices=["smoke", "decision", "one-per-set", "full", "dummy"],
 )
 parser.add_argument("--hours", type=float, default=4.0, help="v1 runtime per task")
+parser.add_argument("--sobol", type=int, default=100, help="dummy: Sobol points")
+parser.add_argument("--simplex", type=int, default=100, help="dummy: simplex points")
+parser.add_argument("--repeats", type=int, default=2, help="dummy: runs per point")
+parser.add_argument("--runs-per-task", type=int, default=20, help="dummy")
 parser.add_argument("--seed", type=int, default=0)
 parser.add_argument("--exclude", default="", help="todo: task ids to leave out, e.g. 3,7")
 args = parser.parse_args()
@@ -95,6 +111,8 @@ def todo_tasks(runs, records):
 
 if args.mode == "manifest":
     assert not any(results_dir.glob("*.jsonl")), f"{results_dir} has results; move them first"
+
+if args.mode == "manifest" and args.design != "dummy":
     v1 = pd.read_csv(rerun_dir / "sobol_regression.csv")
     v1 = v1[v1["train_frac"] >= 0.01].reset_index(names="v1_row")
     v1["set_id"] = v1.groupby(hp, sort=False).ngroup()
@@ -144,6 +162,80 @@ if args.mode == "manifest":
         f"--export=ALL,DESIGN={args.design} <path to rerun.sbatch>"
     )
 
+if args.mode == "manifest" and args.design == "dummy":
+    from scipy.stats import qmc
+
+    from matsci_opt_benchmarks.crabnet_hyperparameter.utils.parameters import (
+        get_parameters,
+    )
+
+    space = {p["name"]: p for p in get_parameters()[0]}
+    numeric = [n for n, p in space.items() if p["type"] == "range" and n != "train_frac"]
+    other = [n for n in space if n not in numeric]  # train_frac and the categoricals
+
+    def to_values(names, u):
+        # unit-cube coordinates to parameter values, as Ax does: ranges scaled, and
+        # rounded when both bounds are integers; choices split into equal bins
+        out = {}
+        for name, x in zip(names, u.T):
+            p = space[name]
+            if p["type"] == "choice":
+                bins = np.minimum((x * len(p["values"])).astype(int), len(p["values"]) - 1)
+                out[name] = [p["values"][b] for b in bins]
+            else:
+                lo, hi = p["bounds"]
+                v = lo + x * (hi - lo)
+                integer = all(isinstance(b, int) for b in p["bounds"])
+                out[name] = np.rint(v).astype(int) if integer else v
+        return pd.DataFrame(out)
+
+    names = list(space)
+    n_draw = 2 ** int(np.ceil(np.log2(8 * args.sobol)))  # about 1 in 4 meets both constraints
+    sobol = to_values(names, qmc.Sobol(len(names), seed=args.seed).random(n_draw))
+    ok = (sobol["betas1"] <= sobol["betas2"]) & (sobol["emb_scaler"] + sobol["pos_scaler"] <= 1)
+    sobol = sobol[ok].head(args.sobol).assign(block="sobol", active=len(numeric))
+
+    # simplex: every vertex, then half faces (2, 3, 4 active in turn), half interior
+    n = len(numeric)
+    n_face = (args.simplex - n) // 2
+    ks = [1] * n + [2 + i % 3 for i in range(n_face)] + [n] * (args.simplex - n - n_face)
+    rng = np.random.default_rng(args.seed)
+    cube = qmc.Sobol(n - 1, seed=args.seed + 1).random(len(ks))
+    w = np.zeros((len(ks), n))
+    for i, k in enumerate(ks):
+        active = [i] if k == 1 else rng.choice(n, k, replace=False)
+        # spacings of sorted Sobol coordinates are uniform on the face
+        w[i, active] = np.diff(np.r_[0, np.sort(cube[i, : k - 1]), 1])
+    # betas1 <= betas2 (the betas1 vertex becomes a second betas2 vertex);
+    # emb_scaler + pos_scaler <= 1 holds on the simplex already
+    b = [numeric.index("betas1"), numeric.index("betas2")]
+    w[:, b] = np.sort(w[:, b], axis=1)
+    simplex = pd.concat(
+        [
+            to_values(numeric, w),
+            to_values(other, qmc.Sobol(len(other), seed=args.seed + 2).random(len(ks))),
+        ],
+        axis=1,
+    ).assign(block="simplex", active=ks)
+
+    points = pd.concat([sobol, simplex], ignore_index=True)[[*hp, "block", "active"]]
+    points.insert(0, "set_id", np.arange(len(points)))
+    runs = points.loc[points.index.repeat(args.repeats)]
+    runs = runs.sample(frac=1, random_state=args.seed).reset_index(drop=True)
+    runs.insert(0, "run_id", np.arange(len(runs)))
+    runs["sample_seed"] = rng.integers(0, 1000, len(runs))
+    # no runtime estimate for new points, so each task gets an equal share
+    n_tasks = int(np.ceil(len(runs) / args.runs_per_task))
+    runs["task"] = runs["run_id"] % n_tasks
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    runs.to_csv(manifest_path, index=False)
+    print(
+        f"dummy: {len(sobol)} Sobol and {len(simplex)} simplex points, "
+        f"{args.repeats} repeats, {len(runs)} runs in {n_tasks} tasks\n"
+        f"submit from {rerun_dir} with: sbatch --array=0-{n_tasks - 1} "
+        f"--export=ALL,DESIGN=dummy <path to rerun.sbatch>"
+    )
+
 if args.mode == "run":
     import torch
 
@@ -183,7 +275,7 @@ if args.mode == "run":
         record = {
             "run_id": run["run_id"],
             "set_id": run["set_id"],
-            "v1_row": run["v1_row"],
+            "v1_row": run.get("v1_row"),
             **result,
             "gpu": gpu,
             "host": socket.gethostname(),
@@ -224,6 +316,13 @@ if args.mode == "collect":
     if len(table):
         folds = [table[f"fold_scores.fold_{i}.mae"].median() for i in range(5)]
         print("median MAE by fold (no downward trend expected):", np.round(folds, 3))
+    if len(table) and "v1_mae" not in table:
+        cols = ["mae", "rmse", "runtime", "model_size"]
+        print("medians by block:\n", table.groupby("block")[cols].median().round(3))
+        sd = table.groupby("set_id")["mae"].std().median()
+        print(f"median repeat SD of MAE: {sd:.4f} eV")
+        print("median runtime by GPU [s]:", table.groupby("gpu")["runtime"].median().round(1).to_dict())
+    if len(table) and "v1_mae" in table:
         per_set = table.groupby("set_id")[["v1_mae", "mae", "v1_rmse", "rmse"]].mean()
         print(f"median v2 / v1 MAE: {(per_set['mae'] / per_set['v1_mae']).median():.3f}")
         print(f"median v2 / v1 RMSE: {(per_set['rmse'] / per_set['v1_rmse']).median():.3f}")
