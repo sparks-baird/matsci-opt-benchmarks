@@ -63,7 +63,7 @@ If runtime is measured again in v2, keep one GPU type for the whole campaign. Ev
 
 ```bash
 cd ~/crabnet_rerun
-module load miniforge3 && conda activate crabnet-v2
+module load miniforge3 && eval "$(conda shell.bash hook)" && conda activate crabnet-v2
 python ~/matsci-opt-benchmarks/scripts/crabnet_hyperparameter/byu_rc/rerun.py manifest --design smoke
 sbatch --array=0 --qos=test --time=00:30:00 --export=ALL,DESIGN=smoke \
     ~/matsci-opt-benchmarks/scripts/crabnet_hyperparameter/byu_rc/rerun.sbatch

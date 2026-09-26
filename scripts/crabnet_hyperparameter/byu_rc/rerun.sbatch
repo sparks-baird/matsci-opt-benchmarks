@@ -34,7 +34,7 @@ conda activate "$ENV_NAME"
 # is removed when the job ends
 WORKDIR="/tmp/$SLURM_JOB_ID"
 mkdir -p "$WORKDIR"
-trap 'rm -rf "$WORKDIR"' EXIT
+trap 'rm -rf "$WORKDIR"' EXIT TERM
 cd "$WORKDIR"
 
 echo "task $SLURM_ARRAY_TASK_ID of job $SLURM_ARRAY_JOB_ID on $(hostname), design $DESIGN"
