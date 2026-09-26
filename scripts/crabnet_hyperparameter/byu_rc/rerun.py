@@ -10,6 +10,7 @@ scores. This script reruns rows of the v1 CSV with it, one Slurm array task at a
     python rerun.py manifest --design decision   # once, on a login node
     sbatch --array=0-<last task> rerun.sbatch    # the manifest step prints the range
     python rerun.py collect --design decision    # any time; merges and compares with v1
+    python rerun.py todo --design decision       # --array list of tasks with runs to do
 
 Designs, using v1 rows with train_frac >= 0.01 (the 16 rows from two test sessions,
 with train_frac = 0.003, are left out):
@@ -25,7 +26,8 @@ Runs are assigned to array tasks, longest first, so that each task holds about -
 of v1 (RTX 2080 Ti) runtime. Each finished run is appended to results/task_<id>.jsonl,
 and a task skips runs already there, so a preempted, requeued or resubmitted task
 continues where it stopped. Failed runs are recorded with their error message and are
-not retried. collect lists the tasks that still have runs to do.
+not retried. collect and todo list the tasks that still have runs to do; orc.sh submit
+resubmits the ones that are not queued, which is how preempted tasks get rerun.
 
 Files live in RERUN_DIR (default ~/crabnet_rerun), which must hold sobol_regression.csv
 from the Zenodo record (setup_env.sh downloads it). Each design gets its own
@@ -43,12 +45,13 @@ import numpy as np
 import pandas as pd
 
 parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-parser.add_argument("mode", choices=["manifest", "run", "collect"])
+parser.add_argument("mode", choices=["manifest", "run", "collect", "todo"])
 parser.add_argument(
     "--design", default="decision", choices=["smoke", "decision", "one-per-set", "full"]
 )
 parser.add_argument("--hours", type=float, default=4.0, help="v1 runtime per task")
 parser.add_argument("--seed", type=int, default=0)
+parser.add_argument("--exclude", default="", help="todo: task ids to leave out, e.g. 3,7")
 args = parser.parse_args()
 
 rerun_dir = Path(os.environ.get("RERUN_DIR", Path.home() / "crabnet_rerun"))
@@ -60,6 +63,35 @@ hp = [
     "pos_scaler", "weight_decay", "batch_size", "out_hidden4", "betas1", "betas2",
     "bias", "criterion", "elem_prop", "train_frac",
 ]  # fmt: skip
+
+
+def read_results(paths=None):
+    # a task killed mid-write can leave a partial last line; skip it
+    records = []
+    for path in sorted(results_dir.glob("task_*.jsonl")) if paths is None else paths:
+        for line in path.open() if path.exists() else []:
+            try:
+                records.append(json.loads(line))
+            except json.JSONDecodeError:
+                pass
+    return records
+
+
+def array_spec(ids):
+    # 0,1,2,5,7,8 -> 0-2,5,7-8
+    spans = []
+    for i in sorted(ids):
+        if spans and i == spans[-1][1] + 1:
+            spans[-1][1] = i
+        else:
+            spans.append([i, i])
+    return ",".join(f"{a}-{b}" if b > a else f"{a}" for a, b in spans)
+
+
+def todo_tasks(runs, records):
+    done = {r["run_id"] for r in records}
+    return sorted(int(t) for t in runs.loc[~runs["run_id"].isin(done), "task"].unique())
+
 
 if args.mode == "manifest":
     assert not any(results_dir.glob("*.jsonl")), f"{results_dir} has results; move them first"
@@ -124,8 +156,24 @@ if args.mode == "run":
     runs = runs[runs["task"] == task_id]
     results_dir.mkdir(exist_ok=True)
     out = results_dir / f"task_{task_id:05d}.jsonl"
-    done = [json.loads(line)["run_id"] for line in out.open()] if out.exists() else []
+    done = [r["run_id"] for r in read_results([out])]
+    if out.exists() and out.read_bytes()[-1:] not in (b"", b"\n"):
+        with out.open("a") as f:  # end a partial line left by a kill mid-write
+            f.write("\n")
     gpu = torch.cuda.get_device_name() if torch.cuda.is_available() else "cpu"
+    if "SLURM_JOB_ID" in os.environ:
+        # Stop before any run is recorded: a GPU this torch build has no kernels for
+        # (Hopper, Blackwell) would otherwise record every run as a failure, and failed
+        # runs are not retried. orc.sh submit requeues the task later.
+        if not torch.cuda.is_available():
+            raise SystemExit(f"task {task_id}: no GPU visible, stopping")
+        major, minor = torch.cuda.get_device_capability()
+        sms = [a[3:] for a in torch.cuda.get_arch_list() if a.startswith("sm_")]
+        if not any(int(s[:-1]) == major and int(s[-1]) <= minor for s in sms):
+            raise SystemExit(
+                f"task {task_id}: torch {torch.__version__} cannot run on {gpu} "
+                f"(sm_{major}{minor}; built for {', '.join(sms)}), stopping"
+            )
     print(f"task {task_id}: {len(runs)} runs, {len(done)} already done, on {gpu}")
     for run in runs[~runs["run_id"].isin(done)].to_dict("records"):
         parameters = {k: run[k] for k in hp}
@@ -152,15 +200,11 @@ if args.mode == "collect":
     from scipy.stats import spearmanr
 
     runs = pd.read_csv(manifest_path)
-    records = [
-        json.loads(line)
-        for path in sorted(results_dir.glob("task_*.jsonl"))
-        for line in path.open()
-    ]
+    records = read_results()
     if not records:
         raise SystemExit(f"no results in {results_dir} yet")
     res = pd.json_normalize(records).drop_duplicates("run_id", keep="last")
-    todo = sorted(runs.loc[~runs["run_id"].isin(res["run_id"]), "task"].unique())
+    todo = todo_tasks(runs, records)
     failed = res["error"].notna() if "error" in res else pd.Series(False, res.index)
     res = res[~failed].rename(
         columns={"scores.mae.mean": "mae", "scores.rmse.mean": "rmse"}
@@ -176,7 +220,7 @@ if args.mode == "collect":
         f"{len(runs) - len(table) - failed.sum()} to go"
     )
     if todo:
-        print(f"tasks with runs to do: --array={','.join(map(str, todo))}")
+        print(f"tasks with runs to do: --array={array_spec(todo)}")
     if len(table):
         folds = [table[f"fold_scores.fold_{i}.mae"].median() for i in range(5)]
         print("median MAE by fold (no downward trend expected):", np.round(folds, 3))
@@ -199,3 +243,8 @@ if args.mode == "collect":
             )
         ratio = (table["runtime"] / table["v1_runtime"]).groupby(table["gpu"]).median()
         print("median runtime ratio v2 / v1 (2080 Ti) by GPU:", ratio.round(2).to_dict())
+
+if args.mode == "todo":
+    exclude = {int(t) for t in args.exclude.replace(" ", ",").split(",") if t.strip()}
+    todo = todo_tasks(pd.read_csv(manifest_path), read_results())
+    print(array_spec(t for t in todo if t not in exclude))

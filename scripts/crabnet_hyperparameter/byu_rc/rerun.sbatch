@@ -1,9 +1,14 @@
 #!/bin/bash
 # Slurm array job for the v2 CrabNet rerun on BYU Research Computing (see README.md).
-# Submit from $RERUN_DIR so that logs/ resolves there, for example:
+# orc.sh submit is the usual way to submit it. By hand, submit from $RERUN_DIR so that
+# logs/ resolves there, for example:
 #   cd ~/crabnet_rerun && sbatch --array=0-19 ~/matsci-opt-benchmarks/scripts/crabnet_hyperparameter/byu_rc/rerun.sbatch
-# Command-line flags override the lines below, e.g. --gpus=l40s:1, --time=24:00:00,
-# --qos=standby, --export=ALL,DESIGN=smoke.
+# Command-line flags override the lines below, e.g. --gpus=a100:1, --time=24:00:00,
+# --qos=test, --export=ALL,DESIGN=smoke.
+#
+# Preemptable by default (--qos=standby). A preempted task loses at most the run in
+# progress: Slurm requeues it (--requeue) if the preemption mode allows, and otherwise
+# the next orc.sh submit resubmits it. Either way it skips the runs already recorded.
 
 #SBATCH --job-name=crabnet-v2
 #SBATCH --time=12:00:00
@@ -11,6 +16,7 @@
 #SBATCH --ntasks=4
 #SBATCH --mem=16G
 #SBATCH --gpus=l40s:1
+#SBATCH --qos=standby
 #SBATCH --requeue
 #SBATCH --output=logs/%x_%A_%a.out
 
