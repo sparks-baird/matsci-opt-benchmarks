@@ -37,12 +37,13 @@ jobs:
     # session starts. See "Why the write grant cannot make the job trigger
     # itself" in
     # https://github.com/ME-EN-372/me-en-372-machine-design-private/blob/main/docs/claude-yml-model-fallback.md.
+    # @claude-orc goes to the claude-orc job below instead.
     if: |
       github.event.sender.type != 'Bot' &&
-      ((github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude'))))
+      ((github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude') && !contains(github.event.comment.body, '@claude-orc')) ||
+       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude') && !contains(github.event.comment.body, '@claude-orc')) ||
+       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude') && !contains(github.event.review.body, '@claude-orc')) ||
+       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')) && !contains(github.event.issue.body, '@claude-orc') && !contains(github.event.issue.title, '@claude-orc')))
     runs-on: ubuntu-latest
     # Allow long waits (e.g., Edison polling) without hitting a job-level limit.
     # This budget now covers both attempts, so a fallback after a long first
@@ -103,82 +104,12 @@ jobs:
       # Effort part: low | medium | high | xhigh | max.
       # The FULL tag is passed as the action's trigger phrase. That is required,
       # because the action only accepts whitespace or punctuation after the
-      # phrase, not "+".
+      # phrase, not "+". The claude-orc job shares the parser.
       - name: Parse model selector tag
         id: select
         env:
           TRIGGER_TEXT: ${{ github.event.comment.body || github.event.review.body || format('{0} {1}', github.event.issue.title, github.event.issue.body) }}
-        run: |
-          # First tag in the text wins
-          TAG=$(grep -oiE '@claude(\+[a-z0-9.-]*[a-z0-9])?(:(low|medium|high|xhigh|max))?' <<<"$TRIGGER_TEXT" | head -n1)
-          TAG=${TAG:-@claude}
-
-          tag_lc=$(tr '[:upper:]' '[:lower:]' <<<"$TAG")
-          rest=${tag_lc#@claude}
-          effort=""
-          if [[ "$rest" == *:* ]]; then
-            effort=${rest##*:}
-            rest=${rest%:*}
-          fi
-          model_part=${rest#+}
-
-          # "opus-4.8" becomes claude-opus-4-8; a bare "opus" stays "opus", which
-          # the CLI reads as an alias for the latest model of that family.
-          resolve_model() {
-            local p=${1,,}
-            if [[ -z "$p" ]]; then
-              printf ''
-            elif [[ "$p" != *[0-9]* ]]; then
-              printf '%s' "${p#claude-}"
-            else
-              local m=${p//./-}
-              [[ "$m" == claude-* ]] || m="claude-$m"
-              printf '%s' "$m"
-            fi
-          }
-
-          model=$(resolve_model "$model_part")
-          model=${model:-$PRIMARY_MODEL}
-          fallback=$(resolve_model "$FALLBACK_MODEL")
-
-          case "$effort" in
-            low|medium|high|xhigh|max) ;;
-            "") effort=$DEFAULT_EFFORT ;;
-            *) echo "Ignoring unknown effort level ':$effort'; using $DEFAULT_EFFORT"
-               effort=$DEFAULT_EFFORT ;;
-          esac
-
-          # "opus" and "claude-opus-5" name the same model, so compare with the
-          # "claude-" prefix stripped and treat a bare family name as matching
-          # any version of it.
-          a=${model#claude-}
-          b=${fallback#claude-}
-          if [[ -z "$fallback" ]]; then
-            echo "Fallback is off (FALLBACK_MODEL is empty)."
-          elif [[ "$a" == "$b" || "$a" == "$b"-* || "$b" == "$a"-* ]]; then
-            echo "Fallback $fallback is the same model as the primary ($model), so no retry will be attempted."
-            fallback=""
-          fi
-
-          # --fallback-model is the CLI's own in-session switch. It covers an
-          # overloaded or unavailable model, not an exhausted allowance, and it
-          # keeps the session going instead of restarting it, so it is worth
-          # having in addition to the job-level retry below.
-          primary_args="--model $model --effort $effort"
-          if [[ -n "$fallback" ]]; then
-            primary_args="$primary_args --fallback-model $fallback"
-          fi
-
-          echo "Tag: $TAG -> $primary_args"
-          if [[ -n "$fallback" ]]; then
-            echo "If the allowance for $model is spent, the job retries with $fallback."
-          fi
-
-          echo "phrase=$TAG" >> "$GITHUB_OUTPUT"
-          echo "model=$model" >> "$GITHUB_OUTPUT"
-          echo "effort=$effort" >> "$GITHUB_OUTPUT"
-          echo "fallback_model=$fallback" >> "$GITHUB_OUTPUT"
-          echo "primary_args=$primary_args" >> "$GITHUB_OUTPUT"
+        run: bash .github/scripts/claude_tag.sh
 
       - name: Run Claude Code
         id: claude
@@ -425,3 +356,93 @@ jobs:
             echo "Retry on ${{ steps.select.outputs.fallback_model }} also failed."
           fi
           exit 1
+
+  # @claude-orc: a Claude session with an open SSH connection to BYU's
+  # supercomputer (Office of Research Computing, ORC). Only sgbaird can start
+  # one, and the byu-rc environment holds each run until sgbaird approves it.
+  # The "Connect to ORC" step asks in the thread for a verification code and
+  # logs in with the environment's password. The session gets the open
+  # connection (ssh orc ...), never the password. There is no retry on a
+  # spent allowance here; ping again instead.
+  claude-orc:
+    if: |
+      github.event.sender.login == 'sgbaird' &&
+      ((github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude-orc')) ||
+       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude-orc')) ||
+       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude-orc')) ||
+       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude-orc') || contains(github.event.issue.title, '@claude-orc'))))
+    runs-on: ubuntu-latest
+    environment: byu-rc
+    # One ORC session at a time; a second ping waits for the first to finish.
+    concurrency:
+      group: claude-orc
+      cancel-in-progress: false
+    timeout-minutes: 180
+    permissions:
+      contents: read
+      # The connect step posts and edits its code request comment.
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BASH_DEFAULT_TIMEOUT_MS: "900000"
+      BASH_MAX_TIMEOUT_MS: "3600000"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Parse model selector tag
+        id: select
+        env:
+          TRIGGER_TEXT: ${{ github.event.comment.body || github.event.review.body || format('{0} {1}', github.event.issue.title, github.event.issue.body) }}
+        run: bash .github/scripts/claude_tag.sh
+
+      # The only step that sees the ORC password.
+      - name: Connect to ORC
+        env:
+          BYU_HPC_USERNAME: ${{ secrets.BYU_HPC_USERNAME }}
+          BYU_HPC_PASSWORD: ${{ secrets.BYU_HPC_PASSWORD }}
+          ISSUE_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
+          OPERATOR: ${{ github.event.sender.login }}
+        run: python3 .github/scripts/orc_connect.py
+
+      # The runner process still holds this job's secrets in memory. Without
+      # root, and with ptrace limited to root, nothing in the session can read
+      # that memory. Docker access amounts to root, so it goes as well.
+      - name: Drop root access
+        run: |
+          sudo sysctl -qw kernel.yama.ptrace_scope=2
+          sudo systemctl stop docker.socket docker.service
+          sudo find /etc/sudoers.d -type f -delete
+          if sudo -n true 2>/dev/null; then
+            echo "sudo still works"
+            exit 1
+          fi
+
+      # show_full_output and display_report stay off: the repo is public, and
+      # the session's output includes ORC paths, job ids and queue listings.
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          trigger_phrase: ${{ steps.select.outputs.phrase }}
+          # Needed alongside prompt: keeps tag mode, so the task still comes
+          # from the triggering comment and the prompt below is added to it.
+          track_progress: true
+          additional_permissions: |
+            actions: read
+          prompt: |
+            An SSH connection to BYU's supercomputer (ORC) is open for this job. Run commands there with `ssh orc 'bash -lc "<command>"'`. See "BYU supercomputer (ORC)" in CLAUDE.md before using it.
+          claude_args: |
+            ${{ steps.select.outputs.primary_args }}
+            --permission-mode bypassPermissions
+
+      - name: Close the ORC connection
+        if: always()
+        run: ssh -O exit orc 2>/dev/null || true

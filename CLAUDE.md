@@ -137,3 +137,14 @@ If using Edison Analysis, refer to https://docs.edisonscientific.com/edison-clie
 ## LaTeX
 
 Install MiKTeX instead of TeXLive to reduce download size and time. In the first installation of MiKTeX, download known required packages based on the LaTeX file itself, and install anything else ad-hoc as needed.
+
+## BYU supercomputer (ORC)
+
+A `@claude-orc` ping (job `claude-orc` in `.github/workflows/claude.yml`) starts a session with an open SSH connection to BYU's Office of Research Computing. The connection was opened before the session started, from a verification code the operator posted in the thread. The session has no ORC password, and none is needed.
+
+- Run commands as `ssh orc 'bash -lc "<command>"'`. The login shell (`-lc`) is what puts `sbatch`, `squeue` and `module` on the PATH.
+- Check the connection with `ssh -O check orc`. If it is gone, say so in the thread and stop; the operator pings `@claude-orc` again for a new one. Do not try to log in yourself, and do not ask for the password.
+- The CrabNet v2 rerun lives in `~/matsci-opt-benchmarks` (a git clone; `git -C ~/matsci-opt-benchmarks pull` to update it) with results in `~/crabnet_rerun`. Drive it with `bash ~/matsci-opt-benchmarks/scripts/crabnet_hyperparameter/byu_rc/orc.sh {setup|manifest|smoke|submit|status} <design>`; see the README next to it. `submit` also resubmits preempted tasks.
+- To bring results back, `scp orc:crabnet_rerun/<design>/results_v2.csv <path>` and commit them.
+- The repository is public and so is this run's log. Keep ORC output in the thread short (counts, job ids, summary tables) and leave out the ORC username and home directory paths.
+- Ask before anything that deletes files on ORC or cancels jobs you did not submit in this session.
