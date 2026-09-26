@@ -1,0 +1,169 @@
+{
+  "n_rows": 173219,
+  "n_unique_sets": 41550,
+  "n_nan_values": 0,
+  "hardware_values": [
+    "2080ti"
+  ],
+  "n_sessions": 4,
+  "rows_per_session": {
+    "201d73be-af0c-4c9c-9a77-f54a027c3bef": 136774,
+    "6bf8f274-0d4d-47c4-bc25-ce5e859a7066": 36429,
+    "5fd7e1c6-033a-4b10-b916-704e320305a7": 10,
+    "15ec2ebc-1b73-4df7-a670-fad9045355bc": 6
+  },
+  "repeats_per_set": {
+    "mean": 4.168929001203369,
+    "median": 4.0,
+    "min": 1,
+    "max": 5,
+    "histogram": {
+      "1": 130,
+      "2": 1294,
+      "3": 6647,
+      "4": 16835,
+      "5": 16644
+    }
+  },
+  "successful_runs_per_sobol_point": 2.6431121826171875,
+  "attempted_runs_assuming_5_repeats": 327680,
+  "fraction_attempted_completed": 0.5286224365234375,
+  "sobol_points_with_no_success": 23986,
+  "fraction_sobol_points_with_at_least_one_success": 0.634002685546875,
+  "constraints": {
+    "betas1_le_betas2_violations": 0,
+    "emb_plus_pos_le_1_violations": 0,
+    "max_emb_plus_pos": 0.9999826472776168
+  },
+  "train_frac_below_lower_bound_0.01": {
+    "n_rows": 16,
+    "values": [
+      0.003
+    ],
+    "sessions": [
+      "15ec2ebc-1b73-4df7-a670-fad9045355bc",
+      "5fd7e1c6-033a-4b10-b916-704e320305a7"
+    ]
+  },
+  "objectives": {
+    "mae": {
+      "min": 0.1687526649553957,
+      "p1": 0.24794579310141251,
+      "median": 0.4888827853354128,
+      "mean": 0.529881605420388,
+      "p99": 1.0084132182498353,
+      "max": 1.2139817508450157,
+      "log10_max_over_min": 0.8569615182957663,
+      "log10_p99_over_p1": 0.6092817857494869
+    },
+    "rmse": {
+      "min": 0.4398172745403605,
+      "p1": 0.6226256048415921,
+      "median": 0.973473318305674,
+      "mean": 1.0024782616614243,
+      "p99": 1.4735495287220497,
+      "max": 1.7027129046257758,
+      "log10_max_over_min": 0.5878691445166064,
+      "log10_p99_over_p1": 0.3741377612407677
+    },
+    "runtime": {
+      "min": 2.836301565170288,
+      "p1": 7.005009202957154,
+      "median": 118.5593967437744,
+      "mean": 193.03117232056388,
+      "p99": 1136.8216068697006,
+      "max": 33900.41595554352,
+      "log10_max_over_min": 4.077452622372877,
+      "log10_p99_over_p1": 2.210283609181824,
+      "n_runs_above_3600_s": 31
+    },
+    "model_size": {
+      "min": 1957841.0,
+      "p1": 3016590.0,
+      "median": 22805034.0,
+      "mean": 29452305.67488555,
+      "p99": 97813086.0,
+      "max": 123707448.0,
+      "log10_max_over_min": 1.8006184287770381,
+      "log10_p99_over_p1": 1.510880674073617
+    }
+  },
+  "units": {
+    "mae_rmse": "eV (matbench_expt_gap experimental band gap, 5-fold mean)",
+    "runtime": "seconds of wall-clock time per run on one RTX 2080 Ti, time() - t0",
+    "model_size": "number of trainable parameters, crabnet count_parameters()"
+  },
+  "original_figure_comparison": {
+    "runtime_counts_1000s_centered_bins": [
+      159968,
+      12479,
+      694,
+      47,
+      6,
+      8,
+      1,
+      5,
+      0,
+      3,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1
+    ],
+    "model_size_tallest_bar_bin_0.5M": 3088,
+    "mae_tallest_bar_bin_0.005": 2609,
+    "rmse_tallest_bar_bin_0.005": 2006
+  },
+  "runs_per_set_by_session": {
+    "15ec2ebc-1b73-4df7-a670-fad9045355bc": {
+      "0": 41547,
+      "1": 1,
+      "2": 1,
+      "3": 1
+    },
+    "201d73be-af0c-4c9c-9a77-f54a027c3bef": {
+      "0": 40,
+      "1": 741,
+      "2": 5195,
+      "3": 16653,
+      "4": 18921
+    },
+    "5fd7e1c6-033a-4b10-b916-704e320305a7": {
+      "0": 41543,
+      "1": 4,
+      "2": 3
+    },
+    "6bf8f274-0d4d-47c4-bc25-ce5e859a7066": {
+      "0": 5121,
+      "1": 36429
+    }
+  },
+  "notes": {
+    "filtering": "Notebook 1.0 pulls only MongoDB documents that contain 'hardware' and 'scores', i.e. runs that finished. Runs that raised an exception were stored with an 'error' field and no 'scores', so they are absent. Runs lost to SLURM walltime or preemption never wrote a document. No NaNs, no threshold on MAE, RMSE, runtime or model size, and no explicit 'bad hyperparameter' filter was found in notebooks 1.0 to 1.2 or in the submission script. NaN predictions were replaced by 0 before scoring (np.nan_to_num), so diverged models appear as high-MAE runs.",
+    "repeats": "Session 6bf8f274 has at most one run per set and session 201d73be at most four (2 sample seeds x num_repeats=2 in crabnet_hyperparameter_submitit.py), giving 5 intended runs per point. 173,219 / 65,536 = 2.64 is successful runs per attempted Sobol point, which is the 'approximately 2.6 repeats' of the submitted text; the mean among sets with at least one success is 4.17.",
+    "debug_rows": "16 rows from two short test sessions (15ec2ebc, 5fd7e1c6) use train_frac = 0.003 (dummy setting), below the 0.01 lower bound. They are included in the CSV and in all figures.",
+    "original_figures": "The submitted plotly histograms (image1 to image5) match this CSV: repeat counts 130, 1294, 6647, 16835, 16644; runtime bars with 1000 s bins give 159968, 12479, 694, 47, ...; tallest MAE, RMSE and model size bars (about 2600, 2000, 3100) and x-ranges agree.",
+    "units": "model_size is a parameter count, so the 'model size [MB]' axis label in plot_pareto_fronts.py is wrong."
+  }
+}
