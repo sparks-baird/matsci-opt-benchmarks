@@ -1,0 +1,4 @@
+# Pull requests that change workflows, or anything else under .github/, need
+# @sgbaird's approval before they can merge (the "main" ruleset requires
+# code owner review).
+/.github/ @sgbaird
