@@ -9,7 +9,7 @@ scores. This script reruns rows of the v1 CSV with it, one Slurm array task at a
 
     python rerun.py manifest --design decision   # once, on a login node
     sbatch --array=0-<last task> rerun.sbatch    # the manifest step prints the range
-    python rerun.py collect                      # any time; merges and compares with v1
+    python rerun.py collect --design decision    # any time; merges and compares with v1
 
 Designs, using v1 rows with train_frac >= 0.01 (the 16 rows from two test sessions,
 with train_frac = 0.003, are left out):
@@ -24,10 +24,12 @@ with train_frac = 0.003, are left out):
 Runs are assigned to array tasks, longest first, so that each task holds about --hours
 of v1 (RTX 2080 Ti) runtime. Each finished run is appended to results/task_<id>.jsonl,
 and a task skips runs already there, so a preempted, requeued or resubmitted task
-continues where it stopped. Failed runs are recorded with their error message.
+continues where it stopped. Failed runs are recorded with their error message and are
+not retried. collect lists the tasks that still have runs to do.
 
-Paths come from the RERUN_DIR environment variable (default ~/compute/crabnet_rerun),
-which must hold sobol_regression.csv from the Zenodo record (setup_env.sh downloads it).
+Files live in RERUN_DIR (default ~/crabnet_rerun), which must hold sobol_regression.csv
+from the Zenodo record (setup_env.sh downloads it). Each design gets its own
+subdirectory with manifest.csv, results/ and results_v2.csv.
 """
 
 import argparse
@@ -49,9 +51,9 @@ parser.add_argument("--hours", type=float, default=4.0, help="v1 runtime per tas
 parser.add_argument("--seed", type=int, default=0)
 args = parser.parse_args()
 
-rerun_dir = Path(os.environ.get("RERUN_DIR", Path.home() / "compute" / "crabnet_rerun"))
-manifest_path = rerun_dir / "manifest.csv"
-results_dir = rerun_dir / "results"
+rerun_dir = Path(os.environ.get("RERUN_DIR", Path.home() / "crabnet_rerun"))
+manifest_path = rerun_dir / args.design / "manifest.csv"
+results_dir = rerun_dir / args.design / "results"
 hp = [
     "N", "alpha", "d_model", "dim_feedforward", "dropout", "emb_scaler", "eps",
     "epochs_step", "fudge", "heads", "k", "lr", "pe_resolution", "ple_resolution",
@@ -60,6 +62,7 @@ hp = [
 ]  # fmt: skip
 
 if args.mode == "manifest":
+    assert not any(results_dir.glob("*.jsonl")), f"{results_dir} has results; move them first"
     v1 = pd.read_csv(rerun_dir / "sobol_regression.csv")
     v1 = v1[v1["train_frac"] >= 0.01].reset_index(names="v1_row")
     v1["set_id"] = v1.groupby(hp, sort=False).ngroup()
@@ -98,13 +101,15 @@ if args.mode == "manifest":
         task[i] = load.argmin()
         load[task[i]] += seconds[i]
     runs["task"] = task
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
     runs.to_csv(manifest_path, index=False)
     print(
         f"{args.design}: {len(runs)} runs of {runs['set_id'].nunique()} sets, "
         f"{seconds.sum() / 86400:.1f} GPU-days at 2080 Ti speed, {len(load)} tasks "
         f"(v1 hours per task: median {np.median(load) / 3600:.1f}, "
         f"max {load.max() / 3600:.1f})\n"
-        f"submit with: sbatch --array=0-{len(load) - 1} rerun.sbatch"
+        f"submit from {rerun_dir} with: sbatch --array=0-{len(load) - 1} "
+        f"--export=ALL,DESIGN={args.design} <path to rerun.sbatch>"
     )
 
 if args.mode == "run":
@@ -152,7 +157,10 @@ if args.mode == "collect":
         for path in sorted(results_dir.glob("task_*.jsonl"))
         for line in path.open()
     ]
+    if not records:
+        raise SystemExit(f"no results in {results_dir} yet")
     res = pd.json_normalize(records).drop_duplicates("run_id", keep="last")
+    todo = sorted(runs.loc[~runs["run_id"].isin(res["run_id"]), "task"].unique())
     failed = res["error"].notna() if "error" in res else pd.Series(False, res.index)
     res = res[~failed].rename(
         columns={"scores.mae.mean": "mae", "scores.rmse.mean": "rmse"}
@@ -162,11 +170,13 @@ if args.mode == "collect":
         res[["run_id", "mae", "rmse", "model_size", "runtime", "gpu", *fold_cols]],
         on="run_id",
     )
-    table.to_csv(rerun_dir / "results_v2.csv", index=False)
+    table.to_csv(manifest_path.parent / "results_v2.csv", index=False)
     print(
         f"{len(table)} of {len(runs)} runs done, {failed.sum()} failed, "
         f"{len(runs) - len(table) - failed.sum()} to go"
     )
+    if todo:
+        print(f"tasks with runs to do: --array={','.join(map(str, todo))}")
     if len(table):
         folds = [table[f"fold_scores.fold_{i}.mae"].median() for i in range(5)]
         print("median MAE by fold (no downward trend expected):", np.round(folds, 3))
