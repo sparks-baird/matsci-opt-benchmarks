@@ -65,8 +65,9 @@ submit)
         echo "no manifest for $DESIGN yet; run: bash orc.sh manifest $DESIGN"
         exit 0
     fi
-    # array task ids of this design that are pending, running or requeued
-    queued="$(squeue --me -h -r -n "$JOB" -o %K | grep -E '^[0-9]+$' | paste -sd, -)"
+    # array task ids of this design that are pending, running or requeued (awk rather
+    # than grep, which exits 1 when nothing is queued and so stops the script)
+    queued="$(squeue --me -h -r -n "$JOB" -o %K | awk '/^[0-9]+$/' | paste -sd, -)"
     array="$(rerun todo --exclude "$queued")"
     if [ -z "$array" ]; then
         echo "$DESIGN: nothing to submit (queued: ${queued:-none})"
