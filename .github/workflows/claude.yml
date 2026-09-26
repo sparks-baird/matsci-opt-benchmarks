@@ -37,12 +37,13 @@ jobs:
     # session starts. See "Why the write grant cannot make the job trigger
     # itself" in
     # https://github.com/ME-EN-372/me-en-372-machine-design-private/blob/main/docs/claude-yml-model-fallback.md.
+    # @claude-orc goes to the claude-orc job below instead.
     if: |
       github.event.sender.type != 'Bot' &&
-      ((github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude'))))
+      ((github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude') && !contains(github.event.comment.body, '@claude-orc')) ||
+       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude') && !contains(github.event.comment.body, '@claude-orc')) ||
+       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude') && !contains(github.event.review.body, '@claude-orc')) ||
+       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')) && !contains(github.event.issue.body, '@claude-orc') && !contains(github.event.issue.title, '@claude-orc')))
     runs-on: ubuntu-latest
     # Allow long waits (e.g., Edison polling) without hitting a job-level limit.
     # This budget now covers both attempts, so a fallback after a long first
@@ -95,147 +96,6 @@ jobs:
           tags: tag:rpi-5-8qj7
 
 
-      # Did the first attempt die because its allowance was spent, or for some
-      # ordinary reason? A failed run still writes its execution JSON and still
-      # sets the execution_file output, and the answer is in the run's own error
-      # records: an "api_error" result carrying HTTP 429, and a rate_limit_event
-      # whose status is "rejected".
-      #
-      # Only those error records are searched, never the transcript, so a
-      # comment that happens to discuss usage limits cannot trigger a retry.
-      - name: Check whether the model ran out of credits
-        id: billing
-        if: ${{ !cancelled() && steps.claude.outcome == 'failure' }}
-        env:
-          EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
-          FALLBACK_MODEL_RESOLVED: ${{ steps.select.outputs.fallback_model }}
-        run: |
-          python3 - <<'PY'
-          import json, os, re
-
-          path = os.environ.get("EXECUTION_FILE", "")
-          fallback = os.environ.get("FALLBACK_MODEL_RESOLVED", "")
-          retry_any = os.environ.get("RETRY_ON_ANY_FAILURE", "false").lower() == "true"
-
-          # The CLI's own wording for a spent allowance, plus the API's
-          # credit-balance wording.
-          BILLING = re.compile(
-              r"out of (usage |extra )?credits|out of extra usage"
-              r"|credit balance (is )?too low|(reached|hit) your .{0,40}limit"
-              r"|usage limit reached|requires usage credits|out of usage"
-              r"|seat type doesn.t include usage|usage allocation has been disabled"
-              r"|monthly spend limit",
-              re.I,
-          )
-
-          messages = []
-          if path and os.path.isfile(path):
-              try:
-                  messages = json.load(open(path))
-              except Exception as exc:
-                  print(f"Could not parse {path}: {exc}")
-          else:
-              print(f"No execution file to inspect (execution_file={path!r})")
-
-          billing = False
-          reason = "the failure does not look like a spent allowance"
-
-          for m in messages:
-              if m.get("type") == "rate_limit_event":
-                  info = m.get("rate_limit_info") or {}
-                  if info.get("status") == "rejected":
-                      billing = True
-                      reason = (
-                          f"rate_limit_event rejected: {info.get('rateLimitType')}"
-                          f" (overage {info.get('overageStatus')}"
-                          f"/{info.get('overageDisabledReason')})"
-                      )
-
-          results = [m for m in messages if m.get("type") == "result"]
-          if results and results[-1].get("is_error"):
-              last = results[-1]
-              text = " ".join(str(last.get(k, "")) for k in ("result", "errors"))
-              status = last.get("api_error_status")
-              if status in (402, 429) or BILLING.search(text):
-                  billing = True
-                  reason = f"HTTP {status}: {last.get('result') or last.get('errors')}"
-
-          if not messages:
-              reason = "no execution file, so the cause is unknown"
-
-          retry = bool(fallback) and (billing or retry_any)
-          if not fallback:
-              reason += "; no fallback model is configured"
-          elif retry_any and not billing:
-              reason += "; retrying anyway because RETRY_ON_ANY_FAILURE is true"
-
-          reason = re.sub(r"\s+", " ", reason).strip()[:300]
-          print(f"Allowance spent: {billing}")
-          print(f"Retry with {fallback or '(none)'}: {retry}")
-          print(f"Reason: {reason}")
-
-          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
-              fh.write(f"retry={'true' if retry else 'false'}\n")
-              fh.write(f"reason={reason}\n")
-          PY
-
-
-      # Second attempt, on the fallback model. This is a fresh session: it posts
-      # its own tracking comment and starts the task from the beginning, so the
-      # note below tells it to look at what the first attempt already did.
-      - name: Run Claude Code on the fallback model
-        id: fallback
-        if: ${{ !cancelled() && steps.billing.outputs.retry == 'true' }}
-        uses: anthropics/claude-code-action@v1
-        with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          trigger_phrase: ${{ steps.select.outputs.phrase }}
-          # Without this line, the prompt below switches the action into
-          # automation ("agent") mode: no tracking comment, no thread context,
-          # and the note below becomes the entire task. track_progress forces
-          # tag mode, which posts the tracking comment, reads the task from
-          # the comment that triggered the run, and delivers the note below
-          # as <custom_instructions>.
-          track_progress: true
-          # comment out for less risk
-          show_full_output: true
-          # comment out for less risk
-          display_report: true
-          additional_permissions: |
-            actions: read
-          # In tag mode this input is appended to the normal prompt inside a
-          # <custom_instructions> block, so the task still comes from the
-          # comment that triggered the run.
-          prompt: |
-            An earlier attempt at this same task ran on ${{ steps.select.outputs.model }} and stopped when that model's allowance ran out. You are the retry, running on ${{ steps.select.outputs.fallback_model }}. Before you start, check this thread and this branch for anything that attempt already committed or posted, and carry on from there rather than redoing it. Its progress comment is the one above yours that reports an error.
-          claude_args: |
-            --model ${{ steps.select.outputs.fallback_model }}
-            --effort ${{ steps.select.outputs.effort }}
-            --permission-mode bypassPermissions
-
-
-      - name: Upload fallback execution log
-        if: always() && steps.fallback.outputs.execution_file != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: claude-execution-log-fallback
-          path: ${{ steps.fallback.outputs.execution_file }}
-
-
-      # continue-on-error above hides the first attempt's failure from the job
-      # status, so put it back when nothing succeeded.
-      - name: Fail if no attempt succeeded
-        if: ${{ !cancelled() && steps.claude.outcome == 'failure' && steps.fallback.outcome != 'success' }}
-        env:
-          REASON: ${{ steps.billing.outputs.reason }}
-          RETRIED: ${{ steps.billing.outputs.retry }}
-        run: |
-          echo "First attempt (${{ steps.select.outputs.model }}) failed: $REASON"
-          if [[ "$RETRIED" == "true" ]]; then
-            echo "Retry on ${{ steps.select.outputs.fallback_model }} also failed."
-          fi
-          exit 1
-
       # Copilot-style model selector: @claude+<model>[:<effort>]
       # Examples: @claude, @claude+opus-5, @claude+opus-4.8:max, @claude:high
       # Model part: lowercased, dots to dashes, "claude-" prefixed if missing,
@@ -244,82 +104,12 @@ jobs:
       # Effort part: low | medium | high | xhigh | max.
       # The FULL tag is passed as the action's trigger phrase. That is required,
       # because the action only accepts whitespace or punctuation after the
-      # phrase, not "+".
+      # phrase, not "+". The claude-orc job shares the parser.
       - name: Parse model selector tag
         id: select
         env:
           TRIGGER_TEXT: ${{ github.event.comment.body || github.event.review.body || format('{0} {1}', github.event.issue.title, github.event.issue.body) }}
-        run: |
-          # First tag in the text wins
-          TAG=$(grep -oiE '@claude(\+[a-z0-9.-]*[a-z0-9])?(:(low|medium|high|xhigh|max))?' <<<"$TRIGGER_TEXT" | head -n1)
-          TAG=${TAG:-@claude}
-
-          tag_lc=$(tr '[:upper:]' '[:lower:]' <<<"$TAG")
-          rest=${tag_lc#@claude}
-          effort=""
-          if [[ "$rest" == *:* ]]; then
-            effort=${rest##*:}
-            rest=${rest%:*}
-          fi
-          model_part=${rest#+}
-
-          # "opus-4.8" becomes claude-opus-4-8; a bare "opus" stays "opus", which
-          # the CLI reads as an alias for the latest model of that family.
-          resolve_model() {
-            local p=${1,,}
-            if [[ -z "$p" ]]; then
-              printf ''
-            elif [[ "$p" != *[0-9]* ]]; then
-              printf '%s' "${p#claude-}"
-            else
-              local m=${p//./-}
-              [[ "$m" == claude-* ]] || m="claude-$m"
-              printf '%s' "$m"
-            fi
-          }
-
-          model=$(resolve_model "$model_part")
-          model=${model:-$PRIMARY_MODEL}
-          fallback=$(resolve_model "$FALLBACK_MODEL")
-
-          case "$effort" in
-            low|medium|high|xhigh|max) ;;
-            "") effort=$DEFAULT_EFFORT ;;
-            *) echo "Ignoring unknown effort level ':$effort'; using $DEFAULT_EFFORT"
-               effort=$DEFAULT_EFFORT ;;
-          esac
-
-          # "opus" and "claude-opus-5" name the same model, so compare with the
-          # "claude-" prefix stripped and treat a bare family name as matching
-          # any version of it.
-          a=${model#claude-}
-          b=${fallback#claude-}
-          if [[ -z "$fallback" ]]; then
-            echo "Fallback is off (FALLBACK_MODEL is empty)."
-          elif [[ "$a" == "$b" || "$a" == "$b"-* || "$b" == "$a"-* ]]; then
-            echo "Fallback $fallback is the same model as the primary ($model), so no retry will be attempted."
-            fallback=""
-          fi
-
-          # --fallback-model is the CLI's own in-session switch. It covers an
-          # overloaded or unavailable model, not an exhausted allowance, and it
-          # keeps the session going instead of restarting it, so it is worth
-          # having in addition to the job-level retry below.
-          primary_args="--model $model --effort $effort"
-          if [[ -n "$fallback" ]]; then
-            primary_args="$primary_args --fallback-model $fallback"
-          fi
-
-          echo "Tag: $TAG -> $primary_args"
-          if [[ -n "$fallback" ]]; then
-            echo "If the allowance for $model is spent, the job retries with $fallback."
-          fi
-
-          echo "phrase=$TAG" >> "$GITHUB_OUTPUT"
-          echo "model=$model" >> "$GITHUB_OUTPUT"
-          echo "effort=$effort" >> "$GITHUB_OUTPUT"
-          echo "fallback_model=$fallback" >> "$GITHUB_OUTPUT"
-          echo "primary_args=$primary_args" >> "$GITHUB_OUTPUT"
+        run: bash .github/scripts/claude_tag.sh
 
       - name: Run Claude Code
         id: claude
@@ -566,3 +356,93 @@ jobs:
             echo "Retry on ${{ steps.select.outputs.fallback_model }} also failed."
           fi
           exit 1
+
+  # @claude-orc: a Claude session with an open SSH connection to BYU's
+  # supercomputer (Office of Research Computing, ORC). Only sgbaird can start
+  # one, and the byu-rc environment holds each run until sgbaird approves it.
+  # The "Connect to ORC" step asks in the thread for a verification code and
+  # logs in with the environment's password. The session gets the open
+  # connection (ssh orc ...), never the password. There is no retry on a
+  # spent allowance here; ping again instead.
+  claude-orc:
+    if: |
+      github.event.sender.login == 'sgbaird' &&
+      ((github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude-orc')) ||
+       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude-orc')) ||
+       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude-orc')) ||
+       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude-orc') || contains(github.event.issue.title, '@claude-orc'))))
+    runs-on: ubuntu-latest
+    environment: byu-rc
+    # One ORC session at a time; a second ping waits for the first to finish.
+    concurrency:
+      group: claude-orc
+      cancel-in-progress: false
+    timeout-minutes: 180
+    permissions:
+      contents: read
+      # The connect step posts and edits its code request comment.
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BASH_DEFAULT_TIMEOUT_MS: "900000"
+      BASH_MAX_TIMEOUT_MS: "3600000"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Parse model selector tag
+        id: select
+        env:
+          TRIGGER_TEXT: ${{ github.event.comment.body || github.event.review.body || format('{0} {1}', github.event.issue.title, github.event.issue.body) }}
+        run: bash .github/scripts/claude_tag.sh
+
+      # The only step that sees the ORC password.
+      - name: Connect to ORC
+        env:
+          BYU_HPC_USERNAME: ${{ secrets.BYU_HPC_USERNAME }}
+          BYU_HPC_PASSWORD: ${{ secrets.BYU_HPC_PASSWORD }}
+          ISSUE_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
+          OPERATOR: ${{ github.event.sender.login }}
+        run: python3 .github/scripts/orc_connect.py
+
+      # The runner process still holds this job's secrets in memory. Without
+      # root, and with ptrace limited to root, nothing in the session can read
+      # that memory. Docker access amounts to root, so it goes as well.
+      - name: Drop root access
+        run: |
+          sudo sysctl -qw kernel.yama.ptrace_scope=2
+          sudo systemctl stop docker.socket docker.service
+          sudo find /etc/sudoers.d -type f -delete
+          if sudo -n true 2>/dev/null; then
+            echo "sudo still works"
+            exit 1
+          fi
+
+      # show_full_output and display_report stay off: the repo is public, and
+      # the session's output includes ORC paths, job ids and queue listings.
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          trigger_phrase: ${{ steps.select.outputs.phrase }}
+          # Needed alongside prompt: keeps tag mode, so the task still comes
+          # from the triggering comment and the prompt below is added to it.
+          track_progress: true
+          additional_permissions: |
+            actions: read
+          prompt: |
+            An SSH connection to BYU's supercomputer (ORC) is open for this job. Run commands there with `ssh orc 'bash -lc "<command>"'`. See "BYU supercomputer (ORC)" in CLAUDE.md before using it.
+          claude_args: |
+            ${{ steps.select.outputs.primary_args }}
+            --permission-mode bypassPermissions
+
+      - name: Close the ORC connection
+        if: always()
+        run: ssh -O exit orc 2>/dev/null || true
