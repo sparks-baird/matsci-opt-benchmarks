@@ -43,6 +43,6 @@ mkdir -p "$WORKDIR"
 trap 'rm -rf "$WORKDIR"' EXIT TERM
 cd "$WORKDIR"
 
-echo "task $SLURM_ARRAY_TASK_ID of job $SLURM_ARRAY_JOB_ID on $(hostname), design $DESIGN"
+echo "array task $SLURM_ARRAY_TASK_ID (offset ${TASK_OFFSET:-0}) of job $SLURM_ARRAY_JOB_ID on $(hostname), design $DESIGN"
 nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader
 python "$REPO/scripts/crabnet_hyperparameter/byu_rc/rerun.py" run --design "$DESIGN"

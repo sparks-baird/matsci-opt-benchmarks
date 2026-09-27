@@ -5,7 +5,7 @@ The v1 Sobol dataset ([Zenodo 10.5281/zenodo.7694268](https://doi.org/10.5281/ze
 | File | What it does |
 |---|---|
 | `setup_env.sh` | One-time setup on a login node: conda environment, v1 CSV, Matbench dataset |
-| `rerun.py manifest` | Picks the runs for a design and splits them into array tasks of about 4 h of v1 (RTX 2080 Ti) runtime |
+| `rerun.py manifest` | Picks the runs for a design and splits them into array tasks of about `--hours` (default 4) of v1 (RTX 2080 Ti) runtime |
 | `rerun.sbatch` | One array task: runs its share of the manifest, appending each result to `results/task_<id>.jsonl`. Preemptable (`--qos=standby`) by default |
 | `rerun.py collect` | Merges the results, compares them with v1 and lists unfinished tasks |
 | `orc.sh` | Login-node entry point: `setup`, `manifest`, `smoke`, `submit` (also resubmits preempted tasks) and `status` |
@@ -89,8 +89,14 @@ bash $ORC status decision        # any time: queue, GPU type names, collect
 
 ## 5. Full rerun
 
-- `--design full` makes 2,322 tasks, under the limit of 5,000 tasks per job array ([slurm-auto-array](https://rc.byu.edu/wiki/?id=slurm-auto-array)). Throttle how many run at once with `%`, e.g. `--array=0-2321%40` ([Slurm](https://rc.byu.edu/wiki/?id=Slurm)).
-- Each task holds about 4 h of v1 runtime, more than the 30 minutes the docs ask as a minimum ([lots of very short jobs](https://rc.byu.edu/wiki/?id=What%27s+the+best+way+to+submit+lots+of+very+short+jobs%3F)). The default `--time=12:00:00` leaves room for slower GPUs and is under the 3-day limit of the L40S, P100 and most preemption-only nodes ([Compute Resources](https://rc.byu.edu/documentation/resources)). Change `--hours` in the manifest step to resize tasks.
+```bash
+bash $ORC manifest full --hours 0.9                           # 9,904 tasks
+QOS=standby GPUS=a100:1 TIME=02:00:00 bash $ORC submit full
+```
+
+- `--hours` sets the v1 runtime per task. In the dummy run, an A100 took about 0.8 times as long as v1's 2080 Ti (the L40S about 0.45 times), so `--hours 0.9` gives tasks of about 45 min on an A100. That is more than the 30 minutes the docs ask as a minimum ([lots of very short jobs](https://rc.byu.edu/wiki/?id=What%27s+the+best+way+to+submit+lots+of+very+short+jobs%3F)). The default, 4 h, gives 2,322 tasks.
+- Array task ids only go up to 5000 (`MaxArraySize`; [slurm-auto-array](https://rc.byu.edu/wiki/?id=slurm-auto-array)), so `orc.sh submit` splits the tasks into arrays of 5,000 named `crabnet-v2-<design>-<offset>`, and the job adds the offset (`TASK_OFFSET`) to its array task id. `THROTTLE=40` limits each array to 40 running tasks ([Slurm](https://rc.byu.edu/wiki/?id=Slurm)).
+- No v1 set has a median runtime over 45 min, so `TIME=02:00:00` leaves room for slow nodes. A task that hits the limit loses only the run in progress, and the next `submit` sends it again. The default, 12 h, suits the 4 h tasks and is under the 3-day limit of the L40S, P100 and most preemption-only nodes ([Compute Resources](https://rc.byu.edu/documentation/resources)).
 - **Preemptable GPUs (the default).** `--qos=standby` gives access to the privately owned A100s and lifts per-user job limits, but the job can be killed at any time ([Slurm](https://rc.byu.edu/wiki/?id=Slurm#preemption)). `rerun.sbatch` sets `--requeue`, which the docs reserve for jobs "specifically designed to bear automatic restarts". This one is: a restarted task skips the runs already in its results file. The warning time before a kill is not documented, so at most the run in progress is lost. The docs do not say whether preemption requeues or cancels a job, so `orc.sh submit` covers the second case (step 6). Pass `QOS=normal` for a non-preemptable job, or `QOS=test` for the smoke test.
 - **GPU type under standby.** `GPUS=l40s:1` is the default because it is the only documented type name. For the A100s, run `bash orc.sh status` to list the type names and pass for example `GPUS=a100:1`. If a task lands on a GPU that v1's torch cannot use (H100, H200, B200), or on no GPU, `rerun.py run` stops before recording anything, and the next `submit` sends the task again.
 - The scheduler picks the partition; do not set one ([Why won't my job submit?](https://rc.byu.edu/wiki/index.php?page=Why+won%27t+my+job+submit%3F)). `--time` and `--mem` are required, and `rerun.sbatch` sets both.

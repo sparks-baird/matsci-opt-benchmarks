@@ -46,9 +46,10 @@ rerun() {  # the conda environment is only needed here, so status works before s
 }
 JOB="crabnet-v2-$DESIGN"
 
-submit() {  # submit the tasks in $1 with any extra sbatch flags
-    sbatch --job-name="$JOB" --array="$1" --qos="$QOS" --gpus="$GPUS" --time="$TIME" \
-        --export=ALL,DESIGN="$DESIGN" "${@:2}" "$HERE/rerun.sbatch"
+submit() {  # submit array tasks $1 (task ids minus TASK_OFFSET) with any extra sbatch flags
+    local offset="${TASK_OFFSET:-0}"
+    sbatch --job-name="$JOB-$offset" --array="$1" --qos="$QOS" --gpus="$GPUS" --time="$TIME" \
+        --export=ALL,DESIGN="$DESIGN",TASK_OFFSET="$offset" "${@:2}" "$HERE/rerun.sbatch"
 }
 
 case "$ACTION" in
@@ -65,16 +66,20 @@ submit)
         echo "no manifest for $DESIGN yet; run: bash orc.sh manifest $DESIGN"
         exit 0
     fi
-    # array task ids of this design that are pending, running or requeued (awk rather
-    # than grep, which exits 1 when nothing is queued and so stops the script)
-    queued="$(squeue --me -h -r -n "$JOB" -o %K | awk '/^[0-9]+$/' | paste -sd, -)"
-    array="$(rerun todo --exclude "$queued")"
-    if [ -z "$array" ]; then
-        echo "$DESIGN: nothing to submit (queued: ${queued:-none})"
-    else
-        echo "$DESIGN: submitting tasks $array"
-        submit "$array${THROTTLE:+%$THROTTLE}"
-    fi
+    # task ids of this design that are pending, running or requeued: the array task id
+    # plus the offset that ends the job name (awk rather than grep, which exits 1 when
+    # nothing is queued and so stops the script)
+    queued="$(squeue --me -h -r -o "%j %K" | awk -v p="$JOB-" \
+        'index($1, p) == 1 && $2 ~ /^[0-9]+$/ {print substr($1, length(p) + 1) + $2}' |
+        paste -sd, -)"
+    # one array per 5,000 tasks (the array task id limit), each with its own offset
+    todo="$(rerun todo --exclude "$queued")"
+    [ -n "$todo" ] || echo "$DESIGN: nothing to submit ($(awk -F, '{print NF}' <<< "$queued") tasks queued)"
+    while read -r offset array; do
+        [ -n "$array" ] || continue
+        echo "$DESIGN: submitting tasks $offset + ($array)"
+        TASK_OFFSET="$offset" submit "$array${THROTTLE:+%$THROTTLE}"
+    done <<< "$todo"
     ;;
 status)
     squeue --me -o "%.18i %.20j %.8T %.10M %.12l %.10q %R"

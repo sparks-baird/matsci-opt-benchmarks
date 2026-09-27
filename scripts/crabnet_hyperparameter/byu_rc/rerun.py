@@ -10,7 +10,7 @@ scores. This script reruns rows of the v1 CSV with it, one Slurm array task at a
     python rerun.py manifest --design decision   # once, on a login node
     sbatch --array=0-<last task> rerun.sbatch    # the manifest step prints the range
     python rerun.py collect --design decision    # any time; merges and compares with v1
-    python rerun.py todo --design decision       # --array list of tasks with runs to do
+    python rerun.py todo --design decision       # offset and --array list of tasks to do
 
 Designs, using v1 rows with train_frac >= 0.01 (the 16 rows from two test sessions,
 with train_frac = 0.003, are left out):
@@ -158,8 +158,7 @@ if args.mode == "manifest" and args.design != "dummy":
         f"{seconds.sum() / 86400:.1f} GPU-days at 2080 Ti speed, {len(load)} tasks "
         f"(v1 hours per task: median {np.median(load) / 3600:.1f}, "
         f"max {load.max() / 3600:.1f})\n"
-        f"submit from {rerun_dir} with: sbatch --array=0-{len(load) - 1} "
-        f"--export=ALL,DESIGN={args.design} <path to rerun.sbatch>"
+        f"submit with: bash orc.sh submit {args.design}"
     )
 
 if args.mode == "manifest" and args.design == "dummy":
@@ -243,7 +242,7 @@ if args.mode == "run":
         submitit_evaluate,
     )
 
-    task_id = int(os.environ["SLURM_ARRAY_TASK_ID"])
+    task_id = int(os.environ["SLURM_ARRAY_TASK_ID"]) + int(os.environ.get("TASK_OFFSET", 0))
     runs = pd.read_csv(manifest_path)
     runs = runs[runs["task"] == task_id]
     results_dir.mkdir(exist_ok=True)
@@ -312,7 +311,7 @@ if args.mode == "collect":
         f"{len(runs) - len(table) - failed.sum()} to go"
     )
     if todo:
-        print(f"tasks with runs to do: --array={array_spec(todo)}")
+        print(f"{len(todo)} tasks with runs to do: {array_spec(todo)}")
     if len(table):
         folds = [table[f"fold_scores.fold_{i}.mae"].median() for i in range(5)]
         print("median MAE by fold (no downward trend expected):", np.round(folds, 3))
@@ -344,6 +343,11 @@ if args.mode == "collect":
         print("median runtime ratio v2 / v1 (2080 Ti) by GPU:", ratio.round(2).to_dict())
 
 if args.mode == "todo":
+    # one line per job array, "<offset> <--array list>": array task ids only go up to
+    # 5000 (MaxArraySize on ORC), so each array covers 5,000 tasks and rerun.sbatch
+    # adds TASK_OFFSET to the array task id
     exclude = {int(t) for t in args.exclude.replace(" ", ",").split(",") if t.strip()}
     todo = todo_tasks(pd.read_csv(manifest_path), read_results())
-    print(array_spec(t for t in todo if t not in exclude))
+    todo = [t for t in todo if t not in exclude]
+    for offset in sorted({t // 5000 * 5000 for t in todo}):
+        print(offset, array_spec(t - offset for t in todo if offset <= t < offset + 5000))
