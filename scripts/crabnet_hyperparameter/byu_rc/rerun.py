@@ -68,6 +68,7 @@ parser.add_argument("--repeats", type=int, default=2, help="dummy: runs per poin
 parser.add_argument("--runs-per-task", type=int, default=20, help="dummy")
 parser.add_argument("--seed", type=int, default=0)
 parser.add_argument("--exclude", default="", help="todo: task ids to leave out, e.g. 3,7")
+parser.add_argument("--limit", type=int, help="todo: list at most this many tasks")
 args = parser.parse_args()
 
 rerun_dir = Path(os.environ.get("RERUN_DIR", Path.home() / "crabnet_rerun"))
@@ -348,6 +349,6 @@ if args.mode == "todo":
     # adds TASK_OFFSET to the array task id
     exclude = {int(t) for t in args.exclude.replace(" ", ",").split(",") if t.strip()}
     todo = todo_tasks(pd.read_csv(manifest_path), read_results())
-    todo = [t for t in todo if t not in exclude]
+    todo = [t for t in todo if t not in exclude][: args.limit]
     for offset in sorted({t // 5000 * 5000 for t in todo}):
         print(offset, array_spec(t - offset for t in todo if offset <= t < offset + 5000))

@@ -11,7 +11,8 @@
 # cancelled rather than requeued has runs to do and is no longer queued, so it goes
 # back in. Settings come from the environment: QOS (default standby), GPUS (default
 # l40s:1; see "Pick a GPU type" in README.md), THROTTLE (max tasks running at once),
-# TIME (per task, default 12:00:00), plus REPO, RERUN_DIR and ENV_NAME as in setup_env.sh.
+# TIME (per task, default 12:00:00), MAX_QUEUED (max tasks pending or running, default
+# 1000), plus REPO, RERUN_DIR and ENV_NAME as in setup_env.sh.
 
 set -eo pipefail
 
@@ -24,6 +25,7 @@ export ENV_NAME="${ENV_NAME:-crabnet-v2}"
 QOS="${QOS:-standby}"
 GPUS="${GPUS:-l40s:1}"
 TIME="${TIME:-12:00:00}"
+MAX_QUEUED="${MAX_QUEUED:-1000}"
 
 if [ "$ACTION" = setup ]; then
     if [ -d "$HOME/.conda/envs/$ENV_NAME" ]; then
@@ -72,9 +74,13 @@ submit)
     queued="$(squeue --me -h -r -o "%j %K" | awk -v p="$JOB-" \
         'index($1, p) == 1 && $2 ~ /^[0-9]+$/ {print substr($1, length(p) + 1) + $2}' |
         paste -sd, -)"
-    # one array per 5,000 tasks (the array task id limit), each with its own offset
-    todo="$(rerun todo --exclude "$queued")"
-    [ -n "$todo" ] || echo "$DESIGN: nothing to submit ($(awk -F, '{print NF}' <<< "$queued") tasks queued)"
+    # at most MAX_QUEUED tasks pending or running (the account allows 5,000 jobs in
+    # the queue across its users), in one array per 5,000 tasks (the array task id
+    # limit), each with its own offset
+    n_queued="$(awk -F, '{print NF}' <<< "$queued")"
+    room=$((MAX_QUEUED - n_queued))
+    todo="$(rerun todo --exclude "$queued" --limit $((room > 0 ? room : 0)))"
+    [ -n "$todo" ] || echo "$DESIGN: nothing to submit ($n_queued tasks queued, MAX_QUEUED=$MAX_QUEUED)"
     while read -r offset array; do
         [ -n "$array" ] || continue
         echo "$DESIGN: submitting tasks $offset + ($array)"
