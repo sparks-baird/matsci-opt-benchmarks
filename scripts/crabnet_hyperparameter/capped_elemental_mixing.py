@@ -27,20 +27,26 @@ Optimizers, 100 evaluations each:
   Sobol, then BoTorch). "Sparse start" first attaches the forest search's 10 starting
   compositions, then continues with BoTorch. A point with fewer than 3 nonzero u is
   marked failed and still uses up an evaluation.
+- SAASBO: the same two Ax setups, with the fully Bayesian SAAS GP
+  (SaasFullyBayesianSingleTaskGP, as in Ax's SAASBO generator) in place of the default
+  GP, for both the MAE and the runtime. NUTS runs 256 warmup steps and keeps every 16th
+  of 128 samples, as in the BoTorch SAASBO tutorial (Ax's default is 512 and 256).
 
 Scores follow capped_walk_test.py: the share of the gap closed between the median random
 composition that meets the cap and the best known one (0 and 1).
 
 Inputs as in capped_walk_test.py (Space surrogate, MP parquet). Run with Python 3.12,
 scikit-learn 1.4.1.post1, numpy<2, pandas, pyarrow, joblib, matplotlib,
-pymatgen<2024.7, ax-platform 1.3.1 and torch (CPU).
+pymatgen<2024.7, ax-platform[fully_bayesian] 1.3.1 (numpyro for SAASBO) and torch (CPU).
 """
 
 # %% imports
 import logging
+import os
 import warnings
 from pathlib import Path
 
+import jax
 import joblib
 import matplotlib
 import numpy as np
@@ -48,7 +54,11 @@ import pandas as pd
 import pyarrow.parquet as pq
 import torch
 from ax import Client, RangeParameterConfig
+from ax.api.utils.generation_strategy_dispatch import choose_generation_strategy
+from ax.api.utils.structs import GenerationStrategyDispatchStruct
+from ax.generators.torch.botorch_modular.surrogate import ModelConfig
 from ax.utils.common.logger import set_ax_logger_levels
+from botorch.models.fully_bayesian import SaasFullyBayesianSingleTaskGP
 from joblib import Parallel, delayed
 from pymatgen.core import Element
 from sklearn.ensemble import RandomForestRegressor
@@ -57,8 +67,16 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
 warnings.filterwarnings("ignore")
+# one thread per NUTS fit in the joblib workers, which start after this line
+os.environ["XLA_FLAGS"] = "--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1"
 fig_dir = Path("reports/crabnet_hyperparameter_immi/figures")
 cap, budget, n_init, n_forest, n_ax, n_random = 157.0, 100, 10, 8, 4, 50
+n_saas = 2  # SAASBO runs per setting, each about 1.5 to 2 h on one core
+saas = ModelConfig(
+    botorch_model_class=SaasFullyBayesianSingleTaskGP,
+    mll_options={"warmup_steps": 256, "num_samples": 128, "thinning": 16},
+    name="SAASBO",
+)
 
 # %% Space surrogate and E (as in capped_walk_test.py)
 bounds = {
@@ -197,7 +215,8 @@ def forest_search(seed):
     return best_so_far(y, z)
 
 
-def ax_search(seed, sparse_start):
+def ax_search(seed, sparse_start, model_config=None):
+    """Ax with its default GP, or with model_config (SAASBO) in the same strategy."""
     set_ax_logger_levels(logging.WARNING)
     torch.set_num_threads(1)
     client = Client(random_seed=seed)
@@ -208,6 +227,12 @@ def ax_search(seed, sparse_start):
         ]
     )
     client.configure_optimization(objective="-mae", outcome_constraints=[f"runtime <= {cap}"])
+    if model_config is not None:
+        client.set_generation_strategy(
+            choose_generation_strategy(
+                GenerationStrategyDispatchStruct(method="custom"), model_config=model_config
+            )
+        )
     y, z = np.full(budget, np.inf), np.full(budget, np.inf)
     start = draw(n_init, np.random.default_rng(seed)) if sparse_start else []
     for n in range(budget):
@@ -216,6 +241,7 @@ def ax_search(seed, sparse_start):
             trial = client.attach_trial(parameters=p)
         else:
             ((trial, p),) = client.get_next_trials(max_trials=1).items()
+            jax.clear_caches()  # free the kernels each NUTS fit compiles, or memory keeps growing
         u = np.array([p[f"u{i}"] for i in range(1, 21)])
         if (u > 0).sum() < 3:
             client.mark_trial_failed(trial_index=trial)
@@ -233,14 +259,24 @@ optimizers = [
     "random-forest search",
     "Ax, default start",
     "Ax, sparse start",
+    "SAASBO, default start",
+    "SAASBO, sparse start",
 ]
 runs = {
     "random search": [random_search(s, draw) for s in range(n_random)],
     "random search in the box": [random_search(s, draw_box) for s in range(n_random)],
     "random-forest search": Parallel(n_jobs=4)(delayed(forest_search)(s) for s in range(n_forest)),
 }
-ax_runs = Parallel(n_jobs=4)(delayed(ax_search)(s, sp) for sp in (False, True) for s in range(n_ax))
-runs["Ax, default start"], runs["Ax, sparse start"] = ax_runs[:n_ax], ax_runs[n_ax:]
+ax_setups = {  # sparse start, model config, runs
+    "Ax, default start": (False, None, n_ax),
+    "Ax, sparse start": (True, None, n_ax),
+    "SAASBO, default start": (False, saas, n_saas),
+    "SAASBO, sparse start": (True, saas, n_saas),
+}
+jobs = [(m, s) for m, (_, _, n) in ax_setups.items() for s in range(n)]
+ax_runs = Parallel(n_jobs=4)(delayed(ax_search)(s, *ax_setups[m][:2]) for m, s in jobs)
+for m in ax_setups:
+    runs[m] = [r for (m_, _), r in zip(jobs, ax_runs) if m_ == m]
 traces = {m: np.array([t for t, _ in v]) for m, v in runs.items()}
 share_ok = {m: np.median([f for _, f in v]) for m, v in runs.items()}
 
@@ -278,7 +314,9 @@ print(summary.query("evaluations in [10, 25, 50, 100]").round(3).to_string(index
 
 # %% figure
 ink, muted, band = "#0b0b0b", "#898781", "#f0efec"
-colors = dict(zip(optimizers, ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"]))
+colors = dict(
+    zip(optimizers, ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7"])
+)
 plt.rcParams.update(
     {
         "font.size": 9.5,
@@ -293,7 +331,7 @@ plt.rcParams.update(
         "ytick.labelcolor": ink,
     }
 )
-fig, (a, b) = plt.subplots(1, 2, figsize=(12, 4.4), layout="constrained", width_ratios=[1.4, 1])
+fig, (a, b) = plt.subplots(1, 2, figsize=(12, 5.4), layout="constrained", width_ratios=[1.4, 1])
 for m in optimizers:
     s = summary[summary["optimizer"] == m].replace(np.inf, np.nan)
     a.fill_between(s["evaluations"], s["best_mae_q25"], s["best_mae_q75"], color=colors[m], alpha=0.15, lw=0)
@@ -304,12 +342,12 @@ a.set_ylim(best_known - 0.03, median_ok + 0.02)
 a.set_xlabel("evaluations")
 a.set_ylabel("best MAE meeting the cap [eV]")
 a.set_title("(a) Best MAE with runtime <= 157 s (median, 25th to 75th percentile)", loc="left")
-a.legend(frameon=False, loc="upper right")
+a.legend(frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.13), ncols=3)
 a.grid(axis="y", color=band, lw=0.8)
 a.text(
     0.02, 0.02,
     "A line starts once the median run has a composition under the cap.\n"
-    "Random search in the box and Ax with the default start never get there.",
+    "Optimizers with no line have none in the median run (see b).",
     transform=a.transAxes, fontsize=8.5, color=ink, va="bottom",
 )  # fmt: skip
 s100 = summary[summary["evaluations"] == budget].set_index("optimizer").loc[optimizers]
