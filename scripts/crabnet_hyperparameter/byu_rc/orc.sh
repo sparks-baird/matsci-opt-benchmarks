@@ -79,7 +79,8 @@ submit)
     # limit), each with its own offset
     n_queued="$(awk -F, '{print NF}' <<< "$queued")"
     room=$((MAX_QUEUED - n_queued))
-    todo="$(rerun todo --exclude "$queued" --limit $((room > 0 ? room : 0)))"
+    todo=""
+    [ "$room" -le 0 ] || todo="$(rerun todo --exclude "$queued" --limit "$room")"
     [ -n "$todo" ] || echo "$DESIGN: nothing to submit ($n_queued tasks queued, MAX_QUEUED=$MAX_QUEUED)"
     while read -r offset array; do
         [ -n "$array" ] || continue
