@@ -58,6 +58,8 @@ Why it is done this way:
 | H100, B200 | preemption only | 16, 8 | no | |
 | GH200 | general | 2 | no (ARM CPU) | |
 
+`orc.sh` keeps jobs off `cs-1-2`, `dw-1-5` and `dw-2-4` (`EXCLUDE`). These A100 nodes have 7 of their 8 GPUs in Slurm, every job there can also use the eighth, and CUDA picks the eighth when its PCI bus id sorts before the allocated GPU's. On `cs-1-2`, two tasks ended up on that one GPU.
+
 If runtime is measured again in v2, keep one GPU type for the whole campaign. Every result records the GPU name (`gpu`), so runs on different types can be told apart.
 
 ## 3. Smoke test
