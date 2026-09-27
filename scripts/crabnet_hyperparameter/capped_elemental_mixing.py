@@ -35,6 +35,13 @@ Optimizers, 100 evaluations each:
 Scores follow capped_walk_test.py: the share of the gap closed between the median random
 composition that meets the cap and the best known one (0 and 1).
 
+Each forest, Ax and SAASBO run is appended to capped_elemental_mixing_runs.csv (MAE and
+runtime at every evaluation) as soon as it finishes, and runs already in that file are
+skipped. The random searches take seconds and are redone each time. A SAASBO run takes
+1.5 to 2 h on one core, so the SAASBO seeds can be spread over several invocations:
+`python capped_elemental_mixing.py 2 3` runs SAASBO seeds 2 and 3 and any other missing
+runs. The summary CSV and the figure are written once every run is in the file.
+
 Inputs as in capped_walk_test.py (Space surrogate, MP parquet). Run with Python 3.12,
 scikit-learn 1.4.1.post1, numpy<2, pandas, pyarrow, joblib, matplotlib,
 pymatgen<2024.7, ax-platform[fully_bayesian] 1.3.1 (numpyro for SAASBO) and torch (CPU).
@@ -43,6 +50,7 @@ pymatgen<2024.7, ax-platform[fully_bayesian] 1.3.1 (numpyro for SAASBO) and torc
 # %% imports
 import logging
 import os
+import sys
 import warnings
 from pathlib import Path
 
@@ -70,8 +78,9 @@ warnings.filterwarnings("ignore")
 # one thread per NUTS fit in the joblib workers, which start after this line
 os.environ["XLA_FLAGS"] = "--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1"
 fig_dir = Path("reports/crabnet_hyperparameter_immi/figures")
+runs_file = fig_dir / "capped_elemental_mixing_runs.csv"
 cap, budget, n_init, n_forest, n_ax, n_random = 157.0, 100, 10, 8, 4, 50
-n_saas = 2  # SAASBO runs per setting, each about 1.5 to 2 h on one core
+n_saas = 4  # SAASBO runs per setting, each about 1.5 to 2 h on one core
 saas = ModelConfig(
     botorch_model_class=SaasFullyBayesianSingleTaskGP,
     mll_options={"warmup_steps": 256, "num_samples": 128, "thinning": 16},
@@ -189,9 +198,9 @@ def best_so_far(y, z):
     return np.minimum.accumulate(np.where(z <= cap, y, np.inf)), np.mean(z <= cap)
 
 
-# %% optimizers
+# %% optimizers (each returns the MAE and runtime at every evaluation)
 def random_search(seed, sampler):
-    return best_so_far(*evaluate(sampler(budget, np.random.default_rng(1_000 + seed))))
+    return evaluate(sampler(budget, np.random.default_rng(1_000 + seed)))
 
 
 def forest_search(seed):
@@ -212,7 +221,7 @@ def forest_search(seed):
         c_new = cand[[np.argmin(score)]]
         y_new, z_new = evaluate(c_new)
         C, y, z = np.vstack([C, c_new]), np.append(y, y_new), np.append(z, z_new)
-    return best_so_far(y, z)
+    return y, z
 
 
 def ax_search(seed, sparse_start, model_config=None):
@@ -249,34 +258,52 @@ def ax_search(seed, sparse_start, model_config=None):
         mae, runtime = evaluate(u[None] / u.sum())
         y[n], z[n] = mae[0], runtime[0]
         client.complete_trial(trial_index=trial, raw_data={"mae": float(y[n]), "runtime": float(z[n])})
-    return best_so_far(y, z)
+    return y, z
 
 
-# %% run
-optimizers = [
-    "random search",
-    "random search in the box",
-    "random-forest search",
-    "Ax, default start",
-    "Ax, sparse start",
-    "SAASBO, default start",
-    "SAASBO, sparse start",
-]
-runs = {
+# %% run (the runs missing from runs_file; SAASBO seeds from the command line, all by default)
+evals = {
     "random search": [random_search(s, draw) for s in range(n_random)],
     "random search in the box": [random_search(s, draw_box) for s in range(n_random)],
-    "random-forest search": Parallel(n_jobs=4)(delayed(forest_search)(s) for s in range(n_forest)),
 }
-ax_setups = {  # sparse start, model config, runs
-    "Ax, default start": (False, None, n_ax),
-    "Ax, sparse start": (True, None, n_ax),
-    "SAASBO, default start": (False, saas, n_saas),
-    "SAASBO, sparse start": (True, saas, n_saas),
+setups = {  # function, arguments after the seed, runs
+    "random-forest search": (forest_search, (), n_forest),
+    "Ax, default start": (ax_search, (False, None), n_ax),
+    "Ax, sparse start": (ax_search, (True, None), n_ax),
+    "SAASBO, default start": (ax_search, (False, saas), n_saas),
+    "SAASBO, sparse start": (ax_search, (True, saas), n_saas),
 }
-jobs = [(m, s) for m, (_, _, n) in ax_setups.items() for s in range(n)]
-ax_runs = Parallel(n_jobs=4)(delayed(ax_search)(s, *ax_setups[m][:2]) for m, s in jobs)
-for m in ax_setups:
-    runs[m] = [r for (m_, _), r in zip(jobs, ax_runs) if m_ == m]
+optimizers = [*evals, *setups]
+all_runs = [(m, s) for m, (_, _, n) in setups.items() for s in range(n)]
+saved = pd.read_csv(runs_file) if runs_file.exists() else pd.DataFrame(columns=["optimizer", "seed"])
+done = set(zip(saved["optimizer"], saved["seed"]))
+saas_seeds = [int(a) for a in sys.argv[1:]] or range(n_saas)
+todo = [
+    (m, s) for m, s in all_runs
+    if (m, s) not in done and (not m.startswith("SAASBO") or s in saas_seeds)
+]  # fmt: skip
+
+
+def run(m, s):
+    f, args, _ = setups[m]
+    return m, s, *f(s, *args)
+
+
+for m, s, y, z in Parallel(n_jobs=4, return_as="generator_unordered")(
+    delayed(run)(m, s) for m, s in todo[::-1]  # longest runs first
+):
+    pd.DataFrame(
+        {"optimizer": m, "seed": s, "evaluation": range(1, budget + 1), "mae": y, "runtime": z}
+    ).to_csv(runs_file, mode="a", header=not runs_file.exists(), index=False)
+saved = pd.read_csv(runs_file, float_precision="round_trip")
+missing = [r for r in all_runs if r not in set(zip(saved["optimizer"], saved["seed"]))]
+if missing:
+    print(f"{len(missing)} runs still to do: {missing}")
+    sys.exit()
+for m, (_, _, n) in setups.items():
+    g = saved[(saved["optimizer"] == m) & (saved["seed"] < n)].sort_values(["seed", "evaluation"])
+    evals[m] = [(d["mae"].to_numpy(), d["runtime"].to_numpy()) for _, d in g.groupby("seed")]
+runs = {m: [best_so_far(y, z) for y, z in v] for m, v in evals.items()}
 traces = {m: np.array([t for t, _ in v]) for m, v in runs.items()}
 share_ok = {m: np.median([f for _, f in v]) for m, v in runs.items()}
 
