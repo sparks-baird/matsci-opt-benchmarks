@@ -26,6 +26,10 @@ QOS="${QOS:-standby}"
 GPUS="${GPUS:-l40s:1}"
 TIME="${TIME:-12:00:00}"
 MAX_QUEUED="${MAX_QUEUED:-1000}"
+# A100 nodes with 7 of their 8 GPUs in Slurm. A job there also sees the eighth GPU,
+# and CUDA picks it when its PCI bus id is lower than the allocated GPU's, so two jobs
+# can end up on one GPU that no job was given. Set EXCLUDE= to use them anyway.
+EXCLUDE="${EXCLUDE-cs-1-2,dw-1-5,dw-2-4}"
 
 if [ "$ACTION" = setup ]; then
     if [ -d "$HOME/.conda/envs/$ENV_NAME" ]; then
@@ -51,7 +55,8 @@ JOB="crabnet-v2-$DESIGN"
 submit() {  # submit array tasks $1 (task ids minus TASK_OFFSET) with any extra sbatch flags
     local offset="${TASK_OFFSET:-0}"
     sbatch --job-name="$JOB-$offset" --array="$1" --qos="$QOS" --gpus="$GPUS" --time="$TIME" \
-        --export=ALL,DESIGN="$DESIGN",TASK_OFFSET="$offset" "${@:2}" "$HERE/rerun.sbatch"
+        ${EXCLUDE:+--exclude="$EXCLUDE"} --export=ALL,DESIGN="$DESIGN",TASK_OFFSET="$offset" \
+        "${@:2}" "$HERE/rerun.sbatch"
 }
 
 case "$ACTION" in
