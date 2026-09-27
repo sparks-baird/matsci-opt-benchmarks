@@ -330,17 +330,20 @@ def matbench_metric_calculator(
         seed = parameterization.pop("sample_seed", 10)
         rng = default_rng(seed)
 
-        cb = CrabNet(
-            **correct_parameterization(parameterization),
-            losscurve=False,
-            learningcurve=False,
-        )
-
         mb = MatbenchBenchmark(autoload=False, subset=["matbench_expt_gap"])
 
         for task in mb.tasks:
             task.load()
             for fold in task.folds:
+                # A new network for every fold. CrabNet.fit() only builds a network
+                # when self.model is None, so a reused instance keeps training the
+                # previous folds' network, which has seen this fold's test set.
+                cb = CrabNet(
+                    **correct_parameterization(parameterization),
+                    losscurve=False,
+                    learningcurve=False,
+                )
+
                 # Inputs are either chemical compositions as strings
                 # or crystal structures as pymatgen.Structure objects.
                 # Outputs are either floats (regression tasks) or bools (classification
@@ -460,8 +463,6 @@ def submitit_evaluate(parameters):
 
     print(parameterization)
 
-    cb = CrabNet(**correct_parameterization(parameterization))
-
     mb = MatbenchBenchmark(autoload=False, subset=["matbench_expt_gap"])
 
     # TODO: try-except with NaN output if failure
@@ -469,7 +470,14 @@ def submitit_evaluate(parameters):
     try:
         for task in mb.tasks:
             task.load()
+            fold_runtimes = []
             for fold in task.folds:
+                t_fold = time()
+                # A new network for every fold. CrabNet.fit() only builds a network
+                # when self.model is None, so a reused instance keeps training the
+                # previous folds' network, which has seen this fold's test set.
+                cb = CrabNet(**correct_parameterization(parameterization))
+
                 # Inputs are either chemical compositions as strings or crystal
                 # structures as pymatgen.Structure objects. Outputs are either
                 # floats (regression tasks) or bools (classification tasks)
@@ -502,13 +510,24 @@ def submitit_evaluate(parameters):
 
                 # Record your data!
                 task.record(fold, predictions)
+                fold_runtimes.append(time() - t_fold)
             scores = task.scores
+            # MAE, RMSE, MAPE and max error of each fold, plus its training time
+            fold_scores = {
+                k: {**dict(task.results[k]["scores"]), "runtime": t}
+                for k, t in zip(task.folds_keys, fold_runtimes)
+            }
             # `fit` needs to be called prior to `count_parameters`
             # all 5 models should be same size, but we take the last for simplicity
             model_size = count_parameters(cb.model)
 
         # REVIEW: if using multiple tasks, return multiple `scores` dicts
 
-        return {"scores": scores, "model_size": model_size, "runtime": time() - t0}
+        return {
+            "scores": scores,
+            "fold_scores": fold_scores,
+            "model_size": model_size,
+            "runtime": time() - t0,
+        }
     except Exception as e:
         return {"error": str(e), "runtime": time() - t0}
