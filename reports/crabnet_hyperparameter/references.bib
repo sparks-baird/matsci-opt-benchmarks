@@ -1,0 +1,300 @@
+% references.bib — CrabNet hyperparameter benchmark manuscript
+% Target journal: Integrating Materials and Manufacturing Innovation (IMMI),
+%                 Springer Nature — Data descriptor article.
+%
+% This file contains:
+%   * Entries [Existing01..Existing15]: the 15 references already cited in
+%     the current Data in Brief manuscript (reports/crabnet_hyperparameter/
+%     Datainbrief.{docx,pdf}), now expressed as BibTeX. Where peer-reviewed
+%     versions of preprints exist, the journal version is given and the
+%     superseded preprint identifier is noted in a comment.
+%   * 12 NEW entries recommended by an Edison high-effort literature query
+%     (LITERATURE_HIGH job, 2026-05-06). Insertion guidance for these new
+%     entries is in `references-recommendations.md`.
+%
+% NOTE: Do NOT cite Kaggle / HuggingFace / GitHub URLs as formal references;
+%       use them as data-availability footnotes instead.
+
+% =====================================================================
+%  EXISTING REFERENCES (with peer-reviewed updates where applicable)
+% =====================================================================
+
+@article{Existing01_Ghoreishi2019,
+  author  = {Ghoreishi, Seyede Fatemeh and Molkeri, Abhilash and Arr{\'o}yave, Raymundo and Allaire, Douglas and Srivastava, Ankit},
+  title   = {Efficient Use of Multiple Information Sources in Material Design},
+  journal = {Acta Materialia},
+  year    = {2019},
+  volume  = {180},
+  pages   = {260--271},
+  doi     = {10.1016/j.actamat.2019.09.009}
+}
+
+% Ref (2) — preprint arXiv:1903.06694 superseded by JMLR 2020 publication.
+@article{Existing02_Kandasamy2020_Dragonfly,
+  author  = {Kandasamy, Kirthevasan and Vysyaraju, Karun Raju and Neiswanger, Willie and Paria, Biswajit and Collins, Christopher R. and Schneider, Jeff and P{\'o}czos, Barnab{\'a}s and Xing, Eric P.},
+  title   = {Tuning Hyperparameters without Grad Students: Scalable and Robust Bayesian Optimisation with Dragonfly},
+  journal = {Journal of Machine Learning Research},
+  year    = {2020},
+  volume  = {21},
+  number  = {81},
+  pages   = {1--40},
+  url     = {http://jmlr.org/papers/v21/18-223.html}
+}
+
+@article{Existing03_Hanaoka2022,
+  author  = {Hanaoka, Kazuho},
+  title   = {Comparison of Conceptually Different Multi-Objective {B}ayesian Optimization Methods for Material Design Problems},
+  journal = {Materials Today Communications},
+  year    = {2022},
+  volume  = {31},
+  pages   = {103440},
+  doi     = {10.1016/j.mtcomm.2022.103440}
+}
+
+@article{Existing04_Hase2018_Chimera,
+  author  = {H{\"a}se, Florian and Roch, Lo{\"\i}c M. and Aspuru-Guzik, Al{\'a}n},
+  title   = {Chimera: Enabling Hierarchy Based Multi-Objective Optimization for Self-Driving Laboratories},
+  journal = {Chemical Science},
+  year    = {2018},
+  volume  = {9},
+  number  = {39},
+  pages   = {7642--7655},
+  doi     = {10.1039/C8SC02239A}
+}
+
+@article{Existing05_Baird2022_CrabNet,
+  author  = {Baird, Sterling G. and Liu, Marianne and Sparks, Taylor D.},
+  title   = {High-Dimensional {B}ayesian Optimization of 23 Hyperparameters over 100 Iterations for an Attention-Based Network to Predict Materials Property: A Case Study on {CrabNet} Using {A}x Platform and {SAASBO}},
+  journal = {Computational Materials Science},
+  year    = {2022},
+  volume  = {211},
+  pages   = {111505},
+  doi     = {10.1016/j.commatsci.2022.111505}
+}
+
+% Ref (6) — preprint arXiv:2103.00349 published at UAI 2021.
+@inproceedings{Existing06_Eriksson2021_SAASBO,
+  author    = {Eriksson, David and Jankowiak, Martin},
+  title     = {High-Dimensional {B}ayesian Optimization with Sparse Axis-Aligned Subspaces},
+  booktitle = {Proceedings of the 37th Conference on Uncertainty in Artificial Intelligence (UAI)},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {161},
+  year      = {2021},
+  doi       = {10.48550/arXiv.2103.00349}
+}
+
+% Refs (7) and (9) — both ChemRxiv versions of the SAME paper, published as
+% a single peer-reviewed article in Computational Materials Science (2023).
+% They should be consolidated into one citation in the manuscript.
+@article{Existing07_09_Baird2023_Compactness,
+  author  = {Baird, Sterling G. and Hall, Jason R. and Sparks, Taylor D.},
+  title   = {Compactness Matters: Improving {B}ayesian Optimization Efficiency of Materials Formulations through Invariant Search Spaces},
+  journal = {Computational Materials Science},
+  year    = {2023},
+  volume  = {224},
+  pages   = {112134},
+  doi     = {10.1016/j.commatsci.2023.112134},
+  note    = {Supersedes ChemRxiv preprints doi:10.26434/chemrxiv-2022-nz2w8-v2 and doi:10.26434/chemrxiv-2022-nz2w8-v3.}
+}
+
+% Ref (8) — ChemRxiv preprint published in Data in Brief (2023).
+@article{Existing08_Baird2023_HardSphere,
+  author  = {Baird, Sterling G. and Issa, Riley and Sparks, Taylor D.},
+  title   = {Materials Science Optimization Benchmark Dataset for Multi-Objective, Multi-Fidelity Optimization of Hard-Sphere Packing Simulations},
+  journal = {Data in Brief},
+  year    = {2023},
+  volume  = {50},
+  pages   = {109487},
+  doi     = {10.1016/j.dib.2023.109487},
+  note    = {Supersedes ChemRxiv preprint doi:10.26434/chemrxiv-2023-fjjk7.}
+}
+
+@article{Existing10_Dunn2020_Matbench,
+  author  = {Dunn, Alexander and Wang, Qi and Ganose, Alex and Dopp, Daniel and Jain, Anubhav},
+  title   = {Benchmarking Materials Property Prediction Methods: The {M}atbench Test Set and {A}utomatminer Reference Algorithm},
+  journal = {npj Computational Materials},
+  year    = {2020},
+  volume  = {6},
+  number  = {1},
+  pages   = {138},
+  doi     = {10.1038/s41524-020-00406-3}
+}
+
+@article{Existing11_DeBreuck2021_MODNet,
+  author  = {De Breuck, Pierre-Paul and Evans, Matthew L. and Rignanese, Gian-Marco},
+  title   = {Robust Model Benchmarking and Bias-Imbalance in Data-Driven Materials Science: A Case Study on {MODNet}},
+  journal = {Journal of Physics: Condensed Matter},
+  year    = {2021},
+  volume  = {33},
+  number  = {40},
+  pages   = {404002},
+  doi     = {10.1088/1361-648X/ac1280}
+}
+
+% Ref (12) — preprint arXiv:2204.05838 published in Oxford Open Materials Science.
+@article{Existing12_Wang2022_ActiveLearning,
+  author  = {Wang, Alex E. and Liang, Haotong and McDannald, Austin and Takeuchi, Ichiro and Kusne, A. Gilad},
+  title   = {Benchmarking Active Learning Strategies for Materials Optimization and Discovery},
+  journal = {Oxford Open Materials Science},
+  year    = {2022},
+  volume  = {2},
+  number  = {1},
+  pages   = {itac006},
+  doi     = {10.1093/oxfmat/itac006}
+}
+
+@article{Existing13_Liang2021_BO_Benchmarks,
+  author  = {Liang, Qiaohao and Gongora, Aldair E. and Ren, Zekun and Tiihonen, Armi and Liu, Zhe and Sun, Shijing and Deneault, James R. and Bash, Daniil and Mekki-Berrada, Flore and Khan, Saif A. and Hippalgaonkar, Kedar and Maruyama, Benji and Brown, Keith A. and Fisher~III, John and Buonassisi, Tonio},
+  title   = {Benchmarking the Performance of {B}ayesian Optimization across Multiple Experimental Materials Science Domains},
+  journal = {npj Computational Materials},
+  year    = {2021},
+  volume  = {7},
+  number  = {1},
+  pages   = {188},
+  doi     = {10.1038/s41524-021-00656-9}
+}
+
+@article{Existing14_Henderson2021,
+  author  = {Henderson, Andrew N. and Kauwe, Steven K. and Sparks, Taylor D.},
+  title   = {Benchmark Datasets Incorporating Diverse Tasks, Sample Sizes, Material Systems, and Data Heterogeneity for Materials Informatics},
+  journal = {Data in Brief},
+  year    = {2021},
+  volume  = {37},
+  pages   = {107262},
+  doi     = {10.1016/j.dib.2021.107262}
+}
+
+@article{Existing15_Hase2021_Olympus,
+  author  = {H{\"a}se, Florian and Aldeghi, Matteo and Hickman, Riley J. and Roch, Lo{\"\i}c M. and Christensen, Melodie and Liles, Elena and Hein, Jason E. and Aspuru-Guzik, Al{\'a}n},
+  title   = {Olympus: A Benchmarking Framework for Noisy Optimization and Experiment Planning},
+  journal = {Machine Learning: Science and Technology},
+  year    = {2021},
+  volume  = {2},
+  number  = {3},
+  pages   = {035021},
+  doi     = {10.1088/2632-2153/abedc8}
+}
+
+% =====================================================================
+%  NEW REFERENCES (Edison LITERATURE_HIGH, 2026-05-06)
+%  Insertion guidance: see references-recommendations.md
+% =====================================================================
+
+% Topic A — Multi-fidelity Bayesian optimization in materials science
+@article{SabanzaGil2025_MFBO,
+  author  = {Sabanza-Gil, V{\'\i}ctor and Barbano, Riccardo and Guti{\'e}rrez, Daniel Pacheco and Luterbacher, Jeremy S. and Hern{\'a}ndez-Lobato, Jos{\'e} Miguel and Schwaller, Philippe and Roch, Lo{\"\i}c},
+  title   = {Best Practices for Multi-Fidelity {B}ayesian Optimization in Materials and Molecular Research},
+  journal = {Nature Computational Science},
+  year    = {2025},
+  volume  = {5},
+  number  = {7},
+  pages   = {572--581},
+  doi     = {10.1038/s43588-025-00768-8}
+}
+
+@article{Gantzler2023_MFBO_COF,
+  author  = {Gantzler, Nickolas and Deshwal, Aryan and Doppa, Janardhan Rao and Simon, Cory M.},
+  title   = {Multi-fidelity {B}ayesian Optimization of Covalent Organic Frameworks for Xenon/Krypton Separations},
+  journal = {Digital Discovery},
+  year    = {2023},
+  volume  = {2},
+  pages   = {1937--1956},
+  doi     = {10.1039/D3DD00117B}
+}
+
+% Topic B / G — Multi-objective BO acquisition functions; noise-aware
+@inproceedings{Ament2023_LogEI,
+  author    = {Ament, Sebastian and Daulton, Samuel and Eriksson, David and Balandat, Maximilian and Bakshy, Eytan},
+  title     = {Unexpected Improvements to Expected Improvement for {B}ayesian Optimization},
+  booktitle = {Advances in Neural Information Processing Systems 36 (NeurIPS)},
+  year      = {2023}
+}
+
+% Topic C — High-dimensional Bayesian optimization
+@inproceedings{Hvarfner2024_VanillaBO,
+  author    = {Hvarfner, Carl and Hellsten, Erik Orm and Nardi, Luigi},
+  title     = {Vanilla {B}ayesian Optimization Performs Great in High Dimensions},
+  booktitle = {Proceedings of the 41st International Conference on Machine Learning (ICML)},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {235},
+  pages     = {20793--20817},
+  year      = {2024}
+}
+
+% Topic C / D — High-dimensional BO over mixed/combinatorial spaces
+@inproceedings{Papenmeier2023_Bounce,
+  author    = {Papenmeier, Leonard and Nardi, Luigi and Poloczek, Matthias},
+  title     = {Bounce: Reliable High-Dimensional {B}ayesian Optimization for Combinatorial and Mixed Spaces},
+  booktitle = {Advances in Neural Information Processing Systems 36 (NeurIPS)},
+  year      = {2023}
+}
+
+% Topic D — Constrained Bayesian optimization
+@article{Hickman2025_Anubis,
+  author  = {Hickman, Riley J. and Tom, Gary and Zou, Yunheng and Aldeghi, Matteo and Aspuru-Guzik, Al{\'a}n},
+  title   = {Anubis: {B}ayesian Optimization with Unknown Feasibility Constraints for Scientific Experimentation},
+  journal = {Digital Discovery},
+  year    = {2025},
+  volume  = {4},
+  pages   = {2104--2122},
+  doi     = {10.1039/D5DD00018A}
+}
+
+% Topic E — Materials benchmarking platforms
+@article{Choudhary2024_JARVIS,
+  author  = {Choudhary, Kamal and Wines, Daniel and Li, Kangming and Garrity, Kevin F. and Gupta, Vishu and Romero, Aldo H. and Krogel, Jaron T. and Saritas, Kayahan and Fuhr, Addis and Ganesh, Panchapakesan and Kent, Paul R. C. and Yan, Keqiang and Lin, Yuchao and Ji, Shuiwang and Blaiszik, Ben and Reiser, Patrick and Friederich, Pascal and Agrawal, Ankit and Tiwary, Pratyush and Beyerle, Eric and Minch, Peter and Rhone, Trevor David and Takeuchi, Ichiro and Wexler, Robert B. and Mannodi-Kanakkithodi, Arun and Ertekin, Elif and Mishra, Avanish and Mathew, Nithin and Wood, Mitchell and Rohskopf, Andrew Dale and Hattrick-Simpers, Jason and Wang, Shih-Han and Achenie, Luke E. K. and Xin, Hongliang and Williams, Maureen and Biacchi, Adam J. and Tavazza, Francesca},
+  title   = {{JARVIS}-Leaderboard: A Large Scale Benchmark of Materials Design Methods},
+  journal = {npj Computational Materials},
+  year    = {2024},
+  volume  = {10},
+  pages   = {93},
+  doi     = {10.1038/s41524-024-01259-w}
+}
+
+@article{Fitzner2025_BayBE,
+  author  = {Fitzner, Martin and {\v{S}}o{\v{s}}i{\'c}, Adrian and Hopp, Alexander V. and M{\"u}ller, Marcel and Rihana, Rim and Hrovatin, Karin and Liebig, Fabian and Winkel, Mathias and Halter, Wolfgang and Brandenburg, Jan Gerit},
+  title   = {{BayBE}: A {B}ayesian Back End for Experimental Planning in the Low-to-No-Data Regime},
+  journal = {Digital Discovery},
+  year    = {2025},
+  doi     = {10.1039/D5DD00050E}
+}
+
+@article{Hickman2025_Atlas,
+  author  = {Hickman, Riley J. and Sim, Malcolm and Pablo-Garc{\'\i}a, Sergio and Tom, Gary and Woolhouse, Ivan and Hao, Han and Bao, Zeqing and Bannigan, Pauric and Allen, Christine J. and Aldeghi, Matteo and Aspuru-Guzik, Al{\'a}n},
+  title   = {Atlas: A Brain for Self-Driving Laboratories},
+  journal = {Digital Discovery},
+  year    = {2025},
+  doi     = {10.1039/D4DD00115J}
+}
+
+% Topic F — CrabNet / composition-based property prediction successors
+@article{Madani2025_TransformerGraph,
+  author  = {Madani, Mohammad and Lacivita, Valentina and Shin, Yongwoo and Tarakanova, Anna},
+  title   = {Accelerating Materials Property Prediction via a Hybrid Transformer Graph Framework that Leverages Four Body Interactions},
+  journal = {npj Computational Materials},
+  year    = {2025},
+  volume  = {11},
+  doi     = {10.1038/s41524-024-01472-7}
+}
+
+% Topic H — Self-driving labs reviews
+@article{Tom2024_SDL_Review,
+  author  = {Tom, Gary and Schmid, Stefan P. and Baird, Sterling G. and Cao, Yang and Darvish, Kourosh and Hao, Han and Lo, Stanley and Pablo-Garc{\'\i}a, Sergio and Rajaonson, Ella M. and Skreta, Marta and Yoshikawa, Naruki and Corapi, Samantha and Akkoc, Gun Deniz and Strieth-Kalthoff, Felix and Seifrid, Martin and Aspuru-Guzik, Al{\'a}n},
+  title   = {Self-Driving Laboratories for Chemistry and Materials Science},
+  journal = {Chemical Reviews},
+  year    = {2024},
+  volume  = {124},
+  number  = {16},
+  pages   = {9633--9732},
+  doi     = {10.1021/acs.chemrev.4c00055}
+}
+
+@article{Abolhasani2023_SDL,
+  author  = {Abolhasani, Milad and Kumacheva, Eugenia},
+  title   = {The Rise of Self-Driving Labs in Chemical and Materials Sciences},
+  journal = {Nature Synthesis},
+  year    = {2023},
+  volume  = {2},
+  pages   = {483--492},
+  doi     = {10.1038/s44160-022-00231-0}
+}
