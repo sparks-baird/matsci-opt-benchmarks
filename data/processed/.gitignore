@@ -4,3 +4,5 @@
 !.gitignore
 !particle_packing
 !crabnet_hyperparameter
+!crabnet_v2_dummy
+!crabnet_v2_dummy/**
